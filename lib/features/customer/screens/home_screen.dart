@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import '../../../core/constants/app_constants.dart';
-import '../../../core/theme/app_colors.dart';
-import '../../../data/models/court_model.dart';
-import '../../../data/repositories/court_repository.dart';
+import '../../../app/constants/app_constants.dart';
+import '../../../app/theme/app_colors.dart';
+import '../data/models/court_model.dart';
+import '../data/repositories/court_repository.dart';
 import '../../../shared/widgets/empty_state.dart';
 import '../../../shared/widgets/section_header.dart';
 import '../widgets/court_card.dart';
@@ -53,11 +53,13 @@ class _HomeScreenState extends State<HomeScreen> {
     if (_searchQuery.isNotEmpty) {
       final q = _searchQuery.toLowerCase();
       result = result
-          .where((c) =>
-      c.name.toLowerCase().contains(q) ||
-          c.place.toLowerCase().contains(q) ||
-          c.city.toLowerCase().contains(q) ||
-          c.courtTypes.any((t) => t.toLowerCase().contains(q)))
+          .where(
+            (c) =>
+                c.name.toLowerCase().contains(q) ||
+                c.place.toLowerCase().contains(q) ||
+                c.city.toLowerCase().contains(q) ||
+                c.courtTypes.any((t) => t.toLowerCase().contains(q)),
+          )
           .toList();
     }
     _courts = result;
@@ -93,7 +95,11 @@ class _HomeScreenState extends State<HomeScreen> {
                 children: [
                   Row(
                     children: [
-                      const Icon(Icons.location_on_rounded, color: AppColors.primary, size: 16),
+                      const Icon(
+                        Icons.location_on_rounded,
+                        color: AppColors.primary,
+                        size: 16,
+                      ),
                       const SizedBox(width: 4),
                       const Text(
                         'Mumbai, IN',
@@ -104,8 +110,11 @@ class _HomeScreenState extends State<HomeScreen> {
                           fontWeight: FontWeight.w500,
                         ),
                       ),
-                      const Icon(Icons.keyboard_arrow_down_rounded,
-                          color: AppColors.textSecondary, size: 18),
+                      const Icon(
+                        Icons.keyboard_arrow_down_rounded,
+                        color: AppColors.textSecondary,
+                        size: 18,
+                      ),
                     ],
                   ),
                   const SizedBox(height: 4),
@@ -138,8 +147,11 @@ class _HomeScreenState extends State<HomeScreen> {
               child: Stack(
                 alignment: Alignment.center,
                 children: [
-                  const Icon(Icons.notifications_outlined,
-                      color: AppColors.textPrimary, size: 22),
+                  const Icon(
+                    Icons.notifications_outlined,
+                    color: AppColors.textPrimary,
+                    size: 22,
+                  ),
                   Positioned(
                     top: 10,
                     right: 10,
@@ -219,23 +231,20 @@ class _HomeScreenState extends State<HomeScreen> {
     }
 
     return SliverList(
-      delegate: SliverChildBuilderDelegate(
-            (context, index) {
-          if (index == _courts.length) {
-            return const SizedBox(height: AppConstants.paddingXL);
-          }
-          final court = _courts[index];
-          return CourtCard(
-            court: court,
-            onTap: () => Navigator.pushNamed(
-              context,
-              AppConstants.routeCourtDetail,
-              arguments: court,
-            ),
-          );
-        },
-        childCount: _courts.length + 1,
-      ),
+      delegate: SliverChildBuilderDelegate((context, index) {
+        if (index == _courts.length) {
+          return const SizedBox(height: AppConstants.paddingXL);
+        }
+        final court = _courts[index];
+        return CourtCard(
+          court: court,
+          onTap: () => Navigator.pushNamed(
+            context,
+            AppConstants.routeCourtDetail,
+            arguments: court,
+          ),
+        );
+      }, childCount: _courts.length + 1),
     );
   }
 }

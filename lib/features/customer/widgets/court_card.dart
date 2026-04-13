@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import '../../../core/constants/app_constants.dart';
-import '../../../core/theme/app_colors.dart';
-import '../../../data/models/court_model.dart';
+import '../../../app/constants/app_constants.dart';
+import '../../../app/theme/app_colors.dart';
+import '../data/models/court_model.dart';
 
 class CourtCard extends StatelessWidget {
   final Court court;
@@ -47,7 +47,9 @@ class _CourtImage extends StatelessWidget {
     return Stack(
       children: [
         ClipRRect(
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(AppConstants.radiusL)),
+          borderRadius: const BorderRadius.vertical(
+            top: Radius.circular(AppConstants.radiusL),
+          ),
           child: Image.network(
             court.imageUrl,
             height: AppConstants.cardImageHeight,
@@ -59,14 +61,21 @@ class _CourtImage extends StatelessWidget {
                 height: AppConstants.cardImageHeight,
                 color: AppColors.divider,
                 child: const Center(
-                  child: CircularProgressIndicator(color: AppColors.primary, strokeWidth: 2),
+                  child: CircularProgressIndicator(
+                    color: AppColors.primary,
+                    strokeWidth: 2,
+                  ),
                 ),
               );
             },
             errorBuilder: (_, __, ___) => Container(
               height: AppConstants.cardImageHeight,
               color: AppColors.divider,
-              child: const Icon(Icons.sports_tennis_rounded, size: 48, color: AppColors.textMuted),
+              child: const Icon(
+                Icons.sports_tennis_rounded,
+                size: 48,
+                color: AppColors.textMuted,
+              ),
             ),
           ),
         ),
@@ -100,7 +109,9 @@ class _AvailabilityBadge extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: (isAvailable ? AppColors.primary : Colors.red).withOpacity(0.4),
+            color: (isAvailable ? AppColors.primary : Colors.red).withOpacity(
+              0.4,
+            ),
             blurRadius: 8,
             offset: const Offset(0, 3),
           ),
@@ -112,7 +123,10 @@ class _AvailabilityBadge extends StatelessWidget {
           Container(
             width: 6,
             height: 6,
-            decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              shape: BoxShape.circle,
+            ),
           ),
           const SizedBox(width: 5),
           Text(
@@ -195,7 +209,11 @@ class _CourtInfo extends StatelessWidget {
           const SizedBox(height: 6),
           Row(
             children: [
-              const Icon(Icons.location_on_rounded, size: 14, color: AppColors.primary),
+              const Icon(
+                Icons.location_on_rounded,
+                size: 14,
+                color: AppColors.primary,
+              ),
               const SizedBox(width: 4),
               Expanded(
                 child: Text(
@@ -253,23 +271,23 @@ class _CourtInfo extends StatelessWidget {
         .take(2)
         .map(
           (type) => Container(
-        margin: const EdgeInsets.only(right: 6),
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-        decoration: BoxDecoration(
-          color: AppColors.badgeBg,
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: Text(
-          type,
-          style: const TextStyle(
-            fontFamily: 'Poppins',
-            fontSize: 11,
-            fontWeight: FontWeight.w600,
-            color: AppColors.badgeText,
+            margin: const EdgeInsets.only(right: 6),
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+            decoration: BoxDecoration(
+              color: AppColors.badgeBg,
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Text(
+              type,
+              style: const TextStyle(
+                fontFamily: 'Poppins',
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+                color: AppColors.badgeText,
+              ),
+            ),
           ),
-        ),
-      ),
-    )
+        )
         .toList();
   }
 }

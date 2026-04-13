@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import 'app/core/constants/app_constants.dart';
-import 'app/core/constants/app_router.dart';
-import 'app/core/theme/app_theme.dart';
+import 'app/constants/app_constants.dart';
+import 'app/constants/app_router.dart';
+import 'app/theme/app_theme.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();

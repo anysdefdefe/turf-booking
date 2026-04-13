@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../../core/theme/app_colors.dart';
+import '../../../app/theme/app_colors.dart';
 
 class CourtSearchBar extends StatefulWidget {
   final ValueChanged<String> onChanged;
@@ -48,20 +48,31 @@ class _CourtSearchBarState extends State<CourtSearchBar> {
             fontSize: 14,
             fontFamily: 'Poppins',
           ),
-          prefixIcon: const Icon(Icons.search_rounded, color: AppColors.textSecondary, size: 22),
+          prefixIcon: const Icon(
+            Icons.search_rounded,
+            color: AppColors.textSecondary,
+            size: 22,
+          ),
           suffixIcon: _controller.text.isNotEmpty
               ? IconButton(
-            icon: const Icon(Icons.close_rounded, color: AppColors.textSecondary, size: 20),
-            onPressed: () {
-              _controller.clear();
-              widget.onChanged('');
-            },
-          )
+                  icon: const Icon(
+                    Icons.close_rounded,
+                    color: AppColors.textSecondary,
+                    size: 20,
+                  ),
+                  onPressed: () {
+                    _controller.clear();
+                    widget.onChanged('');
+                  },
+                )
               : null,
           border: InputBorder.none,
           enabledBorder: InputBorder.none,
           focusedBorder: InputBorder.none,
-          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 15),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 15,
+          ),
         ),
       ),
     );
