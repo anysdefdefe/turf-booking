@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import '../../../core/constants/app_constants.dart';
-import '../../../core/theme/app_colors.dart';
-import '../../../data/models/booking_args.dart';
-import '../../../data/models/court_model.dart';
+import '../../../app/constants/app_constants.dart';
+import '../../../app/theme/app_colors.dart';
+import '../data/models/booking_args.dart';
+import '../data/models/court_model.dart';
 import '../widgets/amenity_chip.dart';
 import '../widgets/detail_section_title.dart';
 import '../widgets/info_row_chip.dart';
@@ -21,10 +21,22 @@ class _CourtDetailScreenState extends State<CourtDetailScreen> {
   int _durationHours = 1;
 
   final List<String> _timeSlots = [
-    '06:00 AM', '07:00 AM', '08:00 AM', '09:00 AM',
-    '10:00 AM', '11:00 AM', '12:00 PM', '01:00 PM',
-    '02:00 PM', '03:00 PM', '04:00 PM', '05:00 PM',
-    '06:00 PM', '07:00 PM', '08:00 PM', '09:00 PM',
+    '06:00 AM',
+    '07:00 AM',
+    '08:00 AM',
+    '09:00 AM',
+    '10:00 AM',
+    '11:00 AM',
+    '12:00 PM',
+    '01:00 PM',
+    '02:00 PM',
+    '03:00 PM',
+    '04:00 PM',
+    '05:00 PM',
+    '06:00 PM',
+    '07:00 PM',
+    '08:00 PM',
+    '09:00 PM',
   ];
 
   bool get _canBook =>
@@ -78,7 +90,9 @@ class _CourtDetailScreenState extends State<CourtDetailScreen> {
       leading: Padding(
         padding: const EdgeInsets.all(8),
         child: _CircleBtn(
-            icon: Icons.arrow_back_rounded, onTap: () => Navigator.pop(context)),
+          icon: Icons.arrow_back_rounded,
+          onTap: () => Navigator.pop(context),
+        ),
       ),
       actions: [
         Padding(
@@ -100,8 +114,11 @@ class _CourtDetailScreenState extends State<CourtDetailScreen> {
               fit: BoxFit.cover,
               errorBuilder: (_, __, ___) => Container(
                 color: AppColors.divider,
-                child: const Icon(Icons.sports_tennis_rounded,
-                    size: 72, color: AppColors.textMuted),
+                child: const Icon(
+                  Icons.sports_tennis_rounded,
+                  size: 72,
+                  color: AppColors.textMuted,
+                ),
               ),
             ),
             const DecoratedBox(
@@ -169,9 +186,10 @@ class _CourtDetailScreenState extends State<CourtDetailScreen> {
                   const Text(
                     'per hour',
                     style: TextStyle(
-                        fontFamily: 'Poppins',
-                        fontSize: 11,
-                        color: AppColors.textSecondary),
+                      fontFamily: 'Poppins',
+                      fontSize: 11,
+                      color: AppColors.textSecondary,
+                    ),
                   ),
                 ],
               ),
@@ -180,16 +198,20 @@ class _CourtDetailScreenState extends State<CourtDetailScreen> {
           const SizedBox(height: 8),
           Row(
             children: [
-              const Icon(Icons.location_on_rounded,
-                  size: 14, color: AppColors.primary),
+              const Icon(
+                Icons.location_on_rounded,
+                size: 14,
+                color: AppColors.primary,
+              ),
               const SizedBox(width: 4),
               Expanded(
                 child: Text(
                   '${court.place}, ${court.city}',
                   style: const TextStyle(
-                      fontFamily: 'Poppins',
-                      fontSize: 13,
-                      color: AppColors.textSecondary),
+                    fontFamily: 'Poppins',
+                    fontSize: 13,
+                    color: AppColors.textSecondary,
+                  ),
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
@@ -254,8 +276,9 @@ class _CourtDetailScreenState extends State<CourtDetailScreen> {
           Wrap(
             spacing: 10,
             runSpacing: 10,
-            children:
-            court.amenities.map((a) => AmenityChip(label: a)).toList(),
+            children: court.amenities
+                .map((a) => AmenityChip(label: a))
+                .toList(),
           ),
         ],
       ),
@@ -294,8 +317,7 @@ class _CourtDetailScreenState extends State<CourtDetailScreen> {
             },
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 200),
-              padding:
-              const EdgeInsets.symmetric(horizontal: 16, vertical: 15),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 15),
               decoration: BoxDecoration(
                 color: AppColors.surface,
                 borderRadius: BorderRadius.circular(14),
@@ -315,11 +337,13 @@ class _CourtDetailScreenState extends State<CourtDetailScreen> {
               ),
               child: Row(
                 children: [
-                  Icon(Icons.calendar_today_rounded,
-                      color: _selectedDate != null
-                          ? AppColors.primary
-                          : AppColors.textSecondary,
-                      size: 20),
+                  Icon(
+                    Icons.calendar_today_rounded,
+                    color: _selectedDate != null
+                        ? AppColors.primary
+                        : AppColors.textSecondary,
+                    size: 20,
+                  ),
                   const SizedBox(width: 12),
                   Text(
                     _selectedDate == null
@@ -335,10 +359,12 @@ class _CourtDetailScreenState extends State<CourtDetailScreen> {
                     ),
                   ),
                   const Spacer(),
-                  Icon(Icons.chevron_right_rounded,
-                      color: _selectedDate != null
-                          ? AppColors.primary
-                          : AppColors.textMuted),
+                  Icon(
+                    Icons.chevron_right_rounded,
+                    color: _selectedDate != null
+                        ? AppColors.primary
+                        : AppColors.textMuted,
+                  ),
                 ],
               ),
             ),
@@ -350,8 +376,18 @@ class _CourtDetailScreenState extends State<CourtDetailScreen> {
 
   String _fmt(DateTime d) {
     const months = [
-      'January', 'February', 'March', 'April', 'May', 'June',
-      'July', 'August', 'September', 'October', 'November', 'December'
+      'January',
+      'February',
+      'March',
+      'April',
+      'May',
+      'June',
+      'July',
+      'August',
+      'September',
+      'October',
+      'November',
+      'December',
     ];
     const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
     return '${days[d.weekday - 1]}, ${d.day} ${months[d.month - 1]} ${d.year}';
@@ -385,7 +421,9 @@ class _CourtDetailScreenState extends State<CourtDetailScreen> {
                   child: AnimatedContainer(
                     duration: const Duration(milliseconds: 180),
                     padding: const EdgeInsets.symmetric(
-                        horizontal: 16, vertical: 11),
+                      horizontal: 16,
+                      vertical: 11,
+                    ),
                     decoration: BoxDecoration(
                       color: sel ? AppColors.primary : AppColors.surface,
                       borderRadius: BorderRadius.circular(10),
@@ -395,12 +433,12 @@ class _CourtDetailScreenState extends State<CourtDetailScreen> {
                       ),
                       boxShadow: sel
                           ? [
-                        BoxShadow(
-                          color: AppColors.primary.withOpacity(0.3),
-                          blurRadius: 8,
-                          offset: const Offset(0, 3),
-                        )
-                      ]
+                              BoxShadow(
+                                color: AppColors.primary.withOpacity(0.3),
+                                blurRadius: 8,
+                                offset: const Offset(0, 3),
+                              ),
+                            ]
                           : [],
                     ),
                     child: Text(
@@ -442,21 +480,24 @@ class _CourtDetailScreenState extends State<CourtDetailScreen> {
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 180),
                   padding: const EdgeInsets.symmetric(
-                      horizontal: 20, vertical: 11),
+                    horizontal: 20,
+                    vertical: 11,
+                  ),
                   decoration: BoxDecoration(
                     color: sel ? AppColors.primary : AppColors.surface,
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
-                        color: sel ? AppColors.primary : AppColors.divider,
-                        width: 1.5),
+                      color: sel ? AppColors.primary : AppColors.divider,
+                      width: 1.5,
+                    ),
                     boxShadow: sel
                         ? [
-                      BoxShadow(
-                        color: AppColors.primary.withOpacity(0.25),
-                        blurRadius: 8,
-                        offset: const Offset(0, 3),
-                      )
-                    ]
+                            BoxShadow(
+                              color: AppColors.primary.withOpacity(0.25),
+                              blurRadius: 8,
+                              offset: const Offset(0, 3),
+                            ),
+                          ]
                         : [],
                   ),
                   child: Text(
@@ -491,33 +532,38 @@ class _CourtDetailScreenState extends State<CourtDetailScreen> {
             children: [
               _DurationBtn(
                 icon: Icons.remove_rounded,
-                onTap:
-                _durationHours > 1 ? () => setState(() => _durationHours--) : null,
+                onTap: _durationHours > 1
+                    ? () => setState(() => _durationHours--)
+                    : null,
               ),
               const SizedBox(width: 20),
-              Column(children: [
-                Text(
-                  '$_durationHours',
-                  style: const TextStyle(
-                    fontFamily: 'Poppins',
-                    fontSize: 28,
-                    fontWeight: FontWeight.w800,
-                    color: AppColors.textPrimary,
+              Column(
+                children: [
+                  Text(
+                    '$_durationHours',
+                    style: const TextStyle(
+                      fontFamily: 'Poppins',
+                      fontSize: 28,
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.textPrimary,
+                    ),
                   ),
-                ),
-                const Text(
-                  'hour(s)',
-                  style: TextStyle(
+                  const Text(
+                    'hour(s)',
+                    style: TextStyle(
                       fontFamily: 'Poppins',
                       fontSize: 12,
-                      color: AppColors.textSecondary),
-                ),
-              ]),
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                ],
+              ),
               const SizedBox(width: 20),
               _DurationBtn(
                 icon: Icons.add_rounded,
-                onTap:
-                _durationHours < 5 ? () => setState(() => _durationHours++) : null,
+                onTap: _durationHours < 5
+                    ? () => setState(() => _durationHours++)
+                    : null,
               ),
               const Spacer(),
               Column(
@@ -535,9 +581,10 @@ class _CourtDetailScreenState extends State<CourtDetailScreen> {
                   const Text(
                     'total',
                     style: TextStyle(
-                        fontFamily: 'Poppins',
-                        fontSize: 12,
-                        color: AppColors.textSecondary),
+                      fontFamily: 'Poppins',
+                      fontSize: 12,
+                      color: AppColors.textSecondary,
+                    ),
                   ),
                 ],
               ),
@@ -553,7 +600,11 @@ class _CourtDetailScreenState extends State<CourtDetailScreen> {
   Widget _buildBottomBar(BuildContext context, Court court) {
     return Container(
       padding: EdgeInsets.fromLTRB(
-          20, 14, 20, MediaQuery.of(context).padding.bottom + 14),
+        20,
+        14,
+        20,
+        MediaQuery.of(context).padding.bottom + 14,
+      ),
       decoration: BoxDecoration(
         color: AppColors.surface,
         boxShadow: [
@@ -582,9 +633,10 @@ class _CourtDetailScreenState extends State<CourtDetailScreen> {
               Text(
                 '$_durationHours hr${_durationHours > 1 ? 's' : ''}',
                 style: const TextStyle(
-                    fontFamily: 'Poppins',
-                    fontSize: 12,
-                    color: AppColors.textSecondary),
+                  fontFamily: 'Poppins',
+                  fontSize: 12,
+                  color: AppColors.textSecondary,
+                ),
               ),
             ],
           ),
@@ -593,16 +645,16 @@ class _CourtDetailScreenState extends State<CourtDetailScreen> {
             child: ElevatedButton(
               onPressed: _canBook
                   ? () => Navigator.pushNamed(
-                context,
-                AppConstants.routeBookingConfirm,
-                arguments: BookingArgs(
-                  court: court,
-                  date: _selectedDate!,
-                  timeSlot: _selectedTime!,
-                  courtType: _selectedType!,
-                  durationHours: _durationHours,
-                ),
-              )
+                      context,
+                      AppConstants.routeBookingConfirm,
+                      arguments: BookingArgs(
+                        court: court,
+                        date: _selectedDate!,
+                        timeSlot: _selectedTime!,
+                        courtType: _selectedType!,
+                        durationHours: _durationHours,
+                      ),
+                    )
                   : null,
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.primary,
@@ -610,7 +662,8 @@ class _CourtDetailScreenState extends State<CourtDetailScreen> {
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14)),
+                  borderRadius: BorderRadius.circular(14),
+                ),
                 elevation: _canBook ? 4 : 0,
                 shadowColor: AppColors.primary.withOpacity(0.35),
               ),
@@ -630,7 +683,11 @@ class _CourtDetailScreenState extends State<CourtDetailScreen> {
   }
 
   Widget _divider() => const Divider(
-      color: AppColors.divider, height: 1, indent: 20, endIndent: 20);
+    color: AppColors.divider,
+    height: 1,
+    indent: 20,
+    endIndent: 20,
+  );
 }
 
 // ── Reusable sub-widgets ──────────────────────────────────────────────────────
@@ -651,9 +708,10 @@ class _CircleBtn extends StatelessWidget {
         shape: BoxShape.circle,
         boxShadow: [
           BoxShadow(
-              color: Colors.black.withOpacity(0.12),
-              blurRadius: 8,
-              offset: const Offset(0, 2))
+            color: Colors.black.withOpacity(0.12),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
         ],
       ),
       child: Icon(icon, size: 20, color: AppColors.textPrimary),
@@ -683,9 +741,10 @@ class _FavBtnState extends State<_FavBtn> {
         shape: BoxShape.circle,
         boxShadow: [
           BoxShadow(
-              color: Colors.black.withOpacity(0.12),
-              blurRadius: 8,
-              offset: const Offset(0, 2))
+            color: Colors.black.withOpacity(0.12),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
         ],
       ),
       child: Icon(
@@ -703,8 +762,7 @@ class _AvailBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Container(
-    padding:
-    const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
     decoration: BoxDecoration(
       color: isAvailable ? AppColors.primary : Colors.red.shade400,
       borderRadius: BorderRadius.circular(20),
@@ -713,10 +771,13 @@ class _AvailBadge extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         Container(
-            width: 6,
-            height: 6,
-            decoration: const BoxDecoration(
-                color: Colors.white, shape: BoxShape.circle)),
+          width: 6,
+          height: 6,
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            shape: BoxShape.circle,
+          ),
+        ),
         const SizedBox(width: 6),
         Text(
           isAvailable ? 'Available' : 'Fully Booked',
@@ -738,8 +799,7 @@ class _DistBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Container(
-    padding:
-    const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
     decoration: BoxDecoration(
       color: Colors.black54,
       borderRadius: BorderRadius.circular(20),
@@ -749,12 +809,15 @@ class _DistBadge extends StatelessWidget {
       children: [
         const Icon(Icons.near_me_rounded, color: Colors.white, size: 12),
         const SizedBox(width: 4),
-        Text('${km.toStringAsFixed(1)} km',
-            style: const TextStyle(
-                fontFamily: 'Poppins',
-                color: Colors.white,
-                fontSize: 11.5,
-                fontWeight: FontWeight.w500)),
+        Text(
+          '${km.toStringAsFixed(1)} km',
+          style: const TextStyle(
+            fontFamily: 'Poppins',
+            color: Colors.white,
+            fontSize: 11.5,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
       ],
     ),
   );
@@ -777,11 +840,12 @@ class _DurationBtn extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         boxShadow: onTap != null
             ? [
-          BoxShadow(
-              color: AppColors.primary.withOpacity(0.3),
-              blurRadius: 8,
-              offset: const Offset(0, 3))
-        ]
+                BoxShadow(
+                  color: AppColors.primary.withOpacity(0.3),
+                  blurRadius: 8,
+                  offset: const Offset(0, 3),
+                ),
+              ]
             : [],
       ),
       child: Icon(icon, color: Colors.white, size: 22),

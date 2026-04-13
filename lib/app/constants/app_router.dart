@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 
-import '../../features/home/screens/court_detail_screen.dart';
-import '../../features/home/screens/home_screen.dart';
-import '../../features/home/screens/splash_screen.dart';
+import '../../../features/customer/screens/court_detail_screen.dart';
+import '../../../features/customer/screens/home_screen.dart';
+import '../../../features/customer/screens/splash_screen.dart';
 import 'app_constants.dart';
 
 /// Navigation router for the application.
