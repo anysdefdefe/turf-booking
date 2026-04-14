@@ -445,7 +445,7 @@ class _AvatarPreviewState extends State<_AvatarPreview> {
                   ? Image.network(
                       url,
                       fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) => const Icon(
+                      errorBuilder: (_, _, _) => const Icon(
                         Icons.person_outline_rounded,
                         size: 36,
                         color: AppColors.textPrimary,
@@ -607,7 +607,7 @@ class _ProfileHeroCard extends StatelessWidget {
                   ? Image.network(
                       profile.avatarUrl,
                       fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) => const Icon(
+                      errorBuilder: (_, _, _) => const Icon(
                         Icons.person_outline_rounded,
                         size: 28,
                         color: AppColors.textPrimary,
