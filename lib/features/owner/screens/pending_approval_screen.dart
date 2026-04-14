@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../../../app/core/theme/app_colors.dart';
-import '../../../app/core/constants/app_constants.dart';
+import 'package:turf_booking/app/theme/app_colors.dart';
+import 'package:turf_booking/app/constants/app_constants.dart';
 
 class PendingApprovalScreen extends StatelessWidget {
   const PendingApprovalScreen({super.key});
