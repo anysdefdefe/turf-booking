@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import '../../../core/constants/app_constants.dart';
-import '../../../core/theme/app_colors.dart';
-import '../../../data/models/court_model.dart';
+import '../../../app/constants/app_constants.dart';
+import '../../../app/theme/app_colors.dart';
+import '../data/models/court_model.dart';
 
 class CourtCard extends StatelessWidget {
   final Court court;
@@ -18,13 +18,7 @@ class CourtCard extends StatelessWidget {
         decoration: BoxDecoration(
           color: AppColors.cardBg,
           borderRadius: BorderRadius.circular(AppConstants.radiusL),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.07),
-              blurRadius: 16,
-              offset: const Offset(0, 6),
-            ),
-          ],
+          border: Border.all(color: AppColors.divider, width: 1),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -47,7 +41,9 @@ class _CourtImage extends StatelessWidget {
     return Stack(
       children: [
         ClipRRect(
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(AppConstants.radiusL)),
+          borderRadius: const BorderRadius.vertical(
+            top: Radius.circular(AppConstants.radiusL),
+          ),
           child: Image.network(
             court.imageUrl,
             height: AppConstants.cardImageHeight,
@@ -59,24 +55,29 @@ class _CourtImage extends StatelessWidget {
                 height: AppConstants.cardImageHeight,
                 color: AppColors.divider,
                 child: const Center(
-                  child: CircularProgressIndicator(color: AppColors.primary, strokeWidth: 2),
+                  child: CircularProgressIndicator(
+                    color: AppColors.primary,
+                    strokeWidth: 2,
+                  ),
                 ),
               );
             },
-            errorBuilder: (_, __, ___) => Container(
+            errorBuilder: (_, _, _) => Container(
               height: AppConstants.cardImageHeight,
               color: AppColors.divider,
-              child: const Icon(Icons.sports_tennis_rounded, size: 48, color: AppColors.textMuted),
+              child: const Icon(
+                Icons.sports_tennis_rounded,
+                size: 48,
+                color: AppColors.textMuted,
+              ),
             ),
           ),
         ),
-        // Availability badge
         Positioned(
           top: 14,
           left: 14,
           child: _AvailabilityBadge(isAvailable: court.isAvailable),
         ),
-        // Distance chip
         Positioned(
           top: 14,
           right: 14,
@@ -96,15 +97,12 @@ class _AvailabilityBadge extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       decoration: BoxDecoration(
-        color: isAvailable ? AppColors.primary : Colors.red.shade400,
+        color: AppColors.surface.withOpacity(0.94),
         borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: (isAvailable ? AppColors.primary : Colors.red).withOpacity(0.4),
-            blurRadius: 8,
-            offset: const Offset(0, 3),
-          ),
-        ],
+        border: Border.all(
+          color: isAvailable ? AppColors.primary : Colors.red.shade300,
+          width: 1,
+        ),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -112,14 +110,17 @@ class _AvailabilityBadge extends StatelessWidget {
           Container(
             width: 6,
             height: 6,
-            decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
+            decoration: const BoxDecoration(
+              color: AppColors.primary,
+              shape: BoxShape.circle,
+            ),
           ),
           const SizedBox(width: 5),
           Text(
             isAvailable ? 'Available' : 'Booked',
             style: const TextStyle(
               fontFamily: 'Poppins',
-              color: Colors.white,
+              color: AppColors.textPrimary,
               fontSize: 11,
               fontWeight: FontWeight.w600,
             ),
@@ -139,19 +140,24 @@ class _DistanceChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       decoration: BoxDecoration(
-        color: Colors.black.withOpacity(0.55),
+        color: AppColors.surface.withOpacity(0.94),
         borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: AppColors.divider, width: 1),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(Icons.near_me_rounded, color: Colors.white, size: 12),
+          const Icon(
+            Icons.near_me_rounded,
+            color: AppColors.textSecondary,
+            size: 12,
+          ),
           const SizedBox(width: 4),
           Text(
             '${distanceKm.toStringAsFixed(1)} km',
             style: const TextStyle(
               fontFamily: 'Poppins',
-              color: Colors.white,
+              color: AppColors.textSecondary,
               fontSize: 11,
               fontWeight: FontWeight.w500,
             ),
@@ -189,13 +195,40 @@ class _CourtInfo extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 8),
-              _RatingPill(rating: court.rating, reviewCount: court.reviewCount),
+              RichText(
+                text: TextSpan(
+                  children: [
+                    TextSpan(
+                      text: '₹${court.pricePerHour.toInt()}',
+                      style: const TextStyle(
+                        fontFamily: 'Poppins',
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                    const TextSpan(
+                      text: '/hr',
+                      style: TextStyle(
+                        fontFamily: 'Poppins',
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ],
           ),
           const SizedBox(height: 6),
           Row(
             children: [
-              const Icon(Icons.location_on_rounded, size: 14, color: AppColors.primary),
+              const Icon(
+                Icons.location_on_rounded,
+                size: 14,
+                color: AppColors.primary,
+              ),
               const SizedBox(width: 4),
               Expanded(
                 child: Text(
@@ -212,97 +245,20 @@ class _CourtInfo extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              ..._buildTypePills(),
-              const Spacer(),
-              RichText(
-                text: TextSpan(
-                  children: [
-                    TextSpan(
-                      text: '₹${court.pricePerHour.toInt()}',
-                      style: const TextStyle(
-                        fontFamily: 'Poppins',
-                        fontSize: 17,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.primary,
-                      ),
-                    ),
-                    const TextSpan(
-                      text: '/hr',
-                      style: TextStyle(
-                        fontFamily: 'Poppins',
-                        fontSize: 12,
-                        fontWeight: FontWeight.w400,
-                        color: AppColors.textSecondary,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
+          const SizedBox(height: 10),
+          Text(
+            court.courtTypes.join('  •  '),
+            style: const TextStyle(
+              fontFamily: 'Poppins',
+              fontSize: 12.5,
+              fontWeight: FontWeight.w500,
+              color: AppColors.textSecondary,
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
           ),
         ],
       ),
-    );
-  }
-
-  List<Widget> _buildTypePills() {
-    return court.courtTypes
-        .take(2)
-        .map(
-          (type) => Container(
-        margin: const EdgeInsets.only(right: 6),
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-        decoration: BoxDecoration(
-          color: AppColors.badgeBg,
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: Text(
-          type,
-          style: const TextStyle(
-            fontFamily: 'Poppins',
-            fontSize: 11,
-            fontWeight: FontWeight.w600,
-            color: AppColors.badgeText,
-          ),
-        ),
-      ),
-    )
-        .toList();
-  }
-}
-
-class _RatingPill extends StatelessWidget {
-  final double rating;
-  final int reviewCount;
-  const _RatingPill({required this.rating, required this.reviewCount});
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        const Icon(Icons.star_rounded, color: AppColors.star, size: 16),
-        const SizedBox(width: 3),
-        Text(
-          rating.toStringAsFixed(1),
-          style: const TextStyle(
-            fontFamily: 'Poppins',
-            fontSize: 13,
-            fontWeight: FontWeight.w700,
-            color: AppColors.textPrimary,
-          ),
-        ),
-        Text(
-          ' ($reviewCount)',
-          style: const TextStyle(
-            fontFamily: 'Poppins',
-            fontSize: 11,
-            color: AppColors.textSecondary,
-          ),
-        ),
-      ],
     );
   }
 }
