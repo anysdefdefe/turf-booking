@@ -68,7 +68,7 @@ class OwnerMyStadiumsScreen extends StatelessWidget {
             padding: const EdgeInsets.only(right: 12),
             child: TextButton.icon(
               onPressed: () {
-                // TODO: navigate to add stadium screen
+                Navigator.pushNamed(context, AppConstants.routeOwnerAddStadium);
               },
               icon: const Icon(Icons.add, size: 18, color: AppColors.primary),
               label: const Text(

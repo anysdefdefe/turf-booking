@@ -48,7 +48,7 @@ class OwnerDashboardScreen extends StatelessWidget {
 
             // ── WELCOME ──────────────────────────────────────────────
             Text(
-              'Welcome, ${owner.name} 👋',
+              '${owner.name},Good to see you!',
               style: const TextStyle(
                 fontFamily: 'Poppins',
                 fontSize: 22,
@@ -162,7 +162,10 @@ class OwnerDashboardScreen extends StatelessWidget {
               isLocked: !owner.isApproved,
               onTap: () {
                 if (owner.isApproved) {
-                  // TODO: navigate to Add Stadium screen
+                  Navigator.pushNamed(
+                    context,
+                    AppConstants.routeOwnerAddStadium,
+                  );
                 } else {
                   _showLockedSnackbar(context);
                 }
