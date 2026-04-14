@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:turf_booking/app/theme/app_colors.dart';
 import 'package:turf_booking/app/constants/app_constants.dart';
+import '../widgets/owner_bottom_nav_bar.dart';
 
 class StadiumModel {
   final String id;
@@ -9,6 +10,7 @@ class StadiumModel {
   final String city;
   final bool isActive;
   final int courtsCount;
+  final Color placeholderColor;
 
   const StadiumModel({
     required this.id,
@@ -17,6 +19,7 @@ class StadiumModel {
     required this.city,
     required this.isActive,
     required this.courtsCount,
+    required this.placeholderColor,
   });
 }
 
@@ -28,6 +31,7 @@ const List<StadiumModel> _mockStadiums = [
     city: 'Bengaluru',
     isActive: true,
     courtsCount: 3,
+    placeholderColor: Color(0xFF1D9E75),
   ),
   StadiumModel(
     id: '2',
@@ -36,6 +40,7 @@ const List<StadiumModel> _mockStadiums = [
     city: 'Bengaluru',
     isActive: true,
     courtsCount: 2,
+    placeholderColor: Color(0xFF378ADD),
   ),
   StadiumModel(
     id: '3',
@@ -44,6 +49,7 @@ const List<StadiumModel> _mockStadiums = [
     city: 'Bengaluru',
     isActive: false,
     courtsCount: 1,
+    placeholderColor: Color(0xFF888780),
   ),
 ];
 
@@ -54,6 +60,7 @@ class OwnerMyStadiumsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
+      bottomNavigationBar: const OwnerBottomNavBar(selectedIndex: 1),
       appBar: AppBar(
         title: const Text('My Stadiums'),
         actions: [
@@ -131,106 +138,125 @@ class _StadiumCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(AppConstants.radiusL),
         border: Border.all(color: AppColors.divider),
       ),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
+      clipBehavior: Clip.antiAlias,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // ── PLACEHOLDER IMAGE ──────────────────────────────────
+          Container(
+            height: 140,
+            width: double.infinity,
+            color: stadium.placeholderColor,
+            child: Stack(
               children: [
-                Expanded(
-                  child: Text(
-                    stadium.name,
-                    style: const TextStyle(
-                      fontFamily: 'Poppins',
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.textPrimary,
-                    ),
+                Center(
+                  child: Icon(
+                    Icons.stadium_rounded,
+                    size: 56,
+                    color: Colors.white.withValues(alpha: 0.3),
                   ),
                 ),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: stadium.isActive
-                        ? AppColors.badgeBg
-                        : AppColors.chipUnselected,
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Text(
-                    stadium.isActive ? 'Active' : 'Inactive',
-                    style: TextStyle(
-                      fontFamily: 'Poppins',
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600,
-                      color: stadium.isActive
-                          ? AppColors.badgeText
-                          : AppColors.textMuted,
+                Positioned(
+                  top: 10,
+                  right: 10,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.black.withValues(alpha: 0.35),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text(
+                      stadium.isActive ? 'Active' : 'Inactive',
+                      style: const TextStyle(
+                        fontFamily: 'Poppins',
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white,
+                      ),
                     ),
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 6),
-            Row(
+          ),
+
+          // ── CARD CONTENT ───────────────────────────────────────
+          Padding(
+            padding: const EdgeInsets.all(14),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Icon(
-                  Icons.location_on_outlined,
-                  size: 14,
-                  color: AppColors.textSecondary,
-                ),
-                const SizedBox(width: 4),
                 Text(
-                  '${stadium.address}, ${stadium.city}',
+                  stadium.name,
                   style: const TextStyle(
                     fontFamily: 'Poppins',
-                    fontSize: 13,
-                    color: AppColors.textSecondary,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textPrimary,
                   ),
                 ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            const Divider(color: AppColors.divider, height: 1),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                const Icon(
-                  Icons.sports_tennis,
-                  size: 14,
-                  color: AppColors.textSecondary,
-                ),
-                const SizedBox(width: 4),
-                Text(
-                  '${stadium.courtsCount} court${stadium.courtsCount == 1 ? '' : 's'}',
-                  style: const TextStyle(
-                    fontFamily: 'Poppins',
-                    fontSize: 13,
-                    color: AppColors.textSecondary,
-                  ),
-                ),
-                const Spacer(),
-                GestureDetector(
-                  onTap: () {
-                    // TODO: navigate to stadium detail/edit
-                  },
-                  child: const Text(
-                    'Manage →',
-                    style: TextStyle(
-                      fontFamily: 'Poppins',
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.primary,
+                const SizedBox(height: 4),
+                Row(
+                  children: [
+                    const Icon(
+                      Icons.location_on_outlined,
+                      size: 14,
+                      color: AppColors.textSecondary,
                     ),
-                  ),
+                    const SizedBox(width: 4),
+                    Text(
+                      '${stadium.address}, ${stadium.city}',
+                      style: const TextStyle(
+                        fontFamily: 'Poppins',
+                        fontSize: 13,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                const Divider(color: AppColors.divider, height: 1),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    const Icon(
+                      Icons.sports_tennis,
+                      size: 14,
+                      color: AppColors.textSecondary,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      '${stadium.courtsCount} court${stadium.courtsCount == 1 ? '' : 's'}',
+                      style: const TextStyle(
+                        fontFamily: 'Poppins',
+                        fontSize: 13,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                    const Spacer(),
+                    GestureDetector(
+                      onTap: () {
+                        // TODO: navigate to stadium detail/edit
+                      },
+                      child: const Text(
+                        'Manage →',
+                        style: TextStyle(
+                          fontFamily: 'Poppins',
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.primary,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
