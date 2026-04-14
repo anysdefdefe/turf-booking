@@ -1,0 +1,23 @@
+import 'package:supabase_flutter/supabase_flutter.dart';
+import '../models/user_model.dart';
+
+abstract class AuthRepository {
+  Future<UserModel> signUpWithEmail({
+    required String email,
+    required String password,
+    required String fullName,
+  });
+
+  Future<UserModel> signInWithEmail({
+    required String email,
+    required String password,
+  });
+
+  Future<UserModel> signInWithGoogle();
+
+  Future<void> signOut();
+
+  Future<UserModel?> getCurrentUser();
+
+  Stream<AuthState> get authStateChanges;
+}
