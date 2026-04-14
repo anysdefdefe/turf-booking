@@ -3,11 +3,16 @@ import 'package:flutter/material.dart';
 import '../../../app/constants/app_constants.dart';
 import '../../../app/theme/app_colors.dart';
 import '../../../shared/widgets/empty_state.dart';
+import '../data/models/court_detail_args.dart';
 import '../data/models/court_model.dart';
+import '../data/models/stadium_model.dart';
+import '../data/repositories/customer_preferences_repository.dart';
 import '../data/repositories/court_repository.dart';
 import '../widgets/court_card.dart';
 import '../widgets/court_search_bar.dart';
 import '../widgets/customer_floating_nav_bar.dart';
+
+enum _HomeFeedType { all, wishlist, stadiums }
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -20,16 +25,68 @@ class _HomeScreenState extends State<HomeScreen> {
   static const String _currentLocation = 'Mumbai, IN';
 
   final CourtRepository _repo = CourtRepository.instance;
+  final CustomerPreferencesRepository _prefs =
+      CustomerPreferencesRepository.instance;
   late final List<String> _allCities;
+  late final List<Stadium> _stadiums;
   late List<Court> _courts;
   final List<String> _selectedCities = [];
   String _searchQuery = '';
+  _HomeFeedType _activeFeed = _HomeFeedType.all;
+  bool _hasAppliedRouteArgs = false;
+
+  List<Court> get _visibleCourts {
+    if (_activeFeed == _HomeFeedType.all) {
+      return _courts;
+    }
+
+    if (_activeFeed == _HomeFeedType.stadiums) {
+      return _courts;
+    }
+
+    final likedIds = _prefs.likedCourtIds.value;
+    return _courts.where((court) => likedIds.contains(court.id)).toList();
+  }
+
+  List<Stadium> get _visibleStadiums {
+    final selectedCities = _selectedCities.toSet();
+    final query = _searchQuery.trim().toLowerCase();
+
+    return _stadiums.where((stadium) {
+      final cityMatch =
+          selectedCities.isEmpty || selectedCities.contains(stadium.city);
+      if (!cityMatch) {
+        return false;
+      }
+      if (query.isEmpty) {
+        return true;
+      }
+      return stadium.name.toLowerCase().contains(query) ||
+          stadium.address.toLowerCase().contains(query) ||
+          stadium.city.toLowerCase().contains(query);
+    }).toList();
+  }
 
   @override
   void initState() {
     super.initState();
     _allCities = _repo.getAllCities();
+    _stadiums = _repo.getAllStadiums();
     _courts = _repo.getAllCourts();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_hasAppliedRouteArgs) {
+      return;
+    }
+
+    final args = ModalRoute.of(context)?.settings.arguments;
+    if (args is Map && args['feed'] == 'wishlist') {
+      _activeFeed = _HomeFeedType.wishlist;
+    }
+    _hasAppliedRouteArgs = true;
   }
 
   void _onSearch(String query) {
@@ -65,6 +122,7 @@ class _HomeScreenState extends State<HomeScreen> {
           .where(
             (court) =>
                 court.name.toLowerCase().contains(query) ||
+                court.stadiumName.toLowerCase().contains(query) ||
                 court.place.toLowerCase().contains(query) ||
                 court.city.toLowerCase().contains(query) ||
                 court.courtTypes.any(
@@ -110,13 +168,53 @@ class _HomeScreenState extends State<HomeScreen> {
     }
 
     if (index == 1) {
-      Navigator.pushNamed(context, AppConstants.routeMyBookings);
+      Navigator.pushReplacementNamed(context, AppConstants.routeMyBookings);
       return;
     }
 
     if (index == 2) {
-      Navigator.pushNamed(context, AppConstants.routeProfile);
+      Navigator.pushReplacementNamed(context, AppConstants.routeProfile);
     }
+  }
+
+  void _onFeedToggle(_HomeFeedType feed) {
+    setState(() {
+      _activeFeed = feed;
+    });
+  }
+
+  void _toggleLike(Court court) {
+    setState(() {
+      _prefs.toggleLike(court.id);
+    });
+  }
+
+  void _openCourtDetails(Court court) {
+    final stadiumCourts = _repo.getCourtsByStadium(court.stadiumId);
+    Navigator.pushNamed(
+      context,
+      AppConstants.routeCourtDetail,
+      arguments: CourtDetailArgs(
+        selectedCourt: court,
+        stadiumCourts: stadiumCourts,
+      ),
+    );
+  }
+
+  void _openStadiumDetails(Stadium stadium) {
+    final stadiumCourts = _repo.getCourtsByStadium(stadium.id);
+    if (stadiumCourts.isEmpty) {
+      return;
+    }
+
+    Navigator.pushNamed(
+      context,
+      AppConstants.routeCourtDetail,
+      arguments: CourtDetailArgs(
+        selectedCourt: stadiumCourts.first,
+        stadiumCourts: stadiumCourts,
+      ),
+    );
   }
 
   @override
@@ -133,6 +231,7 @@ class _HomeScreenState extends State<HomeScreen> {
             _buildHeader(),
             _buildSearchRow(),
             if (_selectedCities.isNotEmpty) _buildFilterSummary(),
+            _buildFeedToggle(),
             _buildResultsHeader(),
             _buildCourtsSection(),
             const SliverToBoxAdapter(child: SizedBox(height: 24)),
@@ -277,10 +376,18 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   SliverToBoxAdapter _buildResultsHeader() {
-    final title = _searchQuery.isEmpty
-        ? 'All courts'
-        : 'Results for "$_searchQuery"';
-    final actionLabel = _courts.isEmpty ? '0 found' : '${_courts.length} found';
+    final visibleCourts = _visibleCourts;
+    final visibleStadiums = _visibleStadiums;
+    final title = switch (_activeFeed) {
+      _HomeFeedType.wishlist => 'Wishlist',
+      _HomeFeedType.stadiums => 'Stadiums',
+      _HomeFeedType.all =>
+        _searchQuery.isEmpty ? 'All courts' : 'Results for "$_searchQuery"',
+    };
+    final resultCount = _activeFeed == _HomeFeedType.stadiums
+        ? visibleStadiums.length
+        : visibleCourts.length;
+    final actionLabel = resultCount == 0 ? '0 found' : '$resultCount found';
 
     return SliverToBoxAdapter(
       child: Padding(
@@ -312,12 +419,22 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildCourtsSection() {
-    if (_courts.isEmpty) {
+    if (_activeFeed == _HomeFeedType.stadiums) {
+      return _buildStadiumsSection();
+    }
+
+    final visibleCourts = _visibleCourts;
+
+    if (visibleCourts.isEmpty) {
       return SliverFillRemaining(
         hasScrollBody: false,
         child: EmptyState(
-          title: 'No courts found',
-          subtitle: 'Try another location or search term',
+          title: _activeFeed == _HomeFeedType.wishlist
+              ? 'No liked courts yet'
+              : 'No courts found',
+          subtitle: _activeFeed == _HomeFeedType.wishlist
+              ? 'Tap the heart on a court to add it here'
+              : 'Try another location or search term',
           icon: Icons.sports_tennis_rounded,
         ),
       );
@@ -325,16 +442,209 @@ class _HomeScreenState extends State<HomeScreen> {
 
     return SliverList(
       delegate: SliverChildBuilderDelegate((context, index) {
-        final court = _courts[index];
+        final court = visibleCourts[index];
         return CourtCard(
           court: court,
-          onTap: () => Navigator.pushNamed(
-            context,
-            AppConstants.routeCourtDetail,
-            arguments: court,
-          ),
+          isLiked: _prefs.isLiked(court.id),
+          onLikeToggle: () => _toggleLike(court),
+          onTap: () => _openCourtDetails(court),
         );
-      }, childCount: _courts.length),
+      }, childCount: visibleCourts.length),
+    );
+  }
+
+  Widget _buildStadiumsSection() {
+    final visibleStadiums = _visibleStadiums;
+
+    if (visibleStadiums.isEmpty) {
+      return const SliverFillRemaining(
+        hasScrollBody: false,
+        child: EmptyState(
+          title: 'No stadiums found',
+          subtitle: 'Try another location or search term',
+          icon: Icons.stadium_rounded,
+        ),
+      );
+    }
+
+    return SliverList(
+      delegate: SliverChildBuilderDelegate((context, index) {
+        final stadium = visibleStadiums[index];
+        final courtCount = _repo.getCourtsByStadium(stadium.id).length;
+        return _StadiumCard(
+          stadium: stadium,
+          courtCount: courtCount,
+          onTap: () => _openStadiumDetails(stadium),
+        );
+      }, childCount: visibleStadiums.length),
+    );
+  }
+
+  SliverToBoxAdapter _buildFeedToggle() {
+    final allSelected = _activeFeed == _HomeFeedType.all;
+    final wishlistSelected = _activeFeed == _HomeFeedType.wishlist;
+    final stadiumSelected = _activeFeed == _HomeFeedType.stadiums;
+    final likedCount = _prefs.likedCourtIds.value.length;
+
+    return SliverToBoxAdapter(
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(20, 8, 20, 2),
+        child: Row(
+          children: [
+            _FeedToggleChip(
+              label: 'All',
+              isSelected: allSelected,
+              onTap: () => _onFeedToggle(_HomeFeedType.all),
+            ),
+            const SizedBox(width: 8),
+            _FeedToggleChip(
+              label: likedCount == 0 ? 'Wishlist' : 'Wishlist ($likedCount)',
+              isSelected: wishlistSelected,
+              onTap: () => _onFeedToggle(_HomeFeedType.wishlist),
+            ),
+            const SizedBox(width: 8),
+            _FeedToggleChip(
+              label: 'Stadiums',
+              isSelected: stadiumSelected,
+              onTap: () => _onFeedToggle(_HomeFeedType.stadiums),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _StadiumCard extends StatelessWidget {
+  final Stadium stadium;
+  final int courtCount;
+  final VoidCallback onTap;
+
+  const _StadiumCard({
+    required this.stadium,
+    required this.courtCount,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(18),
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: AppColors.divider, width: 1),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            ClipRRect(
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(18),
+              ),
+              child: Image.network(
+                stadium.imageUrl,
+                height: 150,
+                width: double.infinity,
+                fit: BoxFit.cover,
+                errorBuilder: (_, _, _) => Container(
+                  height: 150,
+                  color: AppColors.divider,
+                  child: const Icon(
+                    Icons.stadium_rounded,
+                    size: 40,
+                    color: AppColors.textMuted,
+                  ),
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(14),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          stadium.name,
+                          style: const TextStyle(
+                            fontFamily: 'Poppins',
+                            fontSize: 15.5,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.textPrimary,
+                          ),
+                        ),
+                      ),
+                      Text(
+                        '$courtCount courts',
+                        style: const TextStyle(
+                          fontFamily: 'Poppins',
+                          fontSize: 12,
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    '${stadium.address}, ${stadium.city}',
+                    style: const TextStyle(
+                      fontFamily: 'Poppins',
+                      fontSize: 12.5,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _FeedToggleChip extends StatelessWidget {
+  final String label;
+  final bool isSelected;
+  final VoidCallback onTap;
+
+  const _FeedToggleChip({
+    required this.label,
+    required this.isSelected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(20),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: isSelected ? AppColors.primary : AppColors.divider,
+            width: isSelected ? 1.4 : 1,
+          ),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            fontFamily: 'Poppins',
+            fontSize: 12.5,
+            fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+            color: isSelected ? AppColors.textPrimary : AppColors.textSecondary,
+          ),
+        ),
+      ),
     );
   }
 }

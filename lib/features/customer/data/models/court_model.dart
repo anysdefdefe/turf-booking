@@ -1,5 +1,7 @@
 class Court {
   final String id;
+  final String stadiumId;
+  final String stadiumName;
   final String name;
   final String place;
   final String city;
@@ -17,6 +19,8 @@ class Court {
 
   const Court({
     required this.id,
+    required this.stadiumId,
+    required this.stadiumName,
     required this.name,
     required this.place,
     required this.city,
