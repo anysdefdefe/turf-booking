@@ -10,6 +10,9 @@ class AppConstants {
   static const String routeOnboarding = '/onboarding';
   static const String routeNotifications = '/notifications';
   static const String routeProfile = '/profile';
+  static const String routeOwnerPendingApproval = '/owner/pending';
+  static const String routeOwnerDashboard = '/owner/dashboard';
+  static const String routeOwnerMyStadiums = '/owner/my-stadiums';
 
   static const double paddingXS = 4.0;
   static const double paddingS = 8.0;

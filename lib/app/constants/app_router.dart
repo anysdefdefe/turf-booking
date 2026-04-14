@@ -6,6 +6,9 @@ import '../../../features/customer/screens/my_bookings_screen.dart';
 import '../../../features/customer/screens/profile_screen.dart';
 import '../../../features/customer/screens/splash_screen.dart';
 import 'app_constants.dart';
+import '../../../features/owner/screens/pending_approval_screen.dart';
+import '../../../features/owner/screens/owner_dashboard_screen.dart';
+import '../../../features/owner/screens/owner_my_stadiums_screen.dart';
 
 /// Navigation router for the application.
 class AppRouter {
@@ -52,6 +55,15 @@ class AppRouter {
 
       case AppConstants.routeProfile:
         return _buildRoute(const ProfileScreen(), settings: settings);
+
+      case AppConstants.routeOwnerPendingApproval:
+        return _buildRoute(const PendingApprovalScreen());
+
+      case AppConstants.routeOwnerDashboard:
+        return _buildRoute(const OwnerDashboardScreen());
+
+      case AppConstants.routeOwnerMyStadiums:
+        return _buildRoute(const OwnerMyStadiumsScreen());
 
       default:
         return _buildRoute(
