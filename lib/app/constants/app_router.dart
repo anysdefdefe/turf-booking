@@ -5,6 +5,7 @@ import '../../../features/customer/screens/home_screen.dart';
 import '../../../features/customer/screens/my_bookings_screen.dart';
 import '../../../features/customer/screens/profile_screen.dart';
 import '../../../features/customer/screens/splash_screen.dart';
+import '../../../features/admin/screens/admin_main_screen.dart';
 import 'app_constants.dart';
 import '../../../features/owner/screens/pending_approval_screen.dart';
 import '../../../features/owner/screens/owner_dashboard_screen.dart';
@@ -64,6 +65,9 @@ class AppRouter {
 
       case AppConstants.routeOwnerMyStadiums:
         return _buildRoute(const OwnerMyStadiumsScreen());
+
+      case AppConstants.routeAdmin:
+      return _buildRoute(const AdminMainScreen(), settings: settings);
 
       default:
         return _buildRoute(
