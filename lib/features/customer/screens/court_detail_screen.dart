@@ -44,7 +44,30 @@ class _CourtDetailScreenState extends State<CourtDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final court = ModalRoute.of(context)!.settings.arguments as Court;
+    final routeArgs = ModalRoute.of(context)?.settings.arguments;
+    if (routeArgs is! Court) {
+      return Scaffold(
+        backgroundColor: AppColors.background,
+        appBar: AppBar(
+          title: const Text('Court Details'),
+          backgroundColor: AppColors.surface,
+          foregroundColor: AppColors.textPrimary,
+          elevation: 0,
+        ),
+        body: const Center(
+          child: Text(
+            'Court details are unavailable.',
+            style: TextStyle(
+              fontFamily: 'Poppins',
+              fontSize: 14,
+              color: AppColors.textSecondary,
+            ),
+          ),
+        ),
+      );
+    }
+
+    final court = routeArgs;
     return Scaffold(
       backgroundColor: AppColors.background,
       body: CustomScrollView(
@@ -87,13 +110,6 @@ class _CourtDetailScreenState extends State<CourtDetailScreen> {
       backgroundColor: AppColors.surface,
       surfaceTintColor: Colors.transparent,
       automaticallyImplyLeading: false,
-      leading: Padding(
-        padding: const EdgeInsets.all(8),
-        child: _CircleBtn(
-          icon: Icons.arrow_back_rounded,
-          onTap: () => Navigator.pop(context),
-        ),
-      ),
       actions: [
         Padding(
           padding: const EdgeInsets.all(8),
@@ -522,8 +538,8 @@ class _CourtDetailScreenState extends State<CourtDetailScreen> {
                     '$_durationHours',
                     style: const TextStyle(
                       fontFamily: 'Poppins',
-                      fontSize: 28,
-                      fontWeight: FontWeight.w800,
+                      fontSize: 22,
+                      fontWeight: FontWeight.w600,
                       color: AppColors.textPrimary,
                     ),
                   ),
@@ -553,7 +569,7 @@ class _CourtDetailScreenState extends State<CourtDetailScreen> {
                     style: const TextStyle(
                       fontFamily: 'Poppins',
                       fontSize: 22,
-                      fontWeight: FontWeight.w800,
+                      fontWeight: FontWeight.w600,
                       color: AppColors.textPrimary,
                     ),
                   ),
@@ -601,7 +617,7 @@ class _CourtDetailScreenState extends State<CourtDetailScreen> {
                 style: const TextStyle(
                   fontFamily: 'Poppins',
                   fontSize: 20,
-                  fontWeight: FontWeight.w800,
+                  fontWeight: FontWeight.w600,
                   color: AppColors.textPrimary,
                 ),
               ),
@@ -645,7 +661,7 @@ class _CourtDetailScreenState extends State<CourtDetailScreen> {
                 _canBook ? 'Review & Book' : 'Select Date, Time & Sport',
                 style: const TextStyle(
                   fontFamily: 'Poppins',
-                  fontWeight: FontWeight.w700,
+                  fontWeight: FontWeight.w600,
                   fontSize: 14,
                 ),
               ),
@@ -675,8 +691,8 @@ class _CircleBtn extends StatelessWidget {
   Widget build(BuildContext context) => GestureDetector(
     onTap: onTap,
     child: Container(
-      width: 38,
-      height: 38,
+      width: 30,
+      height: 30,
       decoration: BoxDecoration(
         color: AppColors.surface,
         shape: BoxShape.circle,
@@ -700,8 +716,8 @@ class _FavBtnState extends State<_FavBtn> {
     onTap: () => setState(() => _faved = !_faved),
     child: AnimatedContainer(
       duration: const Duration(milliseconds: 200),
-      width: 38,
-      height: 38,
+      width: 30,
+      height: 30,
       decoration: BoxDecoration(
         color: _faved ? Colors.red.shade50 : AppColors.surface,
         shape: BoxShape.circle,
@@ -727,7 +743,7 @@ class _AvailBadge extends StatelessWidget {
   Widget build(BuildContext context) => Container(
     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
     decoration: BoxDecoration(
-      color: AppColors.surface.withOpacity(0.94),
+      color: AppColors.surface.withValues(alpha: 0.94),
       borderRadius: BorderRadius.circular(20),
       border: Border.all(
         color: isAvailable ? AppColors.primary : Colors.red.shade300,
@@ -768,7 +784,7 @@ class _DistBadge extends StatelessWidget {
   Widget build(BuildContext context) => Container(
     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
     decoration: BoxDecoration(
-      color: AppColors.surface.withOpacity(0.94),
+      color: AppColors.surface.withValues(alpha: 0.94),
       borderRadius: BorderRadius.circular(20),
       border: Border.all(color: AppColors.divider, width: 1),
     ),
