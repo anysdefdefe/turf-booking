@@ -4,6 +4,7 @@ import '../../features/home/screens/court_detail_screen.dart';
 import '../../features/home/screens/home_screen.dart';
 import '../../features/home/screens/splash_screen.dart';
 import 'app_constants.dart';
+import '../../../features/owner/screens/pending_approval_screen.dart';
 
 /// Navigation router for the application.
 class AppRouter {
@@ -38,6 +39,9 @@ class AppRouter {
 
       case AppConstants.routeProfile:
         return _buildRoute(_PlaceholderScreen('Profile'));
+
+      case AppConstants.routeOwnerPendingApproval:
+        return _buildRoute(const PendingApprovalScreen());
 
       default:
         return _buildRoute(_PlaceholderScreen('Unknown Route'));
