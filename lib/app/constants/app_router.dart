@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../features/customer/screens/court_detail_screen.dart';
 import '../../../features/customer/screens/home_screen.dart';
 import '../../../features/customer/screens/splash_screen.dart';
+import '../../../features/admin/screens/admin_main_screen.dart';
 import 'app_constants.dart';
 
 /// Navigation router for the application.
@@ -53,6 +54,9 @@ class AppRouter {
 
       case AppConstants.routeProfile:
         return _buildRoute(_PlaceholderScreen('Profile'), settings: settings);
+
+      case AppConstants.routeAdmin:
+      return _buildRoute(const AdminMainScreen(), settings: settings);
 
       default:
         return _buildRoute(
