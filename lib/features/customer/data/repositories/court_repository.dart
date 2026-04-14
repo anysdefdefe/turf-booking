@@ -1,13 +1,64 @@
 import '../models/court_model.dart';
+import '../models/stadium_model.dart';
 
 class CourtRepository {
   CourtRepository._();
   static final CourtRepository instance = CourtRepository._();
 
+  final List<Stadium> _stadiums = [
+    Stadium(
+      id: 'std-001',
+      ownerId: 'owner-001',
+      name: 'Andheri Sports Dome',
+      description:
+          'Indoor premium complex with badminton and squash courts for all skill levels.',
+      address: 'Andheri Sports Complex, SV Road',
+      city: 'Andheri West',
+      latitude: 19.1197,
+      longitude: 72.8468,
+      imageUrl:
+          'https://images.unsplash.com/photo-1626224583764-f87db24ac4ea?w=1200&q=80',
+      isActive: true,
+      createdAt: DateTime(2025, 1, 10),
+    ),
+    Stadium(
+      id: 'std-002',
+      ownerId: 'owner-002',
+      name: 'Powai Racket Arena',
+      description:
+          'Open-air and covered courts with coaching, night lights, and equipment rental.',
+      address: 'Powai Lake Area, Main Access Road',
+      city: 'Powai',
+      latitude: 19.1176,
+      longitude: 72.9060,
+      imageUrl:
+          'https://images.unsplash.com/photo-1554068865-24cecd4e34b8?w=1200&q=80',
+      isActive: true,
+      createdAt: DateTime(2025, 2, 2),
+    ),
+    Stadium(
+      id: 'std-003',
+      ownerId: 'owner-003',
+      name: 'Bandra Multi-Sport Hub',
+      description:
+          'Multi-sport venue with basketball, futsal, and volleyball courts under one roof.',
+      address: 'Bandra Reclamation, Sports Lane',
+      city: 'Bandra West',
+      latitude: 19.0582,
+      longitude: 72.8295,
+      imageUrl:
+          'https://images.unsplash.com/photo-1546519638-68e109498ffc?w=1200&q=80',
+      isActive: true,
+      createdAt: DateTime(2025, 2, 24),
+    ),
+  ];
+
   final List<Court> _courts = const [
     Court(
       id: '1',
-      name: 'Arena Pro Badminton',
+      stadiumId: 'std-001',
+      stadiumName: 'Andheri Sports Dome',
+      name: 'Court 1 - Badminton Pro',
       place: 'Andheri Sports Complex',
       city: 'Andheri West',
       imageUrl:
@@ -32,7 +83,30 @@ class CourtRepository {
     ),
     Court(
       id: '2',
-      name: 'Smash Zone',
+      stadiumId: 'std-001',
+      stadiumName: 'Andheri Sports Dome',
+      name: 'Court 2 - Squash Elite',
+      place: 'Andheri Sports Complex',
+      city: 'Andheri West',
+      imageUrl:
+          'https://images.unsplash.com/photo-1592656094267-764a45160876?w=800&q=80',
+      rating: 4.6,
+      reviewCount: 154,
+      pricePerHour: 650,
+      courtTypes: ['Squash'],
+      isAvailable: true,
+      description:
+          'Professional squash court with cushioned flooring, live score panel, and modern ventilation.',
+      amenities: ['Parking', 'Changing Room', 'AC Courts', 'Equipment Rental'],
+      openTime: '06:00 AM',
+      closeTime: '11:00 PM',
+      distanceKm: 1.4,
+    ),
+    Court(
+      id: '3',
+      stadiumId: 'std-002',
+      stadiumName: 'Powai Racket Arena',
+      name: 'Court A - Tennis Outdoor',
       place: 'Powai Lake Area',
       city: 'Powai',
       imageUrl:
@@ -55,12 +129,35 @@ class CourtRepository {
       distanceKm: 3.5,
     ),
     Court(
-      id: '3',
-      name: 'Kick & Play Futsal',
-      place: 'Goregaon Sports Club',
-      city: 'Goregaon East',
+      id: '4',
+      stadiumId: 'std-002',
+      stadiumName: 'Powai Racket Arena',
+      name: 'Court B - Padel Club',
+      place: 'Powai Lake Area',
+      city: 'Powai',
       imageUrl:
           'https://images.unsplash.com/photo-1529900748604-07564a03e7a6?w=800&q=80',
+      rating: 4.4,
+      reviewCount: 132,
+      pricePerHour: 900,
+      courtTypes: ['Padel'],
+      isAvailable: true,
+      description:
+          'Modern padel court with anti-slip surface, perimeter glass, and dedicated evening lighting.',
+      amenities: ['Parking', 'Coaching Available', 'Equipment Rental'],
+      openTime: '06:00 AM',
+      closeTime: '10:30 PM',
+      distanceKm: 3.7,
+    ),
+    Court(
+      id: '5',
+      stadiumId: 'std-003',
+      stadiumName: 'Bandra Multi-Sport Hub',
+      name: 'Court X - Futsal 5s',
+      place: 'Bandra Reclamation',
+      city: 'Bandra West',
+      imageUrl:
+          'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?w=800&q=80',
       rating: 4.6,
       reviewCount: 312,
       pricePerHour: 1200,
@@ -80,8 +177,10 @@ class CourtRepository {
       distanceKm: 5.1,
     ),
     Court(
-      id: '4',
-      name: 'Court Kings Basketball',
+      id: '6',
+      stadiumId: 'std-003',
+      stadiumName: 'Bandra Multi-Sport Hub',
+      name: 'Court Y - Basketball Indoor',
       place: 'Bandra Reclamation',
       city: 'Bandra West',
       imageUrl:
@@ -98,52 +197,22 @@ class CourtRepository {
       closeTime: '10:00 PM',
       distanceKm: 7.8,
     ),
-    Court(
-      id: '5',
-      name: 'Spike Central Volleyball',
-      place: 'Worli Sea Face',
-      city: 'Worli',
-      imageUrl:
-          'https://images.unsplash.com/photo-1612872087720-bb876e2e67d1?w=800&q=80',
-      rating: 4.7,
-      reviewCount: 145,
-      pricePerHour: 500,
-      courtTypes: ['Volleyball', 'Beach Volleyball'],
-      isAvailable: true,
-      description:
-          'Beachside volleyball courts with sand pits and hard courts. Stunning sea-view backdrop makes every session feel like a vacation.',
-      amenities: [
-        'Open Air',
-        'Night Lights',
-        'Equipment Rental',
-        'Refreshments',
-      ],
-      openTime: '06:00 AM',
-      closeTime: '09:00 PM',
-      distanceKm: 9.2,
-    ),
-    Court(
-      id: '6',
-      name: 'TableTop TT Hub',
-      place: 'Malad West Mall Road',
-      city: 'Malad West',
-      imageUrl:
-          'https://images.unsplash.com/photo-1609710228159-0fa9bd7c0827?w=800&q=80',
-      rating: 4.2,
-      reviewCount: 67,
-      pricePerHour: 300,
-      courtTypes: ['Table Tennis'],
-      isAvailable: true,
-      description:
-          'Dedicated table tennis facility with 10 Stiga-regulation tables in a climate-controlled hall. Great for beginners and pros alike.',
-      amenities: ['AC', 'Equipment Rental', 'Coaching', 'Cafeteria'],
-      openTime: '09:00 AM',
-      closeTime: '10:00 PM',
-      distanceKm: 11.4,
-    ),
   ];
 
   List<Court> getAllCourts() => List.unmodifiable(_courts);
+
+  List<Stadium> getAllStadiums() => List.unmodifiable(_stadiums);
+
+  Stadium? getStadiumById(String id) {
+    for (final stadium in _stadiums) {
+      if (stadium.id == id) return stadium;
+    }
+    return null;
+  }
+
+  List<Court> getCourtsByStadium(String stadiumId) {
+    return _courts.where((court) => court.stadiumId == stadiumId).toList();
+  }
 
   List<String> getAllCities() {
     final cities = _courts.map((c) => c.city).toSet().toList();
@@ -163,6 +232,7 @@ class CourtRepository {
         .where(
           (c) =>
               c.name.toLowerCase().contains(q) ||
+              c.stadiumName.toLowerCase().contains(q) ||
               c.place.toLowerCase().contains(q) ||
               c.city.toLowerCase().contains(q) ||
               c.courtTypes.any((t) => t.toLowerCase().contains(q)),

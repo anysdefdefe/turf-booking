@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 
 import '../../../features/customer/screens/court_detail_screen.dart';
 import '../../../features/customer/screens/home_screen.dart';
+import '../../../features/customer/screens/my_bookings_screen.dart';
+import '../../../features/customer/screens/profile_screen.dart';
 import '../../../features/customer/screens/splash_screen.dart';
 import 'app_constants.dart';
 
@@ -31,10 +33,7 @@ class AppRouter {
         );
 
       case AppConstants.routeMyBookings:
-        return _buildRoute(
-          _PlaceholderScreen('My Bookings'),
-          settings: settings,
-        );
+        return _buildRoute(const MyBookingsScreen(), settings: settings);
 
       case AppConstants.routeSplash:
         return _buildRoute(const SplashScreen(), settings: settings);
@@ -52,7 +51,7 @@ class AppRouter {
         );
 
       case AppConstants.routeProfile:
-        return _buildRoute(_PlaceholderScreen('Profile'), settings: settings);
+        return _buildRoute(const ProfileScreen(), settings: settings);
 
       default:
         return _buildRoute(

@@ -6,8 +6,16 @@ import '../data/models/court_model.dart';
 class CourtCard extends StatelessWidget {
   final Court court;
   final VoidCallback onTap;
+  final bool isLiked;
+  final VoidCallback? onLikeToggle;
 
-  const CourtCard({super.key, required this.court, required this.onTap});
+  const CourtCard({
+    super.key,
+    required this.court,
+    required this.onTap,
+    this.isLiked = false,
+    this.onLikeToggle,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -24,7 +32,11 @@ class CourtCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _CourtImage(court: court),
-            _CourtInfo(court: court),
+            _CourtInfo(
+              court: court,
+              isLiked: isLiked,
+              onLikeToggle: onLikeToggle,
+            ),
           ],
         ),
       ),
@@ -170,7 +182,14 @@ class _DistanceChip extends StatelessWidget {
 
 class _CourtInfo extends StatelessWidget {
   final Court court;
-  const _CourtInfo({required this.court});
+  final bool isLiked;
+  final VoidCallback? onLikeToggle;
+
+  const _CourtInfo({
+    required this.court,
+    required this.isLiked,
+    required this.onLikeToggle,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -219,9 +238,49 @@ class _CourtInfo extends StatelessWidget {
                   ],
                 ),
               ),
+              if (onLikeToggle != null) ...[
+                const SizedBox(width: 6),
+                InkWell(
+                  onTap: onLikeToggle,
+                  borderRadius: BorderRadius.circular(14),
+                  child: Container(
+                    width: 30,
+                    height: 30,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: AppColors.surface,
+                      border: Border.all(
+                        color: isLiked ? AppColors.primary : AppColors.divider,
+                        width: 1,
+                      ),
+                    ),
+                    child: Icon(
+                      isLiked
+                          ? Icons.favorite_rounded
+                          : Icons.favorite_border_rounded,
+                      size: 18,
+                      color: isLiked
+                          ? AppColors.primary
+                          : AppColors.textSecondary,
+                    ),
+                  ),
+                ),
+              ],
             ],
           ),
           const SizedBox(height: 6),
+          Text(
+            court.stadiumName,
+            style: const TextStyle(
+              fontFamily: 'Poppins',
+              fontSize: 12.5,
+              fontWeight: FontWeight.w600,
+              color: AppColors.textPrimary,
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+          const SizedBox(height: 4),
           Row(
             children: [
               const Icon(
