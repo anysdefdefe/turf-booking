@@ -10,6 +10,7 @@ import 'app_constants.dart';
 import '../../../features/owner/screens/pending_approval_screen.dart';
 import '../../../features/owner/screens/owner_dashboard_screen.dart';
 import '../../../features/owner/screens/owner_my_stadiums_screen.dart';
+import '../../../features/owner/screens/owner_add_stadium_screen.dart';
 
 /// Navigation router for the application.
 class AppRouter {
@@ -67,7 +68,10 @@ class AppRouter {
         return _buildRoute(const OwnerMyStadiumsScreen());
 
       case AppConstants.routeAdmin:
-      return _buildRoute(const AdminMainScreen(), settings: settings);
+        return _buildRoute(const AdminMainScreen(), settings: settings);
+
+      case AppConstants.routeOwnerAddStadium:
+        return _buildRoute(const OwnerAddStadiumScreen());
 
       default:
         return _buildRoute(
