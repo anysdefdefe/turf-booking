@@ -112,7 +112,7 @@ class _CourtDetailScreenState extends State<CourtDetailScreen> {
             Image.network(
               court.imageUrl,
               fit: BoxFit.cover,
-              errorBuilder: (_, __, ___) => Container(
+              errorBuilder: (_, _, _) => Container(
                 color: AppColors.divider,
                 child: const Icon(
                   Icons.sports_tennis_rounded,
@@ -325,15 +325,8 @@ class _CourtDetailScreenState extends State<CourtDetailScreen> {
                   color: _selectedDate != null
                       ? AppColors.primary
                       : AppColors.divider,
-                  width: 1.5,
+                  width: 1.2,
                 ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.04),
-                    blurRadius: 8,
-                    offset: const Offset(0, 3),
-                  ),
-                ],
               ),
               child: Row(
                 children: [
@@ -412,7 +405,7 @@ class _CourtDetailScreenState extends State<CourtDetailScreen> {
               scrollDirection: Axis.horizontal,
               padding: const EdgeInsets.symmetric(horizontal: 20),
               itemCount: _timeSlots.length,
-              separatorBuilder: (_, __) => const SizedBox(width: 8),
+              separatorBuilder: (_, _) => const SizedBox(width: 8),
               itemBuilder: (_, i) {
                 final slot = _timeSlots[i];
                 final sel = _selectedTime == slot;
@@ -425,21 +418,12 @@ class _CourtDetailScreenState extends State<CourtDetailScreen> {
                       vertical: 11,
                     ),
                     decoration: BoxDecoration(
-                      color: sel ? AppColors.primary : AppColors.surface,
+                      color: sel ? AppColors.background : AppColors.surface,
                       borderRadius: BorderRadius.circular(10),
                       border: Border.all(
                         color: sel ? AppColors.primary : AppColors.divider,
                         width: 1.2,
                       ),
-                      boxShadow: sel
-                          ? [
-                              BoxShadow(
-                                color: AppColors.primary.withOpacity(0.3),
-                                blurRadius: 8,
-                                offset: const Offset(0, 3),
-                              ),
-                            ]
-                          : [],
                     ),
                     child: Text(
                       slot,
@@ -447,7 +431,9 @@ class _CourtDetailScreenState extends State<CourtDetailScreen> {
                         fontFamily: 'Poppins',
                         fontSize: 12.5,
                         fontWeight: FontWeight.w600,
-                        color: sel ? Colors.white : AppColors.textSecondary,
+                        color: sel
+                            ? AppColors.textPrimary
+                            : AppColors.textSecondary,
                       ),
                     ),
                   ),
@@ -484,21 +470,12 @@ class _CourtDetailScreenState extends State<CourtDetailScreen> {
                     vertical: 11,
                   ),
                   decoration: BoxDecoration(
-                    color: sel ? AppColors.primary : AppColors.surface,
+                    color: sel ? AppColors.background : AppColors.surface,
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
                       color: sel ? AppColors.primary : AppColors.divider,
-                      width: 1.5,
+                      width: 1.2,
                     ),
-                    boxShadow: sel
-                        ? [
-                            BoxShadow(
-                              color: AppColors.primary.withOpacity(0.25),
-                              blurRadius: 8,
-                              offset: const Offset(0, 3),
-                            ),
-                          ]
-                        : [],
                   ),
                   child: Text(
                     type,
@@ -506,7 +483,9 @@ class _CourtDetailScreenState extends State<CourtDetailScreen> {
                       fontFamily: 'Poppins',
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
-                      color: sel ? Colors.white : AppColors.textSecondary,
+                      color: sel
+                          ? AppColors.textPrimary
+                          : AppColors.textSecondary,
                     ),
                   ),
                 ),
@@ -575,7 +554,7 @@ class _CourtDetailScreenState extends State<CourtDetailScreen> {
                       fontFamily: 'Poppins',
                       fontSize: 22,
                       fontWeight: FontWeight.w800,
-                      color: AppColors.primary,
+                      color: AppColors.textPrimary,
                     ),
                   ),
                   const Text(
@@ -607,13 +586,9 @@ class _CourtDetailScreenState extends State<CourtDetailScreen> {
       ),
       decoration: BoxDecoration(
         color: AppColors.surface,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.08),
-            blurRadius: 20,
-            offset: const Offset(0, -6),
-          ),
-        ],
+        border: const Border(
+          top: BorderSide(color: AppColors.divider, width: 1),
+        ),
       ),
       child: Row(
         children: [
@@ -664,8 +639,7 @@ class _CourtDetailScreenState extends State<CourtDetailScreen> {
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(14),
                 ),
-                elevation: _canBook ? 4 : 0,
-                shadowColor: AppColors.primary.withOpacity(0.35),
+                elevation: 0,
               ),
               child: Text(
                 _canBook ? 'Review & Book' : 'Select Date, Time & Sport',
@@ -704,15 +678,9 @@ class _CircleBtn extends StatelessWidget {
       width: 38,
       height: 38,
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.92),
+        color: AppColors.surface,
         shape: BoxShape.circle,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.12),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
+        border: Border.all(color: AppColors.divider, width: 1),
       ),
       child: Icon(icon, size: 20, color: AppColors.textPrimary),
     ),
@@ -735,17 +703,12 @@ class _FavBtnState extends State<_FavBtn> {
       width: 38,
       height: 38,
       decoration: BoxDecoration(
-        color: _faved
-            ? Colors.red.shade50.withOpacity(0.95)
-            : Colors.white.withOpacity(0.92),
+        color: _faved ? Colors.red.shade50 : AppColors.surface,
         shape: BoxShape.circle,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.12),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
+        border: Border.all(
+          color: _faved ? Colors.red.shade200 : AppColors.divider,
+          width: 1,
+        ),
       ),
       child: Icon(
         _faved ? Icons.favorite_rounded : Icons.favorite_border_rounded,
@@ -764,8 +727,12 @@ class _AvailBadge extends StatelessWidget {
   Widget build(BuildContext context) => Container(
     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
     decoration: BoxDecoration(
-      color: isAvailable ? AppColors.primary : Colors.red.shade400,
+      color: AppColors.surface.withOpacity(0.94),
       borderRadius: BorderRadius.circular(20),
+      border: Border.all(
+        color: isAvailable ? AppColors.primary : Colors.red.shade300,
+        width: 1,
+      ),
     ),
     child: Row(
       mainAxisSize: MainAxisSize.min,
@@ -774,7 +741,7 @@ class _AvailBadge extends StatelessWidget {
           width: 6,
           height: 6,
           decoration: const BoxDecoration(
-            color: Colors.white,
+            color: AppColors.primary,
             shape: BoxShape.circle,
           ),
         ),
@@ -783,7 +750,7 @@ class _AvailBadge extends StatelessWidget {
           isAvailable ? 'Available' : 'Fully Booked',
           style: const TextStyle(
             fontFamily: 'Poppins',
-            color: Colors.white,
+            color: AppColors.textPrimary,
             fontSize: 11.5,
             fontWeight: FontWeight.w600,
           ),
@@ -801,19 +768,24 @@ class _DistBadge extends StatelessWidget {
   Widget build(BuildContext context) => Container(
     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
     decoration: BoxDecoration(
-      color: Colors.black54,
+      color: AppColors.surface.withOpacity(0.94),
       borderRadius: BorderRadius.circular(20),
+      border: Border.all(color: AppColors.divider, width: 1),
     ),
     child: Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        const Icon(Icons.near_me_rounded, color: Colors.white, size: 12),
+        const Icon(
+          Icons.near_me_rounded,
+          color: AppColors.textSecondary,
+          size: 12,
+        ),
         const SizedBox(width: 4),
         Text(
           '${km.toStringAsFixed(1)} km',
           style: const TextStyle(
             fontFamily: 'Poppins',
-            color: Colors.white,
+            color: AppColors.textSecondary,
             fontSize: 11.5,
             fontWeight: FontWeight.w500,
           ),
@@ -836,19 +808,18 @@ class _DurationBtn extends StatelessWidget {
       width: 42,
       height: 42,
       decoration: BoxDecoration(
-        color: onTap != null ? AppColors.primary : AppColors.divider,
+        color: AppColors.surface,
         borderRadius: BorderRadius.circular(12),
-        boxShadow: onTap != null
-            ? [
-                BoxShadow(
-                  color: AppColors.primary.withOpacity(0.3),
-                  blurRadius: 8,
-                  offset: const Offset(0, 3),
-                ),
-              ]
-            : [],
+        border: Border.all(
+          color: onTap != null ? AppColors.primary : AppColors.divider,
+          width: 1,
+        ),
       ),
-      child: Icon(icon, color: Colors.white, size: 22),
+      child: Icon(
+        icon,
+        color: onTap != null ? AppColors.textPrimary : AppColors.textMuted,
+        size: 22,
+      ),
     ),
   );
 }
