@@ -803,7 +803,7 @@ class _OwnerInfoCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return _InfoCard(
-      tag: 'Court Owner',
+      tag: 'Owner',
       description: isApproved
           ? 'Your ownership is verified. Manage your courts and bookings.'
           : 'Your ownership request is pending approval. We\'ll notify you once verified.',
