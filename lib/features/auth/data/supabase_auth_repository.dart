@@ -82,7 +82,7 @@ class SupabaseAuthRepository implements AuthRepository {
   }
 
   @override
-  Stream<AuthState> get authStateChanges => _client.onAuthStateChange;
+  Stream<AuthState> get authStateChanges => _client.auth.onAuthStateChange;
 
   // 🔒 Private helpers
 
