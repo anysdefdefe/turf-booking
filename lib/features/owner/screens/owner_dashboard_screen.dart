@@ -120,7 +120,10 @@ class OwnerDashboardScreen extends StatelessWidget {
               isLocked: !owner.isApproved,
               onTap: () {
                 if (owner.isApproved) {
-                  // TODO: navigate to My Stadiums screen
+                  Navigator.pushNamed(
+                    context,
+                    AppConstants.routeOwnerMyStadiums,
+                  );
                 } else {
                   _showLockedSnackbar(context);
                 }
