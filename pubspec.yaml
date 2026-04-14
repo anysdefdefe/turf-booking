@@ -17,6 +17,7 @@ dependencies:
   riverpod_annotation: ^4.0.2
   go_router: ^17.2.0
   flutter_dotenv: ^6.0.0
+  state_notifier: ^1.0.0
 
 dev_dependencies:
   flutter_test:
