@@ -13,40 +13,61 @@ class AppRouter {
   static Route<dynamic> onGenerateRoute(RouteSettings settings) {
     switch (settings.name) {
       case AppConstants.routeHome:
-        return _buildRoute(const HomeScreen());
+        return _buildRoute(const HomeScreen(), settings: settings);
 
       case AppConstants.routeCourtDetail:
-        return _buildRoute(const CourtDetailScreen());
+        return _buildRoute(const CourtDetailScreen(), settings: settings);
 
       case AppConstants.routeBookingConfirm:
-        return _buildRoute(_PlaceholderScreen('Booking Confirmation'));
+        return _buildRoute(
+          _PlaceholderScreen('Booking Confirmation'),
+          settings: settings,
+        );
 
       case AppConstants.routeBookingSuccess:
-        return _buildRoute(_PlaceholderScreen('Booking Success'));
+        return _buildRoute(
+          _PlaceholderScreen('Booking Success'),
+          settings: settings,
+        );
 
       case AppConstants.routeMyBookings:
-        return _buildRoute(_PlaceholderScreen('My Bookings'));
+        return _buildRoute(
+          _PlaceholderScreen('My Bookings'),
+          settings: settings,
+        );
 
       case AppConstants.routeSplash:
-        return _buildRoute(const SplashScreen());
+        return _buildRoute(const SplashScreen(), settings: settings);
 
       case AppConstants.routeOnboarding:
-        return _buildRoute(_PlaceholderScreen('Onboarding'));
+        return _buildRoute(
+          _PlaceholderScreen('Onboarding'),
+          settings: settings,
+        );
 
       case AppConstants.routeNotifications:
-        return _buildRoute(_PlaceholderScreen('Notifications'));
+        return _buildRoute(
+          _PlaceholderScreen('Notifications'),
+          settings: settings,
+        );
 
       case AppConstants.routeProfile:
-        return _buildRoute(_PlaceholderScreen('Profile'));
+        return _buildRoute(_PlaceholderScreen('Profile'), settings: settings);
 
       default:
-        return _buildRoute(_PlaceholderScreen('Unknown Route'));
+        return _buildRoute(
+          _PlaceholderScreen('Unknown Route'),
+          settings: settings,
+        );
     }
   }
 
   /// Helper method to build a material page route.
-  static MaterialPageRoute<dynamic> _buildRoute(Widget page) {
-    return MaterialPageRoute(builder: (context) => page);
+  static MaterialPageRoute<dynamic> _buildRoute(
+    Widget page, {
+    RouteSettings? settings,
+  }) {
+    return MaterialPageRoute(settings: settings, builder: (context) => page);
   }
 }
 
