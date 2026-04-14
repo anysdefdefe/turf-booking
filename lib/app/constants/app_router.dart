@@ -2,9 +2,14 @@ import 'package:flutter/material.dart';
 
 import '../../../features/customer/screens/court_detail_screen.dart';
 import '../../../features/customer/screens/home_screen.dart';
+import '../../../features/customer/screens/my_bookings_screen.dart';
+import '../../../features/customer/screens/profile_screen.dart';
 import '../../../features/customer/screens/splash_screen.dart';
 import '../../../features/admin/screens/admin_main_screen.dart';
 import 'app_constants.dart';
+import '../../../features/owner/screens/pending_approval_screen.dart';
+import '../../../features/owner/screens/owner_dashboard_screen.dart';
+import '../../../features/owner/screens/owner_my_stadiums_screen.dart';
 
 /// Navigation router for the application.
 class AppRouter {
@@ -32,10 +37,7 @@ class AppRouter {
         );
 
       case AppConstants.routeMyBookings:
-        return _buildRoute(
-          _PlaceholderScreen('My Bookings'),
-          settings: settings,
-        );
+        return _buildRoute(const MyBookingsScreen(), settings: settings);
 
       case AppConstants.routeSplash:
         return _buildRoute(const SplashScreen(), settings: settings);
@@ -53,7 +55,16 @@ class AppRouter {
         );
 
       case AppConstants.routeProfile:
-        return _buildRoute(_PlaceholderScreen('Profile'), settings: settings);
+        return _buildRoute(const ProfileScreen(), settings: settings);
+
+      case AppConstants.routeOwnerPendingApproval:
+        return _buildRoute(const PendingApprovalScreen());
+
+      case AppConstants.routeOwnerDashboard:
+        return _buildRoute(const OwnerDashboardScreen());
+
+      case AppConstants.routeOwnerMyStadiums:
+        return _buildRoute(const OwnerMyStadiumsScreen());
 
       case AppConstants.routeAdmin:
       return _buildRoute(const AdminMainScreen(), settings: settings);
