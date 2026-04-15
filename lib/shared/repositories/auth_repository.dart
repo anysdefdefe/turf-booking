@@ -2,7 +2,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/user_model.dart';
 
 abstract class AuthRepository {
-  Future<UserModel> signUpWithEmail({
+  Future<void> signUpWithEmail({
     required String email,
     required String password,
     required String fullName,
