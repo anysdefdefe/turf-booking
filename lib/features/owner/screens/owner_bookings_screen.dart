@@ -130,12 +130,15 @@ class _OwnerBookingsScreenState extends State<OwnerBookingsScreen>
     final tabIndex = _tabController.index;
     List<BookingEntry> result = _mockBookings;
 
-    if (tabIndex == 1)
+    if (tabIndex == 1) {
       result = result.where((b) => b.status == 'pending').toList();
-    if (tabIndex == 2)
+    }
+    if (tabIndex == 2) {
       result = result.where((b) => b.status == 'confirmed').toList();
-    if (tabIndex == 3)
+    }
+    if (tabIndex == 3) {
       result = result.where((b) => b.status == 'cancelled').toList();
+    }
 
     if (_searchQuery.isNotEmpty) {
       final q = _searchQuery.toLowerCase();
