@@ -29,7 +29,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     );
   }
 
-  void _submit(AuthState authState, AuthNotifier notifier) {
+  void _submit(AuthNotifier notifier) {
     final isValid = _formKey.currentState?.validate() ?? false;
     if (!isValid) return;
     notifier.signIn(
@@ -131,7 +131,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         _RingButton(
                           label: 'Login',
                           isLoading: authState.isLoading,
-                          onPressed: () => _submit(authState, notifier),
+                          onPressed: () => _submit(notifier),
                         ),
                       ],
                     ),
