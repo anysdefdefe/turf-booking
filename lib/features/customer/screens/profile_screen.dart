@@ -10,7 +10,10 @@ import '../widgets/customer_floating_nav_bar.dart';
 
 DateTime _parseCreatedAt(dynamic value, dynamic fallback) {
   if (value is DateTime) return value;
-  if (value is String) return DateTime.tryParse(value) ?? DateTime.now();
+  if (value is String) {
+    final parsed = DateTime.tryParse(value);
+    if (parsed != null) return parsed;
+  }
   if (fallback is DateTime) return fallback;
   return DateTime.now();
 }
