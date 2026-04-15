@@ -2,10 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'app/constants/app_constants.dart';
 import 'app/constants/app_router.dart';
 import 'app/theme/app_theme.dart';
+
+import 'features/auth/providers/auth_notifier.dart';
+import 'features/auth/screens/login_screen.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -32,20 +36,36 @@ Future<void> main() async {
     ),
   );
 
-  runApp(const CourtlyApp());
+  runApp(const ProviderScope(child: CourtlyApp()));
 }
 
-class CourtlyApp extends StatelessWidget {
+class CourtlyApp extends ConsumerWidget {
   const CourtlyApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final authAsync = ref.watch(authProvider);
+
     return MaterialApp(
       title: 'Courtly',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
-      initialRoute: AppConstants.routeSplash,
-      onGenerateRoute: AppRouter.onGenerateRoute,
+
+      home: authAsync.when(
+        loading: () =>
+            const Scaffold(body: Center(child: CircularProgressIndicator())),
+        error: (err, _) => Scaffold(body: Center(child: Text(err.toString()))),
+        data: (authState) {
+          if (authState.user == null) {
+            return const LoginScreen();
+          }
+
+          return Navigator(
+            onGenerateRoute: AppRouter.onGenerateRoute,
+            initialRoute: AppConstants.routeHome,
+          );
+        },
+      ),
     );
   }
 }
