@@ -172,13 +172,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     try {
       final payload = {
         'id': profile.id,
-        'email': profile.email,
         'full_name': profile.fullName,
         'phone': profile.phone.isEmpty ? null : profile.phone,
         'avatar_url': profile.avatarUrl.isEmpty ? null : profile.avatarUrl,
-        'is_owner': profile.isOwner,
-        'is_approved': profile.isApproved,
-        'is_admin': profile.isAdmin,
       };
 
       await _client.from('users').upsert(payload, onConflict: 'id');
