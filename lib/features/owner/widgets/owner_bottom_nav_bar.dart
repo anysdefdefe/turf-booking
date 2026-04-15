@@ -24,7 +24,10 @@ class OwnerBottomNavBar extends StatelessWidget {
         );
         break;
       case 2:
-        // TODO: navigate to bookings screen
+        Navigator.pushReplacementNamed(
+          context,
+          AppConstants.routeOwnerBookings,
+        );
         break;
     }
   }

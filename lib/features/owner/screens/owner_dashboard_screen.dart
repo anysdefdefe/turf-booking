@@ -178,7 +178,7 @@ class OwnerDashboardScreen extends StatelessWidget {
               isLocked: !owner.isApproved,
               onTap: () {
                 if (owner.isApproved) {
-                  // TODO: navigate to Bookings screen
+                  Navigator.pushNamed(context, AppConstants.routeOwnerBookings);
                 } else {
                   _showLockedSnackbar(context);
                 }
