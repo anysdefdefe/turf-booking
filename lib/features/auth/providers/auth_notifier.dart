@@ -28,13 +28,20 @@ class AuthNotifier extends _$AuthNotifier {
   late final AuthRepository _repo;
 
   @override
-  AuthState build() {
+  Future<AuthState> build() async {
     _repo = ref.watch(authRepositoryProvider);
-    return const AuthState();
+
+    try {
+      final user = await _repo.getCurrentUser();
+
+      return AuthState(isLoading: false, user: user);
+    } catch (e) {
+      return AuthState(isLoading: false, error: e.toString());
+    }
   }
 
   Future<void> signIn(String email, String password) async {
-    state = state.copyWith(isLoading: true, error: null);
+    state = const AsyncLoading();
 
     try {
       final user = await _repo.signInWithEmail(
@@ -42,9 +49,9 @@ class AuthNotifier extends _$AuthNotifier {
         password: password,
       );
 
-      state = state.copyWith(isLoading: false, user: user);
+      state = AsyncData(AuthState(isLoading: false, user: user));
     } catch (e) {
-      state = state.copyWith(isLoading: false, error: e.toString());
+      state = AsyncData(AuthState(isLoading: false, error: e.toString()));
     }
   }
 
@@ -53,7 +60,7 @@ class AuthNotifier extends _$AuthNotifier {
     required String password,
     required String fullName,
   }) async {
-    state = state.copyWith(isLoading: true, error: null);
+    state = const AsyncLoading();
 
     try {
       final user = await _repo.signUpWithEmail(
@@ -62,18 +69,19 @@ class AuthNotifier extends _$AuthNotifier {
         fullName: fullName,
       );
 
-      state = state.copyWith(isLoading: false, user: user);
+      state = AsyncData(AuthState(isLoading: false, user: user));
     } catch (e) {
-      state = state.copyWith(isLoading: false, error: e.toString());
+      state = AsyncData(AuthState(isLoading: false, error: e.toString()));
     }
   }
 
   Future<void> signOut() async {
     try {
       await _repo.signOut();
-      state = const AuthState();
+
+      state = const AsyncData(AuthState());
     } catch (e) {
-      state = state.copyWith(error: e.toString());
+      state = AsyncData(AuthState(error: e.toString()));
     }
   }
 }

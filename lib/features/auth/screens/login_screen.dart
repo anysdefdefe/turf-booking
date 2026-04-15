@@ -15,47 +15,58 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final authState = ref.watch(authProvider);
+    final authAsync = ref.watch(authProvider);
     final notifier = ref.read(authProvider.notifier);
 
     return Scaffold(
       appBar: AppBar(title: const Text('Login')),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            TextField(
-              controller: _emailController,
-              decoration: const InputDecoration(labelText: 'Email'),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: _passwordController,
-              obscureText: true,
-              decoration: const InputDecoration(labelText: 'Password'),
-            ),
-            const SizedBox(height: 20),
+      body: authAsync.when(
+        loading: () => const Center(child: CircularProgressIndicator()),
 
-            if (authState.error != null)
-              Text(authState.error!, style: const TextStyle(color: Colors.red)),
+        error: (err, _) => Center(child: Text(err.toString())),
 
-            const SizedBox(height: 10),
+        data: (authState) {
+          return Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              children: [
+                TextField(
+                  controller: _emailController,
+                  decoration: const InputDecoration(labelText: 'Email'),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: _passwordController,
+                  obscureText: true,
+                  decoration: const InputDecoration(labelText: 'Password'),
+                ),
+                const SizedBox(height: 20),
 
-            ElevatedButton(
-              onPressed: authState.isLoading
-                  ? null
-                  : () {
-                      notifier.signIn(
-                        _emailController.text.trim(),
-                        _passwordController.text.trim(),
-                      );
-                    },
-              child: authState.isLoading
-                  ? const CircularProgressIndicator()
-                  : const Text('Login'),
+                if (authState.error != null)
+                  Text(
+                    authState.error!,
+                    style: const TextStyle(color: Colors.red),
+                  ),
+
+                const SizedBox(height: 10),
+
+                ElevatedButton(
+                  onPressed: authState.isLoading
+                      ? null
+                      : () {
+                          notifier.signIn(
+                            _emailController.text.trim(),
+                            _passwordController.text.trim(),
+                          );
+                        },
+                  child: authState.isLoading
+                      ? const CircularProgressIndicator()
+                      : const Text('Login'),
+                ),
+              ],
             ),
-          ],
-        ),
+          );
+        },
       ),
     );
   }
