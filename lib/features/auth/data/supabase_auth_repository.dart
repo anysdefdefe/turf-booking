@@ -8,7 +8,7 @@ class SupabaseAuthRepository implements AuthRepository {
   SupabaseAuthRepository(this._client);
 
   @override
-  Future<UserModel> signUpWithEmail({
+  Future<void> signUpWithEmail({
     required String email,
     required String password,
     required String fullName,
@@ -21,10 +21,13 @@ class SupabaseAuthRepository implements AuthRepository {
       );
 
       if (response.user == null) {
-        throw Exception('Sign up failed — no user returned');
+        throw Exception('Sign up failed - no user returned');
       }
 
-      return _waitForUserProfile(response.user!.id);
+      // create the auth user, then ensure the app stays logged out.
+      if (response.session != null) {
+        await _client.auth.signOut();
+      }
     } catch (e) {
       throw Exception('Sign up failed: ${e.toString()}');
     }
@@ -42,10 +45,10 @@ class SupabaseAuthRepository implements AuthRepository {
       );
 
       if (response.user == null) {
-        throw Exception('Sign in failed — no user returned');
+        throw Exception('Sign in failed - no user returned');
       }
 
-      return _fetchUserProfile(response.user!.id);
+      return _waitForUserProfile(response.user!.id);
     } catch (e) {
       throw Exception('Sign in failed: ${e.toString()}');
     }
@@ -58,7 +61,6 @@ class SupabaseAuthRepository implements AuthRepository {
       redirectTo: 'io.supabase.turfbooking://login-callback',
     );
 
-    // OAuth completes via authStateChanges stream
     throw UnimplementedError(
       'Google sign in completes via authStateChanges stream',
     );
@@ -84,8 +86,6 @@ class SupabaseAuthRepository implements AuthRepository {
   @override
   Stream<AuthState> get authStateChanges => _client.auth.onAuthStateChange;
 
-  // 🔒 Private helpers
-
   Future<UserModel> _fetchUserProfile(String userId) async {
     final data = await _client.from('users').select().eq('id', userId).single();
 
@@ -93,11 +93,11 @@ class SupabaseAuthRepository implements AuthRepository {
   }
 
   Future<UserModel> _waitForUserProfile(String userId) async {
-    for (int i = 0; i < 5; i++) {
+    for (int i = 0; i < 15; i++) {
       try {
         return await _fetchUserProfile(userId);
       } catch (_) {
-        await Future.delayed(const Duration(milliseconds: 200));
+        await Future.delayed(const Duration(milliseconds: 250));
       }
     }
     throw Exception('User profile not created in time');

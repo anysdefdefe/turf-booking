@@ -5,7 +5,6 @@ import 'auth_provider.dart';
 
 part 'auth_notifier.g.dart';
 
-//state
 class AuthState {
   final bool isLoading;
   final String? error;
@@ -22,7 +21,6 @@ class AuthState {
   }
 }
 
-//notifier
 @riverpod
 class AuthNotifier extends _$AuthNotifier {
   late final AuthRepository _repo;
@@ -33,7 +31,6 @@ class AuthNotifier extends _$AuthNotifier {
 
     try {
       final user = await _repo.getCurrentUser();
-
       return AuthState(isLoading: false, user: user);
     } catch (e) {
       return AuthState(isLoading: false, error: e.toString());
@@ -63,13 +60,13 @@ class AuthNotifier extends _$AuthNotifier {
     state = const AsyncLoading();
 
     try {
-      final user = await _repo.signUpWithEmail(
+      await _repo.signUpWithEmail(
         email: email,
         password: password,
         fullName: fullName,
       );
 
-      state = AsyncData(AuthState(isLoading: false, user: user));
+      state = const AsyncData(AuthState());
     } catch (e) {
       state = AsyncData(AuthState(isLoading: false, error: e.toString()));
     }
@@ -78,7 +75,6 @@ class AuthNotifier extends _$AuthNotifier {
   Future<void> signOut() async {
     try {
       await _repo.signOut();
-
       state = const AsyncData(AuthState());
     } catch (e) {
       state = AsyncData(AuthState(error: e.toString()));
