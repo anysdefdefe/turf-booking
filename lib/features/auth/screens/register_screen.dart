@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:turf_booking/features/auth/providers/auth_notifier.dart';
-import 'package:turf_booking/features/auth/screens/email_confirmation_screen.dart';
+import 'package:go_router/go_router.dart';
+import 'package:turf_booking/features/auth/providers/auth_controller.dart';
 import 'package:turf_booking/features/auth/widgets/auth_form_widgets.dart';
 
 class RegisterScreen extends ConsumerStatefulWidget {
@@ -31,36 +31,30 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     super.dispose();
   }
 
-  Future<void> _submit(AuthNotifier notifier) async {
+  Future<void> _submit() async {
     final isValid = _formKey.currentState?.validate() ?? false;
     if (!isValid) return;
 
     final fullName =
         '${_firstNameController.text.trim()} ${_lastNameController.text.trim()}'.trim();
 
-    await notifier.signUp(
-      email: _emailController.text.trim(),
-      password: _passwordController.text.trim(),
-      fullName: fullName,
+    await ref.read(authControllerProvider.notifier).signUp(
+      _emailController.text.trim(),
+      _passwordController.text.trim(),
+      fullName,
     );
 
     if (!mounted) return;
 
-    final authState = ref.read(authProvider).asData?.value ?? const AuthState();
-    if (authState.error != null) return;
+    final authState = ref.read(authControllerProvider);
+    if (authState.hasError) return;
 
-    Navigator.of(context).pushReplacement(
-      MaterialPageRoute(
-        builder: (_) => EmailConfirmationScreen(email: _emailController.text.trim()),
-      ),
-    );
+    context.go('/email-confirmation', extra: _emailController.text.trim());
   }
 
   @override
   Widget build(BuildContext context) {
-    final authAsync = ref.watch(authProvider);
-    final notifier = ref.read(authProvider.notifier);
-    final authState = authAsync.asData?.value ?? const AuthState();
+    final authState = ref.watch(authControllerProvider);
 
     return Scaffold(
       backgroundColor: const Color(0xFFF6F6F7),
@@ -69,7 +63,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         elevation: 0,
         surfaceTintColor: const Color(0xFFF6F6F7),
         leading: GestureDetector(
-          onTap: () => Navigator.of(context).pop(),
+          onTap: () => context.pop(),
           child: Container(
             margin: const EdgeInsets.all(10),
             decoration: BoxDecoration(
@@ -198,10 +192,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                         ),
                       ),
                     ),
-                    if (authState.error != null) ...[
+                    if (authState.hasError) ...[
                       const SizedBox(height: 12),
                       Text(
-                        authState.error!,
+                        authState.error.toString(),
                         style: const TextStyle(
                           color: Color(0xFFB00020),
                           fontSize: 12.5,
@@ -210,10 +204,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                       ),
                     ],
                     const SizedBox(height: 28),
-                        AuthRingButton(
+                    AuthRingButton(
                       label: 'Sign Up',
                       isLoading: authState.isLoading,
-                      onPressed: () => _submit(notifier),
+                      onPressed: _submit,
                     ),
                   ],
                 ),
@@ -221,7 +215,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
               const SizedBox(height: 20),
               Center(
                 child: GestureDetector(
-                  onTap: () => Navigator.of(context).pop(),
+                  onTap: () => context.pop(),
                   child: RichText(
                     text: const TextSpan(
                       style: TextStyle(fontSize: 13.5, color: Color(0xFF828289)),

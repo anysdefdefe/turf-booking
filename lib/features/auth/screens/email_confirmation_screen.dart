@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 class EmailConfirmationScreen extends StatelessWidget {
   final String email;
@@ -94,7 +95,7 @@ class EmailConfirmationScreen extends StatelessWidget {
                 height: 52,
                 child: OutlinedButton(
                   onPressed: () {
-                    Navigator.of(context).popUntil((route) => route.isFirst);
+                    context.go('/login');
                   },
                   style: OutlinedButton.styleFrom(
                     side: const BorderSide(color: Color(0xFF0E0E10), width: 1.5),
