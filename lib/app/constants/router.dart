@@ -16,7 +16,7 @@ import 'package:turf_booking/features/owner/screens/pending_approval_screen.dart
 part 'router.g.dart';
 
 @riverpod
-GoRouter router(RouterRef ref) {
+GoRouter router(Ref ref) {
   // Watch the auth state stream. This triggers a redirect whenever auth changes.
   final authState = ref.watch(authStateProvider);
 
@@ -26,7 +26,7 @@ GoRouter router(RouterRef ref) {
       // 1. Check if the stream is still loading
       if (authState.isLoading) return null;
 
-      final user = authState.valueOrNull;
+      final user = authState.value;
       final isGoingToLogin = state.matchedLocation == '/login';
       final isGoingToRegister = state.matchedLocation == '/register';
       final isGoingToEmailConfirmation = state.matchedLocation == '/email-confirmation';
