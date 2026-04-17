@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:turf_booking/features/auth/providers/auth_notifier.dart';
-
+import 'package:turf_booking/features/auth/providers/auth_controller.dart';
+import 'package:go_router/go_router.dart';
 import '../../../app/constants/app_constants.dart';
 import '../../../app/theme/app_colors.dart';
 import '../data/repositories/customer_preferences_repository.dart';
@@ -145,11 +145,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   void _onNavTap(int index) {
     if (index == 2) return;
     if (index == 0) {
-      Navigator.pushReplacementNamed(context, AppConstants.routeHome);
+      context.go('/customer/home');
       return;
     }
     if (index == 1) {
-      Navigator.pushReplacementNamed(context, AppConstants.routeMyBookings);
+      context.go('/customer/my-bookings');
     }
   }
 
@@ -320,7 +320,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       return;
     }
 
-    await ref.read(authProvider.notifier).signOut();
+    await ref.read(authControllerProvider.notifier).signOut();
   }
 
   @override
@@ -388,10 +388,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     _ActionTile(
                       icon: Icons.receipt_long_rounded,
                       label: 'My Bookings',
-                      onTap: () => Navigator.pushReplacementNamed(
-                        context,
-                        AppConstants.routeMyBookings,
-                      ),
+                      onTap: () => context.go('/customer/my-bookings'),
                     ),
                     _ActionTile(
                       icon: Icons.favorite_border_rounded,
@@ -399,11 +396,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                       trailing: likedIds.isNotEmpty
                           ? _Badge(count: likedIds.length)
                           : null,
-                      onTap: () => Navigator.pushReplacementNamed(
-                        context,
-                        AppConstants.routeHome,
-                        arguments: {'feed': 'wishlist'},
-                      ),
+                      onTap: () => context.go('/customer/home', extra: {'feed': 'wishlist'}),
                     ),
                     _ActionTile(
                       icon: Icons.notifications_none_rounded,
