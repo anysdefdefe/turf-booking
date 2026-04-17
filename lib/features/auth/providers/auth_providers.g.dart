@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'auth_provider.dart';
+part of 'auth_providers.dart';
 
 // **************************************************************************
 // RiverpodGenerator
@@ -48,7 +48,7 @@ final class SupabaseClientProvider
   }
 }
 
-String _$supabaseClientHash() => r'834a58d6ae4b94e36f4e04a10d8a7684b929310e';
+String _$supabaseClientHash() => r'de6240783d7dddb57e07d034deb0ddf8e2fcc3e4';
 
 @ProviderFor(authRepository)
 final authRepositoryProvider = AuthRepositoryProvider._();
@@ -89,7 +89,7 @@ final class AuthRepositoryProvider
   }
 }
 
-String _$authRepositoryHash() => r'1a9ac32012edca07ab0071ccd84ae2e6c0cb59ab';
+String _$authRepositoryHash() => r'49b4bef701d64bd4f2cc06473188073a4786160f';
 
 @ProviderFor(authState)
 final authStateProvider = AuthStateProvider._();
@@ -127,4 +127,4 @@ final class AuthStateProvider
   }
 }
 
-String _$authStateHash() => r'f8b891639305749cbb2dadc847ba5c5ae7dcb545';
+String _$authStateHash() => r'4ec5a3aba748d5bf767e2fd8cb8770dd7297f186';

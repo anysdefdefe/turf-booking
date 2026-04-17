@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'auth_notifier.dart';
+part of 'auth_controller.dart';
 
 // **************************************************************************
 // RiverpodGenerator
@@ -9,43 +9,43 @@ part of 'auth_notifier.dart';
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
 
-@ProviderFor(AuthNotifier)
-final authProvider = AuthNotifierProvider._();
+@ProviderFor(AuthController)
+final authControllerProvider = AuthControllerProvider._();
 
-final class AuthNotifierProvider
-    extends $AsyncNotifierProvider<AuthNotifier, AuthState> {
-  AuthNotifierProvider._()
+final class AuthControllerProvider
+    extends $AsyncNotifierProvider<AuthController, void> {
+  AuthControllerProvider._()
     : super(
         from: null,
         argument: null,
         retry: null,
-        name: r'authProvider',
+        name: r'authControllerProvider',
         isAutoDispose: true,
         dependencies: null,
         $allTransitiveDependencies: null,
       );
 
   @override
-  String debugGetCreateSourceHash() => _$authNotifierHash();
+  String debugGetCreateSourceHash() => _$authControllerHash();
 
   @$internal
   @override
-  AuthNotifier create() => AuthNotifier();
+  AuthController create() => AuthController();
 }
 
-String _$authNotifierHash() => r'e200fda157bb685acfce7991a6c7f9e7d63bcb0c';
+String _$authControllerHash() => r'de68506aae858ffa1d8c9d8b1a1a7ff32f5cdd9f';
 
-abstract class _$AuthNotifier extends $AsyncNotifier<AuthState> {
-  FutureOr<AuthState> build();
+abstract class _$AuthController extends $AsyncNotifier<void> {
+  FutureOr<void> build();
   @$mustCallSuper
   @override
   void runBuild() {
-    final ref = this.ref as $Ref<AsyncValue<AuthState>, AuthState>;
+    final ref = this.ref as $Ref<AsyncValue<void>, void>;
     final element =
         ref.element
             as $ClassProviderElement<
-              AnyNotifier<AsyncValue<AuthState>, AuthState>,
-              AsyncValue<AuthState>,
+              AnyNotifier<AsyncValue<void>, void>,
+              AsyncValue<void>,
               Object?,
               Object?
             >;
