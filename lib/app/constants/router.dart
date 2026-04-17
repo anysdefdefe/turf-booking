@@ -4,14 +4,14 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
-import '../features/auth/providers/auth_providers.dart';
-import '../features/auth/screens/login_screen.dart';
-import '../features/auth/screens/register_screen.dart';
-import '../features/auth/screens/email_confirmation_screen.dart';
-import '../features/auth/screens/mode_selection_screen.dart';
-import '../features/customer/screens/home_screen.dart';
-import '../features/owner/screens/owner_dashboard_screen.dart';
-import '../features/owner/screens/pending_approval_screen.dart';
+import 'package:turf_booking/features/auth/providers/auth_providers.dart';
+import 'package:turf_booking/features/auth/screens/login_screen.dart';
+import 'package:turf_booking/features/auth/screens/register_screen.dart';
+import 'package:turf_booking/features/auth/screens/email_confirmation_screen.dart';
+import 'package:turf_booking/features/auth/screens/mode_selection_screen.dart';
+import 'package:turf_booking/features/customer/screens/home_screen.dart';
+import 'package:turf_booking/features/owner/screens/owner_dashboard_screen.dart';
+import 'package:turf_booking/features/owner/screens/pending_approval_screen.dart';
 
 part 'router.g.dart';
 

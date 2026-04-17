@@ -5,11 +5,8 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'app/constants/app_constants.dart';
-import 'app/constants/app_router.dart';
 import 'app/theme/app_theme.dart';
-
-import 'features/auth/providers/auth_notifier.dart';
-import 'features/auth/screens/login_screen.dart';
+import 'app/constants/router.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -44,28 +41,13 @@ class CourtlyApp extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final authAsync = ref.watch(authProvider);
+    final goRouter = ref.watch(routerProvider);
 
-    return MaterialApp(
+    return MaterialApp.router(
       title: 'Courtly',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
-
-      home: authAsync.when(
-        loading: () =>
-            const Scaffold(body: Center(child: CircularProgressIndicator())),
-        error: (err, _) => Scaffold(body: Center(child: Text(err.toString()))),
-        data: (authState) {
-          if (authState.user == null) {
-            return const LoginScreen();
-          }
-
-          return Navigator(
-            onGenerateRoute: AppRouter.onGenerateRoute,
-            initialRoute: AppConstants.routeHome,
-          );
-        },
-      ),
+      routerConfig: goRouter,
     );
   }
 }
