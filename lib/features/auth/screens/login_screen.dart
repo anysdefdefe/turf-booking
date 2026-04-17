@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:turf_booking/features/auth/providers/auth_notifier.dart';
-import 'package:turf_booking/features/auth/screens/register_screen.dart';
+import 'package:go_router/go_router.dart';
+import 'package:turf_booking/features/auth/providers/auth_controller.dart';
 import 'package:turf_booking/features/auth/widgets/auth_form_widgets.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
@@ -25,15 +25,16 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   }
 
   void _openRegister() {
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => const RegisterScreen()),
-    );
+    // 1. REPLACED: Use go_router instead of Navigator
+    context.push('/register');
   }
 
-  void _submit(AuthNotifier notifier) {
+  void _submit() {
     final isValid = _formKey.currentState?.validate() ?? false;
     if (!isValid) return;
-    notifier.signIn(
+    
+    // 2. REPLACED: Call the new authControllerProvider
+    ref.read(authControllerProvider.notifier).signIn(
       _emailController.text.trim(),
       _passwordController.text.trim(),
     );
@@ -41,11 +42,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final authAsync = ref.watch(authProvider);
-    final notifier = ref.read(authProvider.notifier);
-    final authState = authAsync.asData?.value ?? const AuthState();
+    // 3. REPLACED: Watch the new AsyncValue state from AuthController
+    final authState = ref.watch(authControllerProvider);
 
-    if (authAsync.isLoading && authAsync.asData == null) {
+    if (authState.isLoading) {
       return const Scaffold(
         backgroundColor: Color(0xFFF6F6F7),
         body: Center(child: CircularProgressIndicator(color: Color(0xFF0A0A0B))),
@@ -58,7 +58,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Full-width hero with curved bottom
             _HeroImage(),
             Padding(
               padding: const EdgeInsets.fromLTRB(24, 24, 24, 32),
@@ -117,10 +116,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             ),
                           ),
                         ),
-                        if (authState.error != null) ...[
+                        
+                        // 4. REPLACED: Handle Riverpod AsyncValue errors natively
+                        if (authState.hasError) ...[
                           const SizedBox(height: 12),
                           Text(
-                            authState.error!,
+                            authState.error.toString(),
                             style: const TextStyle(
                               color: Color(0xFFB00020),
                               fontSize: 12.5,
@@ -132,7 +133,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         AuthRingButton(
                           label: 'Login',
                           isLoading: authState.isLoading,
-                          onPressed: () => _submit(notifier),
+                          onPressed: _submit,
                         ),
                       ],
                     ),
@@ -208,7 +209,6 @@ class _HeroImage extends StatelessWidget {
         color: const Color(0xFF111215),
         child: Stack(
           children: [
-            // Subtle grid pattern overlay for visual interest
             CustomPaint(
               size: Size(screenWidth, 300),
               painter: _GridPainter(),
@@ -220,7 +220,7 @@ class _HeroImage extends StatelessWidget {
                   Icon(Icons.sports_soccer_rounded, size: 48, color: Color(0xFFFFFFFF)),
                   SizedBox(height: 12),
                   Text(
-                    'TurfBook',
+                    'Courtly', // Updated branding to Courtly
                     style: TextStyle(
                       color: Color(0xFFF0F0F1),
                       fontSize: 22,
