@@ -22,6 +22,9 @@ import 'package:turf_booking/features/owner/screens/owner_application_screen.dar
 import 'package:turf_booking/features/owner/screens/owner_bookings_screen.dart';
 import 'package:turf_booking/features/owner/screens/owner_my_stadiums_screen.dart';
 import 'package:turf_booking/features/owner/screens/owner_add_stadium_screen.dart';
+import 'package:turf_booking/features/owner/screens/owner_stadium_manage_screen.dart';
+import 'package:turf_booking/features/owner/screens/owner_stadium_edit_screen.dart';
+import 'package:turf_booking/features/owner/screens/owner_court_edit_screen.dart';
 
 part 'router.g.dart';
 
@@ -61,12 +64,14 @@ GoRouter router(Ref ref) {
       if (isGoingToOwnerArea) {
         // If they are not an owner yet, they can ONLY access the application or pending screen
         if (!user.isOwner) {
-          if (state.matchedLocation != '/owner/application' && state.matchedLocation != '/owner/pending-approval') {
+          if (state.matchedLocation != '/owner/application' &&
+              state.matchedLocation != '/owner/pending-approval') {
             return '/owner/application';
           }
-        } 
+        }
         // If they ARE an owner but not approved, lock them to pending
-        else if (!user.isApproved && state.matchedLocation != '/owner/pending-approval') {
+        else if (!user.isApproved &&
+            state.matchedLocation != '/owner/pending-approval') {
           return '/owner/pending-approval';
         }
       }
@@ -144,6 +149,27 @@ GoRouter router(Ref ref) {
       GoRoute(
         path: '/owner/add-stadium',
         builder: (context, state) => const OwnerAddStadiumScreen(),
+      ),
+      GoRoute(
+        path: '/owner/stadium/:stadiumId/manage',
+        builder: (context, state) {
+          final stadium = state.extra as StadiumModel;
+          return OwnerStadiumManageScreen(stadium: stadium);
+        },
+      ),
+      GoRoute(
+        path: '/owner/stadium/:stadiumId/edit',
+        builder: (context, state) {
+          final stadium = state.extra as StadiumModel;
+          return OwnerStadiumEditScreen(stadium: stadium);
+        },
+      ),
+      GoRoute(
+        path: '/owner/stadium/:stadiumId/court/:courtId/edit',
+        builder: (context, state) {
+          final court = state.extra as CourtModel;
+          return OwnerCourtEditScreen(court: court);
+        },
       ),
     ],
   );
