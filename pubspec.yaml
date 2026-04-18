@@ -19,6 +19,7 @@ dependencies:
   flutter_dotenv: ^6.0.0
   state_notifier: ^1.0.0
   google_fonts: ^8.0.2
+  file_picker: ^11.0.2
 
 dev_dependencies:
   flutter_test:
