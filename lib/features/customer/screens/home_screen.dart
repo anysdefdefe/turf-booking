@@ -251,11 +251,16 @@ class _HomeScreenState extends State<HomeScreen> {
     }
 
     if (index == 1) {
-      context.go('/customer/my-bookings');
+      context.go('/customer/cart');
       return;
     }
 
     if (index == 2) {
+      context.go('/customer/my-bookings');
+      return;
+    }
+
+    if (index == 3) {
       context.go('/customer/profile');
     }
   }
@@ -363,15 +368,21 @@ class _HomeScreenState extends State<HomeScreen> {
 
   SliverToBoxAdapter _buildFilterSummary() {
     final tags = <String>[];
-    if (_selectedCities.isNotEmpty)
+    if (_selectedCities.isNotEmpty) {
       tags.add('${_selectedCities.length} locations');
-    if (_selectedSports.isNotEmpty)
+    }
+    if (_selectedSports.isNotEmpty) {
       tags.add('${_selectedSports.length} sports');
-    if (_selectedTeamSizes.isNotEmpty)
+    }
+    if (_selectedTeamSizes.isNotEmpty) {
       tags.add('${_selectedTeamSizes.length} team sizes');
-    if (_priceRange.start > 0 || _priceRange.end < 3000) tags.add('price');
-    if (_distanceRange.start > 0 || _distanceRange.end < 12)
+    }
+    if (_priceRange.start > 0 || _priceRange.end < 3000) {
+      tags.add('price');
+    }
+    if (_distanceRange.start > 0 || _distanceRange.end < 12) {
       tags.add('distance');
+    }
     final label = tags.join(' • ');
 
     return SliverToBoxAdapter(

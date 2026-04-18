@@ -80,7 +80,16 @@ class CourtCompactCard extends StatelessWidget {
             ),
             const SizedBox(height: 6),
             Text(
-              '${booking.courtType} • ${booking.durationHours} hr${booking.durationHours > 1 ? 's' : ''}',
+              'Sports: ${court.courtTypes.join(', ')}',
+              style: const TextStyle(
+                fontFamily: 'Poppins',
+                fontSize: 12.5,
+                color: AppColors.textSecondary,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              '${booking.durationHours} slot${booking.durationHours > 1 ? 's' : ''}',
               style: const TextStyle(
                 fontFamily: 'Poppins',
                 fontSize: 12.5,
@@ -130,37 +139,30 @@ class CourtCompactCard extends StatelessWidget {
                 ),
               ],
             ),
-            const SizedBox(height: 10),
-            const Text(
-              'Money not refundable',
-              style: TextStyle(
-                fontFamily: 'Poppins',
-                fontSize: 11.5,
-                fontWeight: FontWeight.w500,
-                color: AppColors.textSecondary,
-              ),
-            ),
             if (onCancel != null) ...[
               const SizedBox(height: 10),
-              Align(
-                alignment: Alignment.centerRight,
-                child: OutlinedButton.icon(
-                  onPressed: onCancel,
-                  icon: const Icon(Icons.cancel_outlined, size: 16),
-                  label: const Text('Cancel booking'),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: Colors.red.shade700,
-                    side: BorderSide(color: Colors.red.shade200),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 14,
-                      vertical: 10,
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  if (onCancel != null)
+                    OutlinedButton.icon(
+                      onPressed: onCancel,
+                      icon: const Icon(Icons.cancel_outlined, size: 16),
+                      label: const Text('Cancel'),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: Colors.red.shade700,
+                        side: BorderSide(color: Colors.red.shade200),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 10,
+                        ),
+                        minimumSize: const Size(0, 40),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
                     ),
-                    minimumSize: const Size(0, 40),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                  ),
-                ),
+                ],
               ),
             ],
           ],
@@ -197,18 +199,31 @@ class _StatusChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isCancelled = status == BookingStatus.cancelled;
+    final isUnpaid = status == BookingStatus.unpaid;
+
+    Color bgColor = AppColors.surface;
+    Color borderColor = AppColors.primary;
+    String label = 'Booked';
+
+    if (isCancelled) {
+      bgColor = AppColors.surface;
+      borderColor = Colors.red.shade200;
+      label = 'Cancelled';
+    } else if (isUnpaid) {
+      bgColor = Colors.orange.shade50;
+      borderColor = Colors.orange;
+      label = 'Unpaid';
+    }
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: bgColor,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(
-          color: isCancelled ? Colors.red.shade200 : AppColors.primary,
-          width: 1,
-        ),
+        border: Border.all(color: borderColor, width: 1),
       ),
       child: Text(
-        isCancelled ? 'Cancelled' : 'Booked',
+        label,
         style: const TextStyle(
           fontFamily: 'Poppins',
           fontSize: 11.5,
