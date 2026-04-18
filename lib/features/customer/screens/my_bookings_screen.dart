@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-
+import 'package:go_router/go_router.dart';
 import '../../../app/constants/app_constants.dart';
 import '../../../app/theme/app_colors.dart';
 import '../../../shared/widgets/empty_state.dart';
@@ -88,11 +88,11 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
   void _onNavTap(int index) {
     if (index == 1) return;
     if (index == 0) {
-      Navigator.pushReplacementNamed(context, AppConstants.routeHome);
+      context.go('/customer/home');
       return;
     }
     if (index == 2) {
-      Navigator.pushReplacementNamed(context, AppConstants.routeProfile);
+      context.go('/customer/profile');
     }
   }
 
