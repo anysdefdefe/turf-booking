@@ -63,6 +63,24 @@ class ApplicationRepository {
       throw UnknownException('An unexpected error occurred during submission.', e);
     }
   }
+
+  /// Queries the owner_applications table to see if the current user has a pending application
+  Future<bool> hasPendingApplication() async {
+    final user = _client.auth.currentUser;
+    if (user == null) return false;
+    
+    try {
+      final response = await _client
+          .from('owner_applications')
+          .select('id')
+          .eq('user_id', user.id)
+          .eq('status', 'pending')
+          .limit(1);
+      return response.isNotEmpty;
+    } catch (_) {
+      return false;
+    }
+  }
 }
 
 @riverpod

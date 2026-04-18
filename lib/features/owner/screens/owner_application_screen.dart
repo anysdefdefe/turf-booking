@@ -70,9 +70,35 @@ class _OwnerApplicationScreenState extends ConsumerState<OwnerApplicationScreen>
 
   @override
   Widget build(BuildContext context) {
-    // Scaffold UI listen state for successful submission & error presentation
-    ref.listen(applicationControllerProvider, (previous, next) {
-      if (next.hasError && !next.isLoading) {
+    final pendingStatus = ref.watch(checkPendingApplicationProvider);
+
+    return pendingStatus.when(
+      loading: () => const Scaffold(
+        backgroundColor: AppColors.background,
+        body: Center(
+          child: CircularProgressIndicator(color: AppColors.primary),
+        ),
+      ),
+      error: (e, st) => const Scaffold(
+        backgroundColor: AppColors.background,
+        body: Center(child: Text('Error loading status', style: TextStyle(fontFamily: 'Poppins'))),
+      ),
+      data: (hasPending) {
+        if (hasPending) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) context.go('/owner/pending-approval');
+          });
+          return const Scaffold(
+            backgroundColor: AppColors.background,
+            body: Center(
+              child: CircularProgressIndicator(color: AppColors.primary),
+            ),
+          );
+        }
+
+        // Scaffold UI listen state for successful submission & error presentation
+        ref.listen(applicationControllerProvider, (previous, next) {
+          if (next.hasError && !next.isLoading) {
         final error = next.error;
         final message = error is AppException ? error.message : error.toString();
         ScaffoldMessenger.of(context).showSnackBar(
@@ -212,7 +238,8 @@ class _OwnerApplicationScreenState extends ConsumerState<OwnerApplicationScreen>
             ],
           ),
         ),
-      ),
-    );
+        ),
+      );
+    });
   }
 }

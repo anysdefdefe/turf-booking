@@ -53,3 +53,37 @@ abstract class _$ApplicationController extends $AsyncNotifier<void> {
     element.handleCreate(ref, build);
   }
 }
+
+@ProviderFor(checkPendingApplication)
+final checkPendingApplicationProvider = CheckPendingApplicationProvider._();
+
+final class CheckPendingApplicationProvider
+    extends $FunctionalProvider<AsyncValue<bool>, bool, FutureOr<bool>>
+    with $FutureModifier<bool>, $FutureProvider<bool> {
+  CheckPendingApplicationProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'checkPendingApplicationProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$checkPendingApplicationHash();
+
+  @$internal
+  @override
+  $FutureProviderElement<bool> $createElement($ProviderPointer pointer) =>
+      $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<bool> create(Ref ref) {
+    return checkPendingApplication(ref);
+  }
+}
+
+String _$checkPendingApplicationHash() =>
+    r'79173d87fdd29cbe1dec087de5b4f2972ed1f9e5';
