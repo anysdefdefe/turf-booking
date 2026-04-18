@@ -1,5 +1,6 @@
 // lib/app/router.dart
 
+import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -14,6 +15,9 @@ import 'package:turf_booking/features/customer/screens/my_bookings_screen.dart';
 import 'package:turf_booking/features/customer/screens/profile_screen.dart';
 import 'package:turf_booking/features/owner/screens/owner_dashboard_screen.dart';
 import 'package:turf_booking/features/owner/screens/pending_approval_screen.dart';
+import 'package:turf_booking/features/owner/screens/owner_bookings_screen.dart';
+import 'package:turf_booking/features/owner/screens/owner_my_stadiums_screen.dart';
+import 'package:turf_booking/features/owner/screens/owner_add_stadium_screen.dart';
 
 part 'router.g.dart';
 
@@ -104,6 +108,18 @@ GoRouter router(Ref ref) {
       GoRoute(
         path: '/owner/pending-approval',
         builder: (context, state) => const PendingApprovalScreen(),
+      ),
+      GoRoute(
+        path: '/owner/bookings',
+        builder: (context, state) => const OwnerBookingsScreen(),
+      ),
+      GoRoute(
+        path: '/owner/my-stadiums',
+        builder: (context, state) => const OwnerMyStadiumsScreen(),
+      ),
+      GoRoute(
+        path: '/owner/add-stadium',
+        builder: (context, state) => const OwnerAddStadiumScreen(),
       ),
     ],
   );

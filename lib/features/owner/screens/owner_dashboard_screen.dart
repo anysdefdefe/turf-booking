@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:turf_booking/app/theme/app_colors.dart';
+import 'package:go_router/go_router.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:turf_booking/app/constants/app_constants.dart';
+import 'package:turf_booking/app/theme/app_colors.dart';
 import '../data/owner_dummy_data.dart';
 import '../widgets/owner_bottom_nav_bar.dart';
 
@@ -29,10 +31,9 @@ class OwnerDashboardScreen extends StatelessWidget {
         actions: [
           IconButton(
             icon: const Icon(Icons.logout, color: AppColors.textSecondary),
-            onPressed: () {
-              Navigator.of(
-                context,
-              ).pushReplacementNamed(AppConstants.routeSplash);
+            onPressed: () async {
+              await Supabase.instance.client.auth.signOut();
+              // authProvider in main.dart will automatically redirect to LoginScreen
             },
           ),
         ],
@@ -42,13 +43,13 @@ class OwnerDashboardScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            if (!owner.isApproved) _PendingApprovalBanner(),
+            if (!owner.isApproved) const _PendingApprovalBanner(),
 
             const SizedBox(height: 8),
 
             // ── WELCOME ──────────────────────────────────────────────
             Text(
-              '${owner.name},Good to see you!',
+              '${owner.name}, good to see you!',
               style: const TextStyle(
                 fontFamily: 'Poppins',
                 fontSize: 22,
@@ -104,7 +105,7 @@ class OwnerDashboardScreen extends StatelessWidget {
 
             // ── TODAY'S BOOKINGS ─────────────────────────────────────
             const Text(
-              'Today\'s Bookings',
+              "Today's Bookings",
               style: TextStyle(
                 fontFamily: 'Poppins',
                 fontSize: 16,
@@ -115,7 +116,7 @@ class OwnerDashboardScreen extends StatelessWidget {
             const SizedBox(height: 14),
 
             if (!owner.isApproved)
-              _LockedCard()
+              const _LockedCard()
             else
               Column(
                 children: [
@@ -160,55 +161,91 @@ class OwnerDashboardScreen extends StatelessWidget {
               label: 'Add New Stadium',
               icon: Icons.add_business_rounded,
               isLocked: !owner.isApproved,
-              onTap: () {
-                if (owner.isApproved) {
-                  Navigator.pushNamed(
-                    context,
-                    AppConstants.routeOwnerAddStadium,
-                  );
-                } else {
-                  _showLockedSnackbar(context);
-                }
-              },
+              onTap: () => context.go('/owner/add-stadium'),
+            ),
+            const SizedBox(height: 12),
+            _ActionButton(
+              label: 'My Stadiums',
+              icon: Icons.stadium_rounded,
+              isLocked: !owner.isApproved,
+              onTap: () => context.go('/owner/my-stadiums'),
             ),
             const SizedBox(height: 12),
             _ActionButton(
               label: 'Manage Bookings',
               icon: Icons.book_online_rounded,
               isLocked: !owner.isApproved,
-              onTap: () {
-                if (owner.isApproved) {
-                  Navigator.pushNamed(context, AppConstants.routeOwnerBookings);
-                } else {
-                  _showLockedSnackbar(context);
-                }
-              },
+              onTap: () => context.go('/owner/bookings'),
             ),
           ],
         ),
       ),
     );
   }
+}
 
-  void _showLockedSnackbar(BuildContext context) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: const Text(
-          'Available after admin approves your account',
-          style: TextStyle(fontFamily: 'Poppins'),
-        ),
-        backgroundColor: AppColors.secondary,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppConstants.radiusM),
-        ),
+// ── PENDING APPROVAL BANNER ───────────────────────────────────────────────────
+
+class _PendingApprovalBanner extends StatelessWidget {
+  const _PendingApprovalBanner();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.all(AppConstants.paddingM),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFFF8E1),
+        border: Border.all(color: const Color(0xFFFFD166)),
+        borderRadius: BorderRadius.circular(AppConstants.radiusM),
+      ),
+      child: const Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(
+            Icons.hourglass_empty_rounded,
+            color: Color(0xFFE6A800),
+            size: 22,
+          ),
+          SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Account Pending Approval',
+                  style: TextStyle(
+                    fontFamily: 'Poppins',
+                    fontWeight: FontWeight.w600,
+                    fontSize: 14,
+                    color: Color(0xFF7A5800),
+                  ),
+                ),
+                SizedBox(height: 4),
+                Text(
+                  "Your stadium owner account is under review. You'll get full access once approved.",
+                  style: TextStyle(
+                    fontFamily: 'Poppins',
+                    fontSize: 12,
+                    color: Color(0xFF7A5800),
+                    height: 1.4,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
 }
 
-// ── LOCKED CARD ──────────────────────────────────────────────────────────────
+// ── LOCKED CARD ───────────────────────────────────────────────────────────────
+
 class _LockedCard extends StatelessWidget {
+  const _LockedCard();
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -242,7 +279,8 @@ class _LockedCard extends StatelessWidget {
   }
 }
 
-// ── BOOKING ITEM ─────────────────────────────────────────────────────────────
+// ── BOOKING ITEM ──────────────────────────────────────────────────────────────
+
 class _BookingItem extends StatelessWidget {
   final String customerName;
   final String courtName;
@@ -259,6 +297,7 @@ class _BookingItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isConfirmed = status == 'confirmed';
+
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
@@ -331,7 +370,7 @@ class _BookingItem extends StatelessWidget {
                 fontSize: 11,
                 fontWeight: FontWeight.w600,
                 color: isConfirmed
-                    ? AppColors.badgeText
+                    ? AppColors.primary
                     : const Color(0xFFE6A800),
               ),
             ),
@@ -342,60 +381,8 @@ class _BookingItem extends StatelessWidget {
   }
 }
 
-// ── PENDING APPROVAL BANNER ───────────────────────────────────────────────────
-class _PendingApprovalBanner extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(AppConstants.paddingM),
-      decoration: BoxDecoration(
-        color: const Color(0xFFFFF8E1),
-        border: Border.all(color: const Color(0xFFFFD166)),
-        borderRadius: BorderRadius.circular(AppConstants.radiusM),
-      ),
-      child: const Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(
-            Icons.hourglass_empty_rounded,
-            color: Color(0xFFE6A800),
-            size: 22,
-          ),
-          SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Account Pending Approval',
-                  style: TextStyle(
-                    fontFamily: 'Poppins',
-                    fontWeight: FontWeight.w600,
-                    fontSize: 14,
-                    color: Color(0xFF7A5800),
-                  ),
-                ),
-                SizedBox(height: 4),
-                Text(
-                  'Your stadium owner account is under review. You\'ll get full access once approved.',
-                  style: TextStyle(
-                    fontFamily: 'Poppins',
-                    fontSize: 12,
-                    color: Color(0xFF7A5800),
-                    height: 1.4,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
 // ── STAT CARD ─────────────────────────────────────────────────────────────────
+
 class _StatCard extends StatelessWidget {
   final String label;
   final String value;
@@ -451,6 +438,7 @@ class _StatCard extends StatelessWidget {
 }
 
 // ── ACTION BUTTON ─────────────────────────────────────────────────────────────
+
 class _ActionButton extends StatelessWidget {
   final String label;
   final IconData icon;
