@@ -112,6 +112,10 @@ class _OwnerBookingsScreenState extends State<OwnerBookingsScreen>
   late TabController _tabController;
   String _searchQuery = '';
 
+  // ── FILTER STATE ────────────────────────────────────────
+  String? _dateFilter;
+  String? _courtFilter;
+
   final List<String> _tabs = ['All', 'Pending', 'Confirmed', 'Cancelled'];
 
   @override
@@ -130,16 +134,23 @@ class _OwnerBookingsScreenState extends State<OwnerBookingsScreen>
     final tabIndex = _tabController.index;
     List<BookingEntry> result = _mockBookings;
 
-    if (tabIndex == 1) {
+    // Tab filter
+    if (tabIndex == 1)
       result = result.where((b) => b.status == 'pending').toList();
-    }
-    if (tabIndex == 2) {
+    if (tabIndex == 2)
       result = result.where((b) => b.status == 'confirmed').toList();
-    }
-    if (tabIndex == 3) {
+    if (tabIndex == 3)
       result = result.where((b) => b.status == 'cancelled').toList();
+
+    // Sheet filters
+    if (_dateFilter != null) {
+      result = result.where((b) => b.date == _dateFilter).toList();
+    }
+    if (_courtFilter != null) {
+      result = result.where((b) => b.courtName == _courtFilter).toList();
     }
 
+    // Search
     if (_searchQuery.isNotEmpty) {
       final q = _searchQuery.toLowerCase();
       result = result
@@ -156,79 +167,31 @@ class _OwnerBookingsScreenState extends State<OwnerBookingsScreen>
     return result;
   }
 
-  void _showFilterSheet() {
-    showModalBottomSheet<void>(
+  bool get _hasActiveFilters => _dateFilter != null || _courtFilter != null;
+
+  void _showFilterSheet() async {
+    final result = await showModalBottomSheet<Map<String, String?>>(
       context: context,
       backgroundColor: Colors.transparent,
-      builder: (context) => _FilterSheet(),
+      builder: (context) =>
+          _FilterSheet(selectedDate: _dateFilter, selectedCourt: _courtFilter),
     );
+    if (result != null) {
+      setState(() {
+        _dateFilter = result['date'];
+        _courtFilter = result['court'];
+      });
+    }
   }
 
-  void _showStatusDialog(BookingEntry booking) {
-    showDialog<void>(
-      context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppConstants.radiusL),
-        ),
-        title: const Text(
-          'Update Status',
-          style: TextStyle(
-            fontFamily: 'Poppins',
-            fontWeight: FontWeight.w600,
-            fontSize: 16,
-          ),
-        ),
-        content: Text(
-          'Change status for ${booking.customerName}\'s booking?',
-          style: const TextStyle(
-            fontFamily: 'Poppins',
-            fontSize: 14,
-            color: AppColors.textSecondary,
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text(
-              'Cancel',
-              style: TextStyle(
-                fontFamily: 'Poppins',
-                color: AppColors.textSecondary,
-              ),
-            ),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              _showSnackbar('Booking approved (mock)');
-            },
-            child: const Text(
-              'Approve',
-              style: TextStyle(
-                fontFamily: 'Poppins',
-                color: AppColors.primary,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              _showSnackbar('Booking rejected (mock)');
-            },
-            child: const Text(
-              'Reject',
-              style: TextStyle(
-                fontFamily: 'Poppins',
-                color: Colors.redAccent,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
+  void _approveBooking(BookingEntry booking) {
+    // TODO: call Supabase update here
+    _showSnackbar('✓ Booking by ${booking.customerName} approved');
+  }
+
+  void _rejectBooking(BookingEntry booking) {
+    // TODO: call Supabase update here
+    _showSnackbar('✗ Booking by ${booking.customerName} rejected');
   }
 
   void _showSnackbar(String message) {
@@ -261,6 +224,25 @@ class _OwnerBookingsScreenState extends State<OwnerBookingsScreen>
             color: AppColors.textPrimary,
           ),
         ),
+        // ── CLEAR FILTERS BUTTON (shows only when filters are active) ──
+        actions: [
+          if (_hasActiveFilters)
+            TextButton(
+              onPressed: () => setState(() {
+                _dateFilter = null;
+                _courtFilter = null;
+              }),
+              child: const Text(
+                'Clear',
+                style: TextStyle(
+                  fontFamily: 'Poppins',
+                  color: AppColors.primary,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+        ],
         bottom: TabBar(
           controller: _tabController,
           onTap: (index) => setState(() {}),
@@ -321,26 +303,76 @@ class _OwnerBookingsScreenState extends State<OwnerBookingsScreen>
                   ),
                 ),
                 const SizedBox(width: 10),
+                // ── FILTER BUTTON (dot indicator when active) ──
                 GestureDetector(
                   onTap: _showFilterSheet,
-                  child: Container(
-                    width: 46,
-                    height: 46,
-                    decoration: BoxDecoration(
-                      color: AppColors.surface,
-                      borderRadius: BorderRadius.circular(AppConstants.radiusM),
-                      border: Border.all(color: AppColors.divider),
-                    ),
-                    child: const Icon(
-                      Icons.tune_rounded,
-                      color: AppColors.textSecondary,
-                      size: 20,
-                    ),
+                  child: Stack(
+                    children: [
+                      Container(
+                        width: 46,
+                        height: 46,
+                        decoration: BoxDecoration(
+                          color: _hasActiveFilters
+                              ? AppColors.badgeBg
+                              : AppColors.surface,
+                          borderRadius: BorderRadius.circular(
+                            AppConstants.radiusM,
+                          ),
+                          border: Border.all(
+                            color: _hasActiveFilters
+                                ? AppColors.primary
+                                : AppColors.divider,
+                          ),
+                        ),
+                        child: Icon(
+                          Icons.tune_rounded,
+                          color: _hasActiveFilters
+                              ? AppColors.primary
+                              : AppColors.textSecondary,
+                          size: 20,
+                        ),
+                      ),
+                      if (_hasActiveFilters)
+                        Positioned(
+                          top: 6,
+                          right: 6,
+                          child: Container(
+                            width: 8,
+                            height: 8,
+                            decoration: const BoxDecoration(
+                              color: AppColors.primary,
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                        ),
+                    ],
                   ),
                 ),
               ],
             ),
           ),
+
+          // ── ACTIVE FILTER CHIPS ──────────────────────────────────
+          if (_hasActiveFilters)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+              child: Row(
+                children: [
+                  if (_dateFilter != null)
+                    _ActiveFilterChip(
+                      label: _dateFilter!,
+                      onRemove: () => setState(() => _dateFilter = null),
+                    ),
+                  if (_dateFilter != null && _courtFilter != null)
+                    const SizedBox(width: 8),
+                  if (_courtFilter != null)
+                    _ActiveFilterChip(
+                      label: _courtFilter!,
+                      onRemove: () => setState(() => _courtFilter = null),
+                    ),
+                ],
+              ),
+            ),
 
           // ── BOOKING LIST ─────────────────────────────────────────
           Expanded(
@@ -349,13 +381,13 @@ class _OwnerBookingsScreenState extends State<OwnerBookingsScreen>
                 : ListView.separated(
                     padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
                     itemCount: _filteredBookings.length,
-                    separatorBuilder: (context, index) =>
-                        const SizedBox(height: 10),
+                    separatorBuilder: (_, __) => const SizedBox(height: 10),
                     itemBuilder: (context, index) {
                       final booking = _filteredBookings[index];
                       return _BookingCard(
                         booking: booking,
-                        onStatusTap: () => _showStatusDialog(booking),
+                        onApproveTap: () => _approveBooking(booking),
+                        onRejectTap: () => _rejectBooking(booking),
                       );
                     },
                   ),
@@ -400,13 +432,58 @@ class _OwnerBookingsScreenState extends State<OwnerBookingsScreen>
   }
 }
 
+// ── ACTIVE FILTER CHIP ────────────────────────────────────────────────────────
+
+class _ActiveFilterChip extends StatelessWidget {
+  final String label;
+  final VoidCallback onRemove;
+
+  const _ActiveFilterChip({required this.label, required this.onRemove});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: AppColors.badgeBg,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: AppColors.primary),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            label,
+            style: const TextStyle(
+              fontFamily: 'Poppins',
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+              color: AppColors.primary,
+            ),
+          ),
+          const SizedBox(width: 4),
+          GestureDetector(
+            onTap: onRemove,
+            child: const Icon(Icons.close, size: 14, color: AppColors.primary),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 // ── BOOKING CARD ──────────────────────────────────────────────────────────────
 
 class _BookingCard extends StatelessWidget {
   final BookingEntry booking;
-  final VoidCallback onStatusTap;
+  final VoidCallback onApproveTap;
+  final VoidCallback onRejectTap;
 
-  const _BookingCard({required this.booking, required this.onStatusTap});
+  const _BookingCard({
+    required this.booking,
+    required this.onApproveTap,
+    required this.onRejectTap,
+  });
 
   Color get _statusColor {
     switch (booking.status) {
@@ -555,7 +632,7 @@ class _BookingCard extends StatelessWidget {
             ],
           ),
 
-          // ── STATUS ACTIONS (only for pending) ──────────────────
+          // ── APPROVE / REJECT (pending only) ───────────────────
           if (booking.status == 'pending') ...[
             const SizedBox(height: 10),
             const Divider(color: AppColors.divider, height: 1),
@@ -564,7 +641,7 @@ class _BookingCard extends StatelessWidget {
               children: [
                 Expanded(
                   child: GestureDetector(
-                    onTap: onStatusTap,
+                    onTap: onApproveTap, // ← directly calls approve, no dialog
                     child: Container(
                       padding: const EdgeInsets.symmetric(vertical: 8),
                       decoration: BoxDecoration(
@@ -591,7 +668,7 @@ class _BookingCard extends StatelessWidget {
                 const SizedBox(width: 10),
                 Expanded(
                   child: GestureDetector(
-                    onTap: onStatusTap,
+                    onTap: onRejectTap, // ← directly calls reject, no dialog
                     child: Container(
                       padding: const EdgeInsets.symmetric(vertical: 8),
                       decoration: BoxDecoration(
@@ -626,7 +703,52 @@ class _BookingCard extends StatelessWidget {
 
 // ── FILTER SHEET ──────────────────────────────────────────────────────────────
 
-class _FilterSheet extends StatelessWidget {
+class _FilterSheet extends StatefulWidget {
+  final String? selectedDate;
+  final String? selectedCourt;
+
+  const _FilterSheet({this.selectedDate, this.selectedCourt});
+
+  @override
+  State<_FilterSheet> createState() => _FilterSheetState();
+}
+
+class _FilterSheetState extends State<_FilterSheet> {
+  String? _date;
+  String? _court;
+
+  @override
+  void initState() {
+    super.initState();
+    _date = widget.selectedDate;
+    _court = widget.selectedCourt;
+  }
+
+  Widget _chip(String label, bool isSelected, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        decoration: BoxDecoration(
+          color: isSelected ? AppColors.badgeBg : AppColors.chipUnselected,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: isSelected ? AppColors.primary : AppColors.divider,
+          ),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            fontFamily: 'Poppins',
+            fontSize: 12,
+            fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+            color: isSelected ? AppColors.primary : AppColors.textSecondary,
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Padding(
@@ -642,16 +764,39 @@ class _FilterSheet extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'Filter Bookings',
-              style: TextStyle(
-                fontFamily: 'Poppins',
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-                color: AppColors.textPrimary,
-              ),
+            // Header
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  'Filter Bookings',
+                  style: TextStyle(
+                    fontFamily: 'Poppins',
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+                if (_date != null || _court != null)
+                  GestureDetector(
+                    onTap: () => setState(() {
+                      _date = null;
+                      _court = null;
+                    }),
+                    child: const Text(
+                      'Reset',
+                      style: TextStyle(
+                        fontFamily: 'Poppins',
+                        fontSize: 13,
+                        color: AppColors.primary,
+                      ),
+                    ),
+                  ),
+              ],
             ),
             const SizedBox(height: 16),
+
+            // Date
             const Text(
               'Date',
               style: TextStyle(
@@ -664,34 +809,21 @@ class _FilterSheet extends StatelessWidget {
             const SizedBox(height: 8),
             Wrap(
               spacing: 8,
+              runSpacing: 8,
               children: ['Today', 'Tomorrow', 'Yesterday', 'This Week']
                   .map(
-                    (label) => GestureDetector(
-                      onTap: () => Navigator.pop(context),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 14,
-                          vertical: 8,
-                        ),
-                        decoration: BoxDecoration(
-                          color: AppColors.chipUnselected,
-                          borderRadius: BorderRadius.circular(20),
-                          border: Border.all(color: AppColors.divider),
-                        ),
-                        child: Text(
-                          label,
-                          style: const TextStyle(
-                            fontFamily: 'Poppins',
-                            fontSize: 12,
-                            color: AppColors.textSecondary,
-                          ),
-                        ),
-                      ),
+                    (label) => _chip(
+                      label,
+                      _date == label,
+                      () =>
+                          setState(() => _date = _date == label ? null : label),
                     ),
                   )
                   .toList(),
             ),
             const SizedBox(height: 16),
+
+            // Court
             const Text(
               'Court',
               style: TextStyle(
@@ -704,38 +836,27 @@ class _FilterSheet extends StatelessWidget {
             const SizedBox(height: 8),
             Wrap(
               spacing: 8,
+              runSpacing: 8,
               children: ['Court A', 'Court B', 'Court C']
                   .map(
-                    (label) => GestureDetector(
-                      onTap: () => Navigator.pop(context),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 14,
-                          vertical: 8,
-                        ),
-                        decoration: BoxDecoration(
-                          color: AppColors.chipUnselected,
-                          borderRadius: BorderRadius.circular(20),
-                          border: Border.all(color: AppColors.divider),
-                        ),
-                        child: Text(
-                          label,
-                          style: const TextStyle(
-                            fontFamily: 'Poppins',
-                            fontSize: 12,
-                            color: AppColors.textSecondary,
-                          ),
-                        ),
+                    (label) => _chip(
+                      label,
+                      _court == label,
+                      () => setState(
+                        () => _court = _court == label ? null : label,
                       ),
                     ),
                   )
                   .toList(),
             ),
             const SizedBox(height: 20),
+
+            // Apply
             SizedBox(
               width: double.infinity,
               child: TextButton(
-                onPressed: () => Navigator.pop(context),
+                onPressed: () =>
+                    Navigator.pop(context, {'date': _date, 'court': _court}),
                 style: TextButton.styleFrom(
                   backgroundColor: AppColors.primary,
                   foregroundColor: Colors.white,
