@@ -184,6 +184,22 @@ class OwnerDashboardScreen extends StatelessWidget {
             ),
             const SizedBox(height: 12),
             _ActionButton(
+              label: 'My Stadiums',
+              icon: Icons.stadium_rounded,
+              isLocked: !owner.isApproved,
+              onTap: () {
+                if (owner.isApproved) {
+                  Navigator.pushNamed(
+                    context,
+                    AppConstants.routeOwnerMyStadiums,
+                  );
+                } else {
+                  _showLockedSnackbar(context);
+                }
+              },
+            ),
+            const SizedBox(height: 12),
+            _ActionButton(
               label: 'Manage Bookings',
               icon: Icons.book_online_rounded,
               isLocked: !owner.isApproved,
