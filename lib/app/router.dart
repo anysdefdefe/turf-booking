@@ -1,5 +1,6 @@
 // lib/app/router.dart
 
+import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -14,6 +15,7 @@ import 'package:turf_booking/features/customer/screens/my_bookings_screen.dart';
 import 'package:turf_booking/features/customer/screens/profile_screen.dart';
 import 'package:turf_booking/features/owner/screens/owner_dashboard_screen.dart';
 import 'package:turf_booking/features/owner/screens/pending_approval_screen.dart';
+import 'package:turf_booking/features/owner/screens/owner_application_screen.dart';
 
 part 'router.g.dart';
 
@@ -51,9 +53,14 @@ GoRouter router(Ref ref) {
       // 4. Role-based Route Protection for Owners
       final isGoingToOwnerArea = state.matchedLocation.startsWith('/owner');
       if (isGoingToOwnerArea) {
-        // If they aren't approved, force them to the pending screen
-        if (!user.isApproved &&
-            state.matchedLocation != '/owner/pending-approval') {
+        // If they are not an owner yet, they can ONLY access the application or pending screen
+        if (!user.isOwner) {
+          if (state.matchedLocation != '/owner/application' && state.matchedLocation != '/owner/pending-approval') {
+            return '/owner/application';
+          }
+        } 
+        // If they ARE an owner but not approved, lock them to pending
+        else if (!user.isApproved && state.matchedLocation != '/owner/pending-approval') {
           return '/owner/pending-approval';
         }
       }
@@ -100,6 +107,10 @@ GoRouter router(Ref ref) {
       GoRoute(
         path: '/owner/dashboard',
         builder: (context, state) => const OwnerDashboardScreen(),
+      ),
+      GoRoute(
+        path: '/owner/application',
+        builder: (context, state) => const OwnerApplicationScreen(),
       ),
       GoRoute(
         path: '/owner/pending-approval',

@@ -1,4 +1,5 @@
 import 'dart:typed_data';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:turf_booking/shared/exceptions/app_exceptions.dart';
@@ -65,6 +66,6 @@ class ApplicationRepository {
 }
 
 @riverpod
-ApplicationRepository applicationRepository(ApplicationRepositoryRef ref) {
+ApplicationRepository applicationRepository(Ref ref) {
   return ApplicationRepository(Supabase.instance.client);
 }

@@ -55,4 +55,4 @@ final class ApplicationRepositoryProvider
 }
 
 String _$applicationRepositoryHash() =>
-    r'66637b0c4d2cfb7f90ef5233c4673a593db6ed2e';
+    r'f20df18fc60e2e345453c6ccd0262e6b3464266c';

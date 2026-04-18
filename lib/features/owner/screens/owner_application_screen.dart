@@ -32,7 +32,7 @@ class _OwnerApplicationScreenState extends ConsumerState<OwnerApplicationScreen>
   }
 
   Future<void> _pickPdf() async {
-    final result = await FilePicker.platform.pickFiles(
+    final result = await FilePicker.pickFiles(
       type: FileType.custom,
       allowedExtensions: ['pdf'],
       withData: true, // Crucial: Loads bytes into memory
@@ -81,7 +81,7 @@ class _OwnerApplicationScreenState extends ConsumerState<OwnerApplicationScreen>
             backgroundColor: AppColors.error,
           ),
         );
-      } else if (next.valueOrNull != null || (!next.isLoading && !next.hasError && previous?.isLoading == true)) {
+      } else if (next.hasValue || (!next.isLoading && !next.hasError && previous?.isLoading == true)) {
          // Submission success lock jump to pending mode
          context.go('/owner/pending-approval');
       }
