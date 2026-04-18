@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import '../../../app/constants/app_constants.dart';
 import '../../../app/theme/app_colors.dart';
 import '../data/models/booking_args.dart';
@@ -292,7 +293,11 @@ class _CourtDetailScreenState extends State<CourtDetailScreen> {
       actions: [
         Padding(
           padding: const EdgeInsets.all(10),
-          child: _CircleBtn(icon: Icons.share_rounded, onTap: () {}, iconSize: 12),
+          child: _CircleBtn(
+            icon: Icons.share_rounded,
+            onTap: () {},
+            iconSize: 12,
+          ),
         ),
         Padding(
           padding: const EdgeInsets.only(right: 10, top: 10, bottom: 10),
@@ -960,10 +965,9 @@ class _CourtDetailScreenState extends State<CourtDetailScreen> {
           Expanded(
             child: FilledButton.icon(
               onPressed: _canBook
-                  ? () => Navigator.pushNamed(
-                      context,
+                  ? () => context.push(
                       AppConstants.routeBookingConfirm,
-                      arguments: BookingArgs(
+                      extra: BookingArgs(
                         court: court,
                         date: _selectedDate!,
                         slots: _orderedSelectedSlots(),
@@ -1074,8 +1078,11 @@ class _CircleBtn extends StatelessWidget {
   final IconData icon;
   final VoidCallback onTap;
   final double iconSize;
-  const _CircleBtn({required this.icon, required this.onTap,  this.iconSize = 12});
-
+  const _CircleBtn({
+    required this.icon,
+    required this.onTap,
+    this.iconSize = 12,
+  });
 
   @override
   Widget build(BuildContext context) => GestureDetector(

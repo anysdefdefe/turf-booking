@@ -152,6 +152,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     }
   }
 
+  void _switchMode() {
+    context.go('/mode-selection');
+  }
+
   Future<void> _openEditSheet() async {
     final current = _profile;
     if (current == null) return;
@@ -378,7 +382,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     const SizedBox(height: 20),
                     _isOwner
                         ? const _OwnerInfoCard(isApproved: _isApproved)
-                        : const _CustomerInfoCard(),
+                        : _CustomerInfoCard(onSwitchMode: _switchMode),
                     const SizedBox(height: 24),
                     _ProfileDetailsCard(profile: profile),
                     const SizedBox(height: 24),
@@ -395,7 +399,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                       trailing: likedIds.isNotEmpty
                           ? _Badge(count: likedIds.length)
                           : null,
-                      onTap: () => context.go('/customer/home', extra: {'feed': 'wishlist'}),
+                      onTap: () => context.go(
+                        '/customer/home',
+                        extra: {'feed': 'wishlist'},
+                      ),
                     ),
                     _ActionTile(
                       icon: Icons.notifications_none_rounded,
@@ -1116,14 +1123,52 @@ class _StatChip extends StatelessWidget {
 // ─── Info Cards ──────────────────────────────────────────────────────────────
 
 class _CustomerInfoCard extends StatelessWidget {
-  const _CustomerInfoCard();
+  final VoidCallback onSwitchMode;
+
+  const _CustomerInfoCard({required this.onSwitchMode});
 
   @override
   Widget build(BuildContext context) {
-    return const _InfoCard(
+    return _InfoCard(
       tag: 'Customer',
       description: 'You are browsing and booking courts as a customer.',
-      trailingWidget: _RoleBadge(label: 'Active', isPositive: true),
+      trailingWidget: _RoleSwitcher(onTap: onSwitchMode),
+    );
+  }
+}
+
+class _RoleSwitcher extends StatelessWidget {
+  final VoidCallback onTap;
+
+  const _RoleSwitcher({required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(14),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        decoration: BoxDecoration(
+          color: const Color(0xFF0B1220),
+          borderRadius: BorderRadius.circular(14),
+        ),
+        child: const Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.swap_horiz_rounded, size: 14, color: Colors.white),
+            SizedBox(width: 4),
+            Text(
+              'Switch',
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+                color: Colors.white,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

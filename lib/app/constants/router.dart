@@ -8,6 +8,7 @@ import 'package:turf_booking/features/auth/screens/login_screen.dart';
 import 'package:turf_booking/features/auth/screens/register_screen.dart';
 import 'package:turf_booking/features/auth/screens/email_confirmation_screen.dart';
 import 'package:turf_booking/features/auth/screens/mode_selection_screen.dart';
+import 'package:turf_booking/features/customer/screens/court_detail_screen.dart';
 import 'package:turf_booking/features/customer/screens/home_screen.dart';
 import 'package:turf_booking/features/customer/screens/my_bookings_screen.dart';
 import 'package:turf_booking/features/customer/screens/profile_screen.dart';
@@ -30,10 +31,12 @@ GoRouter router(Ref ref) {
       final user = authState.value;
       final isGoingToLogin = state.matchedLocation == '/login';
       final isGoingToRegister = state.matchedLocation == '/register';
-      final isGoingToEmailConfirmation = state.matchedLocation == '/email-confirmation';
-      
+      final isGoingToEmailConfirmation =
+          state.matchedLocation == '/email-confirmation';
+
       // Unauthenticated users are allowed on Login, Register, and Email Confirmation
-      final isAuthScreen = isGoingToLogin || isGoingToRegister || isGoingToEmailConfirmation;
+      final isAuthScreen =
+          isGoingToLogin || isGoingToRegister || isGoingToEmailConfirmation;
 
       // 2. Unauthenticated users can ONLY go to auth screens
       if (user == null) {
@@ -49,7 +52,8 @@ GoRouter router(Ref ref) {
       final isGoingToOwnerArea = state.matchedLocation.startsWith('/owner');
       if (isGoingToOwnerArea) {
         // If they aren't approved, force them to the pending screen
-        if (!user.isApproved && state.matchedLocation != '/owner/pending-approval') {
+        if (!user.isApproved &&
+            state.matchedLocation != '/owner/pending-approval') {
           return '/owner/pending-approval';
         }
       }
@@ -57,10 +61,7 @@ GoRouter router(Ref ref) {
       return null; // All checks passed, let them proceed
     },
     routes: [
-      GoRoute(
-        path: '/login',
-        builder: (context, state) => const LoginScreen(),
-      ),
+      GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
       GoRoute(
         path: '/register',
         builder: (context, state) => const RegisterScreen(),
@@ -79,6 +80,14 @@ GoRouter router(Ref ref) {
       GoRoute(
         path: '/customer/home',
         builder: (context, state) => const HomeScreen(),
+      ),
+      GoRoute(
+        path: '/court-detail',
+        pageBuilder: (context, state) => MaterialPage<void>(
+          key: state.pageKey,
+          arguments: state.extra,
+          child: const CourtDetailScreen(),
+        ),
       ),
       GoRoute(
         path: '/customer/my-bookings',

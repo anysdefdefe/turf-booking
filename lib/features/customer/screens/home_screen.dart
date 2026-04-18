@@ -274,10 +274,9 @@ class _HomeScreenState extends State<HomeScreen> {
 
   void _openCourtDetails(Court court) {
     final stadiumCourts = _repo.getCourtsByStadium(court.stadiumId);
-    Navigator.pushNamed(
-      context,
+    context.push(
       AppConstants.routeCourtDetail,
-      arguments: CourtDetailArgs(
+      extra: CourtDetailArgs(
         selectedCourt: court,
         stadiumCourts: stadiumCourts,
       ),
@@ -290,10 +289,9 @@ class _HomeScreenState extends State<HomeScreen> {
       return;
     }
 
-    Navigator.pushNamed(
-      context,
+    context.push(
       AppConstants.routeCourtDetail,
-      arguments: CourtDetailArgs(
+      extra: CourtDetailArgs(
         selectedCourt: stadiumCourts.first,
         stadiumCourts: stadiumCourts,
       ),
@@ -312,7 +310,6 @@ class _HomeScreenState extends State<HomeScreen> {
         child: CustomScrollView(
           slivers: [
             _buildHeader(),
-            _buildSearchRow(),
             if (_hasActiveFilters) _buildFilterSummary(),
             _buildFeedToggle(),
             _buildResultsHeader(),
@@ -327,34 +324,37 @@ class _HomeScreenState extends State<HomeScreen> {
   SliverToBoxAdapter _buildHeader() {
     return SliverToBoxAdapter(
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
-        child: const Text(
-          'Find your Court',
-          style: TextStyle(
-            fontFamily: 'Poppins',
-            fontSize: 28,
-            fontWeight: FontWeight.w800,
-            color: AppColors.textPrimary,
-            height: 1.05,
-          ),
-        ),
-      ),
-    );
-  }
-
-  SliverToBoxAdapter _buildSearchRow() {
-    return SliverToBoxAdapter(
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
-        child: Row(
+        padding: const EdgeInsets.fromLTRB(20, 18, 20, 8),
+        child: Column(
           children: [
-            Expanded(child: CourtSearchBar(onChanged: _onSearch)),
-            const SizedBox(width: 10),
-            _OutlineIconButton(
-              icon: Icons.filter_alt_outlined,
-              onTap: _openLocationSheet,
-              isActive: _hasActiveFilters,
+            Row(
+              children: [
+                const Icon(
+                  Icons.stadium_rounded,
+                  size: 22,
+                  color: AppColors.textPrimary,
+                ),
+                const SizedBox(width: 8),
+                const Expanded(
+                  child: Text(
+                    'Courtify',
+                    style: TextStyle(
+                      fontFamily: 'Poppins',
+                      fontSize: 18,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                ),
+                _OutlineIconButton(
+                  icon: Icons.filter_alt_outlined,
+                  onTap: _openLocationSheet,
+                  isActive: _hasActiveFilters,
+                ),
+              ],
             ),
+            const SizedBox(height: 10),
+            CourtSearchBar(onChanged: _onSearch),
           ],
         ),
       ),
@@ -399,9 +399,14 @@ class _HomeScreenState extends State<HomeScreen> {
               onPressed: _clearFilters,
               style: TextButton.styleFrom(
                 foregroundColor: AppColors.textPrimary,
-                padding: EdgeInsets.zero,
-                minimumSize: Size.zero,
-                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
+                minimumSize: const Size(48, 36),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
               ),
               child: const Text(
                 'Clear',
@@ -798,11 +803,22 @@ class _AdvancedFilterSheet extends StatelessWidget {
                       onPressed: onClear,
                       style: TextButton.styleFrom(
                         foregroundColor: AppColors.textSecondary,
-                        padding: EdgeInsets.zero,
-                        minimumSize: Size.zero,
-                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 8,
+                        ),
+                        minimumSize: const Size(56, 36),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
                       ),
-                      child: const Text('Clear all'),
+                      child: const Text(
+                        'Clear all',
+                        style: TextStyle(
+                          fontFamily: 'Poppins',
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
                     ),
                   ],
                 ),
@@ -925,6 +941,15 @@ class _AdvancedFilterSheet extends StatelessWidget {
                   alignment: Alignment.centerRight,
                   child: FilledButton(
                     onPressed: () => Navigator.pop(context),
+                    style: FilledButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 18,
+                        vertical: 12,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
                     child: const Text(
                       'Apply filters',
                       style: TextStyle(

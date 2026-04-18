@@ -151,6 +151,11 @@ class CourtCompactCard extends StatelessWidget {
                   style: OutlinedButton.styleFrom(
                     foregroundColor: Colors.red.shade700,
                     side: BorderSide(color: Colors.red.shade200),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 10,
+                    ),
+                    minimumSize: const Size(0, 40),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(10),
                     ),
