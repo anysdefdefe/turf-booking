@@ -14,9 +14,12 @@ class BookingConfirmationScreen extends StatelessWidget {
 
   const BookingConfirmationScreen({super.key, required this.args});
 
-  void _onProceedToPay(BuildContext context) {
-    _createBookings();
+  Future<void> _onProceedToPay(BuildContext context) async {
+    await _createBookings();
     CustomerCartRepository.instance.clear();
+    if (!context.mounted) {
+      return;
+    }
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Payment Successful! Booking Confirmed.')),
     );
@@ -37,7 +40,7 @@ class BookingConfirmationScreen extends StatelessWidget {
     }
   }
 
-  void _createBookings() {
+  Future<void> _createBookings() async {
     for (final item in args.cartItems) {
       final newId =
           'BK-${DateTime.now().microsecondsSinceEpoch.toString().substring(6)}';
@@ -51,7 +54,7 @@ class BookingConfirmationScreen extends StatelessWidget {
             ? 'Court Booking'
             : item.court.courtTypes.first,
       );
-      CustomerBookingRepository.instance.addBooking(newBooking);
+      await CustomerBookingRepository.instance.addBooking(newBooking);
     }
   }
 
@@ -245,7 +248,7 @@ class BookingConfirmationScreen extends StatelessWidget {
               SizedBox(
                 width: double.infinity,
                 child: FilledButton(
-                  onPressed: () => _onProceedToPay(context),
+                  onPressed: () async => _onProceedToPay(context),
                   style: FilledButton.styleFrom(
                     backgroundColor: AppColors.textPrimary,
                     foregroundColor: Colors.white,

@@ -5,8 +5,6 @@ import '../../../app/theme/app_colors.dart';
 import '../data/models/booking_cart_item.dart';
 import '../data/models/court_detail_args.dart';
 import '../data/models/court_model.dart';
-import '../data/models/customer_booking.dart';
-import '../data/repositories/customer_booking_repository.dart';
 import '../data/repositories/customer_cart_repository.dart';
 import '../data/repositories/customer_preferences_repository.dart';
 import '../data/repositories/court_repository.dart';
@@ -22,8 +20,6 @@ class CourtDetailScreen extends StatefulWidget {
 
 class _CourtDetailScreenState extends State<CourtDetailScreen> {
   final CourtRepository _repo = CourtRepository.instance;
-  final CustomerBookingRepository _bookingRepo =
-      CustomerBookingRepository.instance;
   final CustomerCartRepository _cartRepo = CustomerCartRepository.instance;
 
   bool _initialized = false;
@@ -32,26 +28,10 @@ class _CourtDetailScreenState extends State<CourtDetailScreen> {
   int _dateStartOffset = 0;
 
   DateTime? _selectedDate;
+  List<String> _timeSlots = const [];
+  Set<String> _bookedSlots = const <String>{};
+  bool _isLoadingBookedSlots = false;
   final Set<String> _selectedSlots = <String>{};
-
-  final List<String> _timeSlots = [
-    '06:00 AM',
-    '07:00 AM',
-    '08:00 AM',
-    '09:00 AM',
-    '10:00 AM',
-    '11:00 AM',
-    '12:00 PM',
-    '01:00 PM',
-    '02:00 PM',
-    '03:00 PM',
-    '04:00 PM',
-    '05:00 PM',
-    '06:00 PM',
-    '07:00 PM',
-    '08:00 PM',
-    '09:00 PM',
-  ];
 
   bool get _canBook =>
       _selectedDate != null &&
@@ -82,8 +62,37 @@ class _CourtDetailScreenState extends State<CourtDetailScreen> {
     }
 
     _selectedDate = _stripDate(DateTime.now());
+    _setTimeSlotsForCurrentCourt();
+    _refreshBookedSlots();
 
     _initialized = true;
+  }
+
+  void _setTimeSlotsForCurrentCourt() {
+    _timeSlots = _repo.generateHourlySlots(_currentCourt);
+  }
+
+  Future<void> _refreshBookedSlots() async {
+    final selectedDate = _selectedDate;
+    if (selectedDate == null) {
+      return;
+    }
+
+    setState(() => _isLoadingBookedSlots = true);
+    final booked = await _repo.getBookedSlotsForDate(
+      courtId: _currentCourt.id,
+      date: selectedDate,
+    );
+
+    if (!mounted) {
+      return;
+    }
+
+    setState(() {
+      _bookedSlots = booked.toSet();
+      _selectedSlots.removeWhere((slot) => _bookedSlots.contains(slot));
+      _isLoadingBookedSlots = false;
+    });
   }
 
   int _indexOfCourtId(String courtId, List<Court> courts) {
@@ -107,7 +116,9 @@ class _CourtDetailScreenState extends State<CourtDetailScreen> {
       _activeCourtIndex = nextIndex;
       _selectedSlots.clear();
       _selectedDate = _stripDate(DateTime.now());
+      _setTimeSlotsForCurrentCourt();
     });
+    _refreshBookedSlots();
   }
 
   DateTime _stripDate(DateTime d) => DateTime(d.year, d.month, d.day);
@@ -130,32 +141,6 @@ class _CourtDetailScreenState extends State<CourtDetailScreen> {
 
   bool _isSameDate(DateTime a, DateTime b) =>
       a.year == b.year && a.month == b.month && a.day == b.day;
-
-  Set<String> _bookedSlotsForDate(DateTime date) {
-    final blocked = <String>{};
-    final selectedCourtId = _currentCourt.id;
-    final now = DateTime.now();
-    for (final booking in _bookingRepo.getAllBookings()) {
-      if (booking.court.id != selectedCourtId ||
-          booking.status != BookingStatus.booked ||
-          !_isSameDate(booking.date, date)) {
-        continue;
-      }
-      blocked.addAll(booking.slots);
-    }
-
-    if (_isSameDate(date, now)) {
-      for (final slot in _timeSlots) {
-        final slotDateTime = _slotDateTime(date, slot);
-        if (!slotDateTime.isAfter(now)) {
-          blocked.add(slot);
-        }
-      }
-    }
-
-    blocked.add(_timeSlots.first);
-    return blocked;
-  }
 
   DateTime _slotDateTime(DateTime date, String slot) {
     final parts = slot.split(' ');
@@ -183,7 +168,16 @@ class _CourtDetailScreenState extends State<CourtDetailScreen> {
     if (date == null) {
       return false;
     }
-    return _bookedSlotsForDate(date).contains(slot);
+    if (_bookedSlots.contains(slot)) {
+      return true;
+    }
+
+    if (_isSameDate(date, DateTime.now())) {
+      final slotDateTime = _slotDateTime(date, slot);
+      return !slotDateTime.isAfter(DateTime.now());
+    }
+
+    return false;
   }
 
   void _toggleSlot(String slot) {
@@ -471,11 +465,6 @@ class _CourtDetailScreenState extends State<CourtDetailScreen> {
             runSpacing: 8,
             children: [
               InfoRowChip(
-                icon: Icons.star_rounded,
-                label: '${court.rating}  (${court.reviewCount} reviews)',
-                color: AppColors.star,
-              ),
-              InfoRowChip(
                 icon: Icons.access_time_rounded,
                 label: '${court.openTime} – ${court.closeTime}',
                 color: AppColors.primary,
@@ -622,10 +611,12 @@ class _CourtDetailScreenState extends State<CourtDetailScreen> {
                     ? 'Today'
                     : weekdays[date.weekday - 1];
                 return GestureDetector(
-                  onTap: () => setState(() {
-                    _selectedDate = date;
-                    _selectedSlots.removeWhere((slot) => _isBooked(slot));
-                  }),
+                  onTap: () {
+                    setState(() {
+                      _selectedDate = date;
+                    });
+                    _refreshBookedSlots();
+                  },
                   child: AnimatedContainer(
                     duration: const Duration(milliseconds: 180),
                     width: 52,
@@ -696,6 +687,21 @@ class _CourtDetailScreenState extends State<CourtDetailScreen> {
   // ── Time Slot Picker ──────────────────────────────────────────────────────
 
   Widget _buildTimeSlotPicker() {
+    final morningSlots = _timeSlots.where((slot) {
+      final hour = _slotHour(slot);
+      return hour >= 6 && hour < 12;
+    }).toList(growable: false);
+
+    final afternoonSlots = _timeSlots.where((slot) {
+      final hour = _slotHour(slot);
+      return hour >= 12 && hour < 17;
+    }).toList(growable: false);
+
+    final eveningSlots = _timeSlots.where((slot) {
+      final hour = _slotHour(slot);
+      return hour >= 17;
+    }).toList(growable: false);
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
       child: Column(
@@ -730,26 +736,48 @@ class _CourtDetailScreenState extends State<CourtDetailScreen> {
             ],
           ),
           const SizedBox(height: 16),
-          _buildSlotSection(
-            title: 'MORNING',
-            icon: Icons.wb_sunny_outlined,
-            slots: _timeSlots.sublist(0, 6),
-          ),
+          if (_isLoadingBookedSlots)
+            const LinearProgressIndicator(minHeight: 2),
+          if (morningSlots.isNotEmpty)
+            _buildSlotSection(
+              title: 'MORNING',
+              icon: Icons.wb_sunny_outlined,
+              slots: morningSlots,
+            ),
           const SizedBox(height: 14),
-          _buildSlotSection(
-            title: 'AFTERNOON',
-            icon: Icons.wb_twilight_outlined,
-            slots: _timeSlots.sublist(6, 12),
-          ),
+          if (afternoonSlots.isNotEmpty)
+            _buildSlotSection(
+              title: 'AFTERNOON',
+              icon: Icons.wb_twilight_outlined,
+              slots: afternoonSlots,
+            ),
           const SizedBox(height: 14),
-          _buildSlotSection(
-            title: 'EVENING',
-            icon: Icons.nightlight_round,
-            slots: _timeSlots.sublist(12, _timeSlots.length),
-          ),
+          if (eveningSlots.isNotEmpty)
+            _buildSlotSection(
+              title: 'EVENING',
+              icon: Icons.nightlight_round,
+              slots: eveningSlots,
+            ),
         ],
       ),
     );
+  }
+
+  int _slotHour(String slot) {
+    final parts = slot.split(' ');
+    if (parts.length != 2) {
+      return 0;
+    }
+    final hm = parts[0].split(':');
+    if (hm.length != 2) {
+      return 0;
+    }
+    final hourRaw = int.tryParse(hm[0]) ?? 0;
+    var hour = hourRaw % 12;
+    if (parts[1].toUpperCase() == 'PM') {
+      hour += 12;
+    }
+    return hour;
   }
 
   Widget _buildSlotSection({

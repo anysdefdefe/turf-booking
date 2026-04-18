@@ -1,13 +1,16 @@
 import 'package:flutter/foundation.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../models/customer_booking.dart';
 import 'court_repository.dart';
 
 class CustomerBookingRepository {
-  CustomerBookingRepository._();
+  CustomerBookingRepository._(this._client);
+
+  final SupabaseClient _client;
 
   static final CustomerBookingRepository instance =
-      CustomerBookingRepository._();
+      CustomerBookingRepository._(Supabase.instance.client);
 
   final CourtRepository _courtRepo = CourtRepository.instance;
   final List<CustomerBooking> _bookings = [];
@@ -18,61 +21,101 @@ class CustomerBookingRepository {
     bookingsNotifier.value = List<CustomerBooking>.unmodifiable(_bookings);
   }
 
-  void _bootstrapIfNeeded() {
-    if (_bookings.isNotEmpty) {
+  Future<void> fetchUserBookings() async {
+    final user = _client.auth.currentUser;
+    if (user == null) {
+      _bookings.clear();
+      _syncNotifier();
       return;
     }
-    final courts = _courtRepo.getAllCourts();
-    _bookings.addAll([
-      CustomerBooking(
-        id: 'BK-1001',
-        court: courts[0],
-        status: BookingStatus.booked,
-        date: DateTime.now().add(const Duration(days: 1)),
-        slots: const ['07:00 PM', '08:00 PM'],
-        courtType: courts[0].courtTypes.first,
-      ),
-      CustomerBooking(
-        id: 'BK-1002',
-        court: courts[2],
-        status: BookingStatus.booked,
-        date: DateTime.now().subtract(const Duration(days: 2)),
-        slots: const ['06:00 PM'],
-        courtType: courts[2].courtTypes.first,
-      ),
-      CustomerBooking(
-        id: 'BK-1003',
-        court: courts[4],
-        status: BookingStatus.cancelled,
-        date: DateTime.now().add(const Duration(days: 3)),
-        slots: const ['08:00 AM', '09:00 AM'],
-        courtType: courts[4].courtTypes.first,
-        cancelledAt: DateTime.now().subtract(const Duration(hours: 2)),
-      ),
-      CustomerBooking(
-        id: 'BK-1004',
-        court: courts[1],
-        status: BookingStatus.booked,
-        date: DateTime.now().add(const Duration(days: 2)),
-        slots: const ['09:00 PM'],
-        courtType: courts[1].courtTypes.first,
-      ),
-    ]);
+
+    await _courtRepo.refreshCatalog();
+
+    final bookingRows = await _client
+        .from('bookings')
+        .select('id, court_id, booking_date, status, payment_status, created_at')
+        .eq('customer_id', user.id)
+        .order('created_at', ascending: false);
+
+    final bookingIds = bookingRows
+        .cast<Map<String, dynamic>>()
+        .map((row) => row['id'] as String)
+        .toList(growable: false);
+
+    Map<String, List<Map<String, dynamic>>> slotsByBooking = {};
+    if (bookingIds.isNotEmpty) {
+      final slotRows = await _client
+          .from('slots')
+          .select('booking_id, start_time, status')
+          .inFilter('booking_id', bookingIds);
+
+      for (final raw in slotRows) {
+        final row = raw;
+        final bookingId = row['booking_id'] as String?;
+        if (bookingId == null) {
+          continue;
+        }
+        slotsByBooking.putIfAbsent(bookingId, () => []).add(row);
+      }
+    }
+
+    final mapped = <CustomerBooking>[];
+    for (final raw in bookingRows) {
+      final row = raw;
+      final courtId = row['court_id'] as String?;
+      if (courtId == null) {
+        continue;
+      }
+
+      final court = _courtRepo.getCourtById(courtId);
+      if (court == null) {
+        continue;
+      }
+
+      final bookingId = row['id'] as String;
+      final slots = (slotsByBooking[bookingId] ?? const <Map<String, dynamic>>[])
+          .map((slotRow) => _slotLabelFromIso(slotRow['start_time']?.toString()))
+          .where((slot) => slot.isNotEmpty)
+          .toList()
+        ..sort(_slotSort);
+
+      mapped.add(
+        CustomerBooking(
+          id: bookingId,
+          court: court,
+          status: _statusFromRaw(
+            row['status']?.toString(),
+            row['payment_status']?.toString(),
+          ),
+          date: DateTime.tryParse(row['booking_date']?.toString() ?? '') ??
+              DateTime.now(),
+          slots: slots,
+          courtType: court.courtTypes.first,
+          cancelledAt: row['status']?.toString() == 'cancelled'
+              ? DateTime.tryParse(row['created_at']?.toString() ?? '')
+              : null,
+        ),
+      );
+    }
+
+    _bookings
+      ..clear()
+      ..addAll(mapped);
     _syncNotifier();
   }
 
   List<CustomerBooking> getAllBookings() {
-    _bootstrapIfNeeded();
+    if (_bookings.isEmpty) {
+      fetchUserBookings();
+    }
     return List.unmodifiable(_bookings);
   }
 
   List<CustomerBooking> getByStatus(BookingStatus status) {
-    _bootstrapIfNeeded();
     return _bookings.where((booking) => booking.status == status).toList();
   }
 
-  void cancelBooking(String bookingId) {
-    _bootstrapIfNeeded();
+  Future<void> cancelBooking(String bookingId) async {
     final index = _bookings.indexWhere((booking) => booking.id == bookingId);
     if (index == -1) {
       return;
@@ -81,6 +124,16 @@ class CustomerBookingRepository {
     if (!booking.canCancel) {
       return;
     }
+
+    await _client
+        .from('bookings')
+        .update({'status': 'cancelled'})
+        .eq('id', bookingId);
+    await _client
+        .from('slots')
+        .update({'status': 'cancelled'})
+        .eq('booking_id', bookingId);
+
     _bookings[index] = booking.copyWith(
       status: BookingStatus.cancelled,
       cancelledAt: DateTime.now(),
@@ -88,19 +141,150 @@ class CustomerBookingRepository {
     _syncNotifier();
   }
 
-  void addBooking(CustomerBooking booking) {
-    _bootstrapIfNeeded();
-    _bookings.insert(0, booking);
+  Future<void> addBooking(CustomerBooking booking) async {
+    final user = _client.auth.currentUser;
+    if (user == null) {
+      return;
+    }
+
+    final date = DateTime(booking.date.year, booking.date.month, booking.date.day);
+    final slotTimes = booking.slots
+        .map((slot) => _slotLabelToDateTime(date, slot))
+        .whereType<DateTime>()
+        .toList()
+      ..sort();
+
+    final bookingInsert = await _client
+        .from('bookings')
+        .insert({
+          'court_id': booking.court.id,
+          'customer_id': user.id,
+          'booking_date': date.toIso8601String().split('T').first,
+          'start_time': slotTimes.isEmpty
+              ? null
+              : slotTimes.first.toIso8601String(),
+          'end_time': slotTimes.isEmpty
+              ? null
+              : slotTimes.last
+                .add(const Duration(hours: 1))
+                .toIso8601String(),
+          'duration_hours': booking.durationHours,
+          'total_amount': booking.totalAmount,
+          'status': booking.status == BookingStatus.cancelled
+              ? 'cancelled'
+              : 'booked',
+          'payment_status':
+              booking.status == BookingStatus.booked ? 'paid' : 'pending',
+        })
+        .select('id')
+        .single();
+
+    final bookingId = bookingInsert['id'] as String;
+    if (slotTimes.isNotEmpty) {
+      final slotInserts = slotTimes
+          .map(
+            (start) => {
+              'court_id': booking.court.id,
+              'booking_id': bookingId,
+              'start_time': start.toIso8601String(),
+              'end_time': start
+                  .add(const Duration(hours: 1))
+                  .toIso8601String(),
+              'status': booking.status == BookingStatus.cancelled
+                  ? 'cancelled'
+                  : 'booked',
+            },
+          )
+          .toList(growable: false);
+      await _client.from('slots').insert(slotInserts);
+    }
+
+    _bookings.insert(0, booking.copyWith(status: BookingStatus.booked));
     _syncNotifier();
   }
 
-  void updateBookingStatus(String bookingId, BookingStatus status) {
-    _bootstrapIfNeeded();
+  Future<void> updateBookingStatus(String bookingId, BookingStatus status) async {
+    final dbStatus = status == BookingStatus.cancelled ? 'cancelled' : 'booked';
+    final paymentStatus = status == BookingStatus.booked ? 'paid' : 'pending';
+
+    await _client
+        .from('bookings')
+        .update({'status': dbStatus, 'payment_status': paymentStatus})
+        .eq('id', bookingId);
+
     final index = _bookings.indexWhere((booking) => booking.id == bookingId);
     if (index == -1) {
       return;
     }
     _bookings[index] = _bookings[index].copyWith(status: status);
     _syncNotifier();
+  }
+
+  BookingStatus _statusFromRaw(String? status, String? paymentStatus) {
+    if ((status ?? '').toLowerCase() == 'cancelled') {
+      return BookingStatus.cancelled;
+    }
+    if ((paymentStatus ?? '').toLowerCase() == 'pending') {
+      return BookingStatus.unpaid;
+    }
+    return BookingStatus.booked;
+  }
+
+  String _slotLabelFromIso(String? iso) {
+    if (iso == null || iso.isEmpty) {
+      return '';
+    }
+    final dt = DateTime.tryParse(iso);
+    if (dt == null) {
+      return '';
+    }
+    return _formatTo12Hour(dt);
+  }
+
+  int _slotSort(String a, String b) {
+    final today = DateTime.now();
+    final aTime = _slotLabelToDateTime(today, a);
+    final bTime = _slotLabelToDateTime(today, b);
+    if (aTime == null || bTime == null) {
+      return a.compareTo(b);
+    }
+    return aTime.compareTo(bTime);
+  }
+
+  DateTime? _slotLabelToDateTime(DateTime date, String slot) {
+    final parts = slot.split(' ');
+    if (parts.length != 2) {
+      return null;
+    }
+    final hm = parts[0].split(':');
+    if (hm.length != 2) {
+      return null;
+    }
+
+    final hourRaw = int.tryParse(hm[0]);
+    final minute = int.tryParse(hm[1]);
+    if (hourRaw == null || minute == null) {
+      return null;
+    }
+
+    var hour = hourRaw % 12;
+    if (parts[1].toUpperCase() == 'PM') {
+      hour += 12;
+    }
+
+    return DateTime(date.year, date.month, date.day, hour, minute);
+  }
+
+  String _formatTo12Hour(DateTime dt) {
+    var hour = dt.hour;
+    final minute = dt.minute;
+    final suffix = hour >= 12 ? 'PM' : 'AM';
+    hour = hour % 12;
+    if (hour == 0) {
+      hour = 12;
+    }
+    final minuteText = minute.toString().padLeft(2, '0');
+    final hourText = hour.toString().padLeft(2, '0');
+    return '$hourText:$minuteText $suffix';
   }
 }
