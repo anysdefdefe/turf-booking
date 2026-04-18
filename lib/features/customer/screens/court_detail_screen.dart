@@ -286,12 +286,13 @@ class _CourtDetailScreenState extends State<CourtDetailScreen> {
         child: _CircleBtn(
           icon: Icons.arrow_back_ios_new_rounded,
           onTap: () => Navigator.of(context).maybePop(),
+          iconSize: 12,
         ),
       ),
       actions: [
         Padding(
           padding: const EdgeInsets.all(10),
-          child: _CircleBtn(icon: Icons.share_rounded, onTap: () {}),
+          child: _CircleBtn(icon: Icons.share_rounded, onTap: () {}, iconSize: 12),
         ),
         Padding(
           padding: const EdgeInsets.only(right: 10, top: 10, bottom: 10),
@@ -1072,20 +1073,22 @@ class _SwitchCourtBtn extends StatelessWidget {
 class _CircleBtn extends StatelessWidget {
   final IconData icon;
   final VoidCallback onTap;
-  const _CircleBtn({required this.icon, required this.onTap});
+  final double iconSize;
+  const _CircleBtn({required this.icon, required this.onTap,  this.iconSize = 12});
+
 
   @override
   Widget build(BuildContext context) => GestureDetector(
     onTap: onTap,
     child: Container(
-      width: 26,
-      height: 26,
+      width: 34,
+      height: 34,
       decoration: BoxDecoration(
         color: AppColors.surface,
         shape: BoxShape.circle,
         border: Border.all(color: AppColors.divider, width: 1),
       ),
-      child: Icon(icon, size: 16, color: AppColors.textPrimary),
+      child: Icon(icon, size: iconSize, color: AppColors.textPrimary),
     ),
   );
 }
@@ -1106,8 +1109,8 @@ class _FavBtn extends StatelessWidget {
           onTap: () => prefs.toggleLike(courtId),
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 200),
-            width: 26,
-            height: 26,
+            width: 34,
+            height: 34,
             decoration: BoxDecoration(
               color: isLiked ? Colors.red.shade50 : AppColors.surface,
               shape: BoxShape.circle,
