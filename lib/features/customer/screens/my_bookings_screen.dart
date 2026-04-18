@@ -26,11 +26,14 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
           .toList();
     }
     if (_selectedFilterIndex == 2) {
+      return all.where((b) => b.status == BookingStatus.unpaid).toList();
+    }
+    if (_selectedFilterIndex == 3) {
       return all
           .where((b) => b.status == BookingStatus.booked && b.isPast)
           .toList();
     }
-    if (_selectedFilterIndex == 3) {
+    if (_selectedFilterIndex == 4) {
       return all.where((b) => b.status == BookingStatus.cancelled).toList();
     }
     return all;
@@ -64,6 +67,15 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
     setState(() {
       _repo.cancelBooking(booking.id);
     });
+  }
+
+  void _onPayNow(CustomerBooking booking) {
+    setState(() {
+      _repo.updateBookingStatus(booking.id, BookingStatus.booked);
+    });
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Payment Successful! Booking Confirmed.')),
+    );
   }
 
   void _openReceiptPlaceholder(CustomerBooking booking) {
@@ -137,6 +149,9 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
                         onCancel: booking.canCancel
                             ? () => _onCancelBooking(booking)
                             : null,
+                        onPayNow: booking.status == BookingStatus.unpaid
+                            ? () => _onPayNow(booking)
+                            : null,
                       );
                     },
                   ),
@@ -147,7 +162,7 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
   }
 
   Widget _buildFilterRow() {
-    const labels = ['All', 'Upcoming', 'Past', 'Cancelled'];
+    const labels = ['All', 'Upcoming', 'Unpaid', 'Past', 'Cancelled'];
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 6, 20, 8),
       child: Row(

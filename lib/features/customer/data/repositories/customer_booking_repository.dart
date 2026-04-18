@@ -76,4 +76,18 @@ class CustomerBookingRepository {
       cancelledAt: DateTime.now(),
     );
   }
+
+  void addBooking(CustomerBooking booking) {
+    _bootstrapIfNeeded();
+    _bookings.insert(0, booking);
+  }
+
+  void updateBookingStatus(String bookingId, BookingStatus status) {
+    _bootstrapIfNeeded();
+    final index = _bookings.indexWhere((booking) => booking.id == bookingId);
+    if (index == -1) {
+      return;
+    }
+    _bookings[index] = _bookings[index].copyWith(status: status);
+  }
 }

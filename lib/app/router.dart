@@ -13,6 +13,8 @@ import 'package:turf_booking/features/customer/screens/court_detail_screen.dart'
 import 'package:turf_booking/features/customer/screens/home_screen.dart';
 import 'package:turf_booking/features/customer/screens/my_bookings_screen.dart';
 import 'package:turf_booking/features/customer/screens/profile_screen.dart';
+import 'package:turf_booking/features/customer/screens/booking_confirmation_screen.dart';
+import 'package:turf_booking/features/customer/data/models/booking_args.dart';
 import 'package:turf_booking/features/owner/screens/owner_dashboard_screen.dart';
 import 'package:turf_booking/features/owner/screens/pending_approval_screen.dart';
 import 'package:turf_booking/features/owner/screens/owner_application_screen.dart';
@@ -98,6 +100,13 @@ GoRouter router(Ref ref) {
           arguments: state.extra,
           child: const CourtDetailScreen(),
         ),
+      ),
+      GoRoute(
+        path: '/booking-confirm',
+        builder: (context, state) {
+          final args = state.extra as BookingArgs;
+          return BookingConfirmationScreen(args: args);
+        },
       ),
       GoRoute(
         path: '/customer/my-bookings',
