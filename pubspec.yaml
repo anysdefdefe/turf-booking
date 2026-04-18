@@ -19,6 +19,7 @@ dependencies:
   flutter_dotenv: ^6.0.0
   state_notifier: ^1.0.0
   google_fonts: ^8.0.2
+  file_picker: ^11.0.2
   image_picker: ^1.1.2
   flutter_map: ^7.0.2
   geolocator: ^13.0.2

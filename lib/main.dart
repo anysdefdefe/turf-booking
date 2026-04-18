@@ -5,7 +5,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'app/theme/app_theme.dart';
-import 'app/constants/router.dart';
+import 'app/router.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
