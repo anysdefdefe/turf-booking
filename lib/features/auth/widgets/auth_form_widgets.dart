@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:turf_booking/app/theme/app_colors.dart';
 
 class AuthFieldLabel extends StatelessWidget {
   final String text;
@@ -12,7 +13,7 @@ class AuthFieldLabel extends StatelessWidget {
       style: const TextStyle(
         fontSize: 12.5,
         fontWeight: FontWeight.w600,
-        color: Color(0xFF3A3A40),
+        color: AppColors.textPrimary,
         letterSpacing: 0.2,
       ),
     );
@@ -39,16 +40,16 @@ class AuthRingButton extends StatelessWidget {
       child: OutlinedButton(
         onPressed: isLoading ? null : onPressed,
         style: OutlinedButton.styleFrom(
-          side: const BorderSide(color: Color(0xFF0E0E10), width: 1.5),
+          side: const BorderSide(color: AppColors.textPrimary, width: 1.5),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(14),
           ),
-          foregroundColor: const Color(0xFF0E0E10),
+          foregroundColor: AppColors.textPrimary,
           backgroundColor: Colors.transparent,
-          disabledForegroundColor: const Color(0xFF828289),
+          disabledForegroundColor: AppColors.textMuted,
         ).copyWith(
           overlayColor: WidgetStateProperty.all(
-            const Color(0xFF0E0E10).withOpacity(0.05),
+            AppColors.textPrimary.withOpacity(0.05),
           ),
         ),
         child: isLoading
@@ -57,7 +58,7 @@ class AuthRingButton extends StatelessWidget {
                 height: 18,
                 child: CircularProgressIndicator(
                   strokeWidth: 2,
-                  color: Color(0xFF0E0E10),
+                  color: AppColors.textPrimary,
                 ),
               )
             : Text(
@@ -75,14 +76,14 @@ class AuthRingButton extends StatelessWidget {
 InputDecoration authPillInputDecoration(String hint, [Widget? suffixIcon]) {
   final border = OutlineInputBorder(
     borderRadius: BorderRadius.circular(12),
-    borderSide: const BorderSide(color: Color(0xFFDDDDE0), width: 1.2),
+    borderSide: const BorderSide(color: AppColors.divider, width: 1.2),
   );
 
   return InputDecoration(
     hintText: hint,
-    hintStyle: const TextStyle(fontSize: 14, color: Color(0xFFB0B0B6)),
+    hintStyle: const TextStyle(fontSize: 14, color: AppColors.textMuted),
     filled: true,
-    fillColor: Colors.white,
+    fillColor: AppColors.surface,
     suffixIcon: suffixIcon != null
         ? Padding(padding: const EdgeInsets.only(right: 12), child: suffixIcon)
         : null,
@@ -91,13 +92,13 @@ InputDecoration authPillInputDecoration(String hint, [Widget? suffixIcon]) {
     border: border,
     enabledBorder: border,
     focusedBorder: border.copyWith(
-      borderSide: const BorderSide(color: Color(0xFF0E0E10), width: 1.5),
+      borderSide: const BorderSide(color: AppColors.textPrimary, width: 1.5),
     ),
     errorBorder: border.copyWith(
-      borderSide: const BorderSide(color: Color(0xFFB00020), width: 1.2),
+      borderSide: const BorderSide(color: AppColors.error, width: 1.2),
     ),
     focusedErrorBorder: border.copyWith(
-      borderSide: const BorderSide(color: Color(0xFFB00020), width: 1.5),
+      borderSide: const BorderSide(color: AppColors.error, width: 1.5),
     ),
   );
 }
