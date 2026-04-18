@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:turf_booking/app/theme/app_colors.dart';
 import 'package:turf_booking/app/constants/app_constants.dart';
 import '../widgets/owner_bottom_nav_bar.dart';
+import 'package:go_router/go_router.dart';
 
 class StadiumModel {
   final String id;
@@ -67,8 +68,9 @@ class OwnerMyStadiumsScreen extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.only(right: 12),
             child: TextButton.icon(
+              // In the appBar actions button:
               onPressed: () {
-                Navigator.pushNamed(context, AppConstants.routeOwnerAddStadium);
+                context.go('/owner/add-stadium');
               },
               icon: const Icon(Icons.add, size: 18, color: AppColors.primary),
               label: const Text(
