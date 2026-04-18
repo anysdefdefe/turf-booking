@@ -4,6 +4,7 @@ import '../../../app/theme/app_colors.dart';
 import '../data/models/booking_args.dart';
 import '../data/models/court_detail_args.dart';
 import '../data/models/court_model.dart';
+import '../data/repositories/customer_booking_repository.dart';
 import '../data/repositories/customer_preferences_repository.dart';
 import '../data/repositories/court_repository.dart';
 import '../widgets/amenity_chip.dart';
@@ -19,15 +20,16 @@ class CourtDetailScreen extends StatefulWidget {
 
 class _CourtDetailScreenState extends State<CourtDetailScreen> {
   final CourtRepository _repo = CourtRepository.instance;
+  final CustomerBookingRepository _bookingRepo =
+      CustomerBookingRepository.instance;
 
   bool _initialized = false;
   List<Court> _stadiumCourts = [];
   int _activeCourtIndex = 0;
 
   DateTime? _selectedDate;
-  String? _selectedTime;
   String? _selectedType;
-  int _durationHours = 1;
+  final Set<String> _selectedSlots = <String>{};
 
   final List<String> _timeSlots = [
     '06:00 AM',
@@ -49,7 +51,11 @@ class _CourtDetailScreenState extends State<CourtDetailScreen> {
   ];
 
   bool get _canBook =>
-      _selectedDate != null && _selectedTime != null && _selectedType != null;
+      _selectedDate != null &&
+      _selectedSlots.isNotEmpty &&
+      _selectedType != null;
+
+  int get _selectedHours => _selectedSlots.length;
 
   Court get _currentCourt => _stadiumCourts[_activeCourtIndex];
 
@@ -79,6 +85,8 @@ class _CourtDetailScreenState extends State<CourtDetailScreen> {
           : null;
     }
 
+    _selectedDate = _stripDate(DateTime.now());
+
     _initialized = true;
   }
 
@@ -104,10 +112,75 @@ class _CourtDetailScreenState extends State<CourtDetailScreen> {
       _selectedType = _currentCourt.courtTypes.isNotEmpty
           ? _currentCourt.courtTypes.first
           : null;
-      _selectedTime = null;
-      _selectedDate = null;
-      _durationHours = 1;
+      _selectedSlots.clear();
+      _selectedDate = _stripDate(DateTime.now());
     });
+  }
+
+  DateTime _stripDate(DateTime d) => DateTime(d.year, d.month, d.day);
+
+  List<DateTime> get _dateOptions {
+    final base = _stripDate(DateTime.now());
+    return List<DateTime>.generate(
+      5,
+      (index) => base.add(Duration(days: index)),
+    );
+  }
+
+  bool _isSameDate(DateTime a, DateTime b) =>
+      a.year == b.year && a.month == b.month && a.day == b.day;
+
+  Set<String> _bookedSlotsForDate(DateTime date) {
+    final blocked = <String>{};
+    final selectedCourtId = _currentCourt.id;
+    for (final booking in _bookingRepo.getAllBookings()) {
+      if (booking.court.id != selectedCourtId ||
+          !_isSameDate(booking.date, date)) {
+        continue;
+      }
+      final startIndex = _timeSlots.indexOf(booking.timeSlot);
+      if (startIndex < 0) {
+        continue;
+      }
+      for (var i = 0; i < booking.durationHours; i++) {
+        final slotIndex = startIndex + i;
+        if (slotIndex >= 0 && slotIndex < _timeSlots.length) {
+          blocked.add(_timeSlots[slotIndex]);
+        }
+      }
+    }
+
+    blocked.add(_timeSlots.first);
+    return blocked;
+  }
+
+  bool _isBooked(String slot) {
+    final date = _selectedDate;
+    if (date == null) {
+      return false;
+    }
+    return _bookedSlotsForDate(date).contains(slot);
+  }
+
+  void _toggleSlot(String slot) {
+    if (_isBooked(slot)) {
+      return;
+    }
+    setState(() {
+      if (_selectedSlots.contains(slot)) {
+        _selectedSlots.remove(slot);
+      } else {
+        _selectedSlots.add(slot);
+      }
+    });
+  }
+
+  List<String> _orderedSelectedSlots() {
+    final slots = _selectedSlots.toList();
+    slots.sort(
+      (a, b) => _timeSlots.indexOf(a).compareTo(_timeSlots.indexOf(b)),
+    );
+    return slots;
   }
 
   @override
@@ -150,13 +223,11 @@ class _CourtDetailScreenState extends State<CourtDetailScreen> {
                 _divider(),
                 _buildAmenities(court),
                 _divider(),
-                _buildDatePicker(context),
-                _divider(),
-                _buildTimeSlotPicker(),
+                _buildDatePicker(),
                 _divider(),
                 _buildTypePicker(court),
                 _divider(),
-                _buildDurationPicker(court),
+                _buildTimeSlotPicker(),
                 const SizedBox(height: 110),
               ],
             ),
@@ -432,7 +503,8 @@ class _CourtDetailScreenState extends State<CourtDetailScreen> {
 
   // ── Date Picker ───────────────────────────────────────────────────────────
 
-  Widget _buildDatePicker(BuildContext context) {
+  Widget _buildDatePicker() {
+    const weekdays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
       child: Column(
@@ -440,146 +512,60 @@ class _CourtDetailScreenState extends State<CourtDetailScreen> {
         children: [
           const DetailSectionTitle(title: 'Select Date'),
           const SizedBox(height: 12),
-          GestureDetector(
-            onTap: () async {
-              final now = DateTime.now();
-              final picked = await showDatePicker(
-                context: context,
-                initialDate: _selectedDate ?? now,
-                firstDate: now,
-                lastDate: now.add(const Duration(days: 60)),
-                builder: (ctx, child) => Theme(
-                  data: Theme.of(ctx).copyWith(
-                    colorScheme: const ColorScheme.light(
-                      primary: AppColors.primary,
-                      onPrimary: Colors.white,
-                    ),
-                  ),
-                  child: child!,
-                ),
-              );
-              if (picked != null) setState(() => _selectedDate = picked);
-            },
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 200),
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 15),
-              decoration: BoxDecoration(
-                color: AppColors.surface,
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(
-                  color: _selectedDate != null
-                      ? AppColors.primary
-                      : AppColors.divider,
-                  width: 1.2,
-                ),
-              ),
-              child: Row(
-                children: [
-                  Icon(
-                    Icons.calendar_today_rounded,
-                    color: _selectedDate != null
-                        ? AppColors.primary
-                        : AppColors.textSecondary,
-                    size: 20,
-                  ),
-                  const SizedBox(width: 12),
-                  Text(
-                    _selectedDate == null
-                        ? 'Tap to choose a date'
-                        : _fmt(_selectedDate!),
-                    style: TextStyle(
-                      fontFamily: 'Poppins',
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                      color: _selectedDate == null
-                          ? AppColors.textMuted
-                          : AppColors.textPrimary,
-                    ),
-                  ),
-                  const Spacer(),
-                  Icon(
-                    Icons.chevron_right_rounded,
-                    color: _selectedDate != null
-                        ? AppColors.primary
-                        : AppColors.textMuted,
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  String _fmt(DateTime d) {
-    const months = [
-      'January',
-      'February',
-      'March',
-      'April',
-      'May',
-      'June',
-      'July',
-      'August',
-      'September',
-      'October',
-      'November',
-      'December',
-    ];
-    const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-    return '${days[d.weekday - 1]}, ${d.day} ${months[d.month - 1]} ${d.year}';
-  }
-
-  // ── Time Slot Picker ──────────────────────────────────────────────────────
-
-  Widget _buildTimeSlotPicker() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 18),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Padding(
-            padding: EdgeInsets.symmetric(horizontal: 20),
-            child: DetailSectionTitle(title: 'Select Time Slot'),
-          ),
-          const SizedBox(height: 12),
           SizedBox(
-            height: 44,
+            height: 72,
             child: ListView.separated(
               scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              itemCount: _timeSlots.length,
+              itemCount: _dateOptions.length,
               separatorBuilder: (_, _) => const SizedBox(width: 8),
-              itemBuilder: (_, i) {
-                final slot = _timeSlots[i];
-                final sel = _selectedTime == slot;
+              itemBuilder: (_, index) {
+                final date = _dateOptions[index];
+                final selected =
+                    _selectedDate != null && _isSameDate(_selectedDate!, date);
+                final label = index == 0 ? 'Today' : weekdays[date.weekday - 1];
                 return GestureDetector(
-                  onTap: () => setState(() => _selectedTime = slot),
+                  onTap: () => setState(() {
+                    _selectedDate = date;
+                    _selectedSlots.removeWhere((slot) => _isBooked(slot));
+                  }),
                   child: AnimatedContainer(
                     duration: const Duration(milliseconds: 180),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 11,
-                    ),
+                    width: 62,
                     decoration: BoxDecoration(
-                      color: sel ? AppColors.background : AppColors.surface,
-                      borderRadius: BorderRadius.circular(10),
+                      color: selected ? AppColors.primary : AppColors.surface,
+                      borderRadius: BorderRadius.circular(8),
                       border: Border.all(
-                        color: sel ? AppColors.primary : AppColors.divider,
-                        width: 1.2,
+                        color: selected ? AppColors.primary : AppColors.divider,
                       ),
                     ),
-                    child: Text(
-                      slot,
-                      style: TextStyle(
-                        fontFamily: 'Poppins',
-                        fontSize: 12.5,
-                        fontWeight: FontWeight.w600,
-                        color: sel
-                            ? AppColors.textPrimary
-                            : AppColors.textSecondary,
-                      ),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          label,
+                          style: TextStyle(
+                            fontFamily: 'Poppins',
+                            fontSize: 11,
+                            fontWeight: FontWeight.w500,
+                            color: selected
+                                ? Colors.white.withValues(alpha: 0.9)
+                                : AppColors.textSecondary,
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          '${date.day}',
+                          style: TextStyle(
+                            fontFamily: 'Poppins',
+                            fontSize: 24,
+                            fontWeight: FontWeight.w700,
+                            height: 0.9,
+                            color: selected
+                                ? Colors.white
+                                : AppColors.textPrimary,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 );
@@ -587,6 +573,153 @@ class _CourtDetailScreenState extends State<CourtDetailScreen> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  // ── Time Slot Picker ──────────────────────────────────────────────────────
+
+  Widget _buildTimeSlotPicker() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: const [
+              DetailSectionTitle(title: 'Select Time Slots'),
+              Spacer(),
+              Text(
+                '1 hr each',
+                style: TextStyle(
+                  fontFamily: 'Poppins',
+                  fontSize: 12,
+                  color: AppColors.textSecondary,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          const Row(
+            children: [
+              _SlotLegend(
+                label: 'Available',
+                color: AppColors.surface,
+                outlined: true,
+              ),
+              SizedBox(width: 12),
+              _SlotLegend(label: 'Selected', color: AppColors.primary),
+              SizedBox(width: 12),
+              _SlotLegend(label: 'Booked', color: Color(0xFFE7E8EC)),
+            ],
+          ),
+          const SizedBox(height: 16),
+          _buildSlotSection(
+            title: 'MORNING',
+            icon: Icons.wb_sunny_outlined,
+            slots: _timeSlots.sublist(0, 6),
+          ),
+          const SizedBox(height: 14),
+          _buildSlotSection(
+            title: 'AFTERNOON',
+            icon: Icons.wb_twilight_outlined,
+            slots: _timeSlots.sublist(6, 12),
+          ),
+          const SizedBox(height: 14),
+          _buildSlotSection(
+            title: 'EVENING',
+            icon: Icons.nightlight_round,
+            slots: _timeSlots.sublist(12, _timeSlots.length),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSlotSection({
+    required String title,
+    required IconData icon,
+    required List<String> slots,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Icon(icon, size: 14, color: AppColors.textSecondary),
+            const SizedBox(width: 6),
+            Text(
+              title,
+              style: const TextStyle(
+                fontFamily: 'Poppins',
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+                letterSpacing: 0.8,
+                color: AppColors.textSecondary,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 10),
+        LayoutBuilder(
+          builder: (_, constraints) {
+            const gap = 8.0;
+            final width = (constraints.maxWidth - (gap * 2)) / 3;
+            return Wrap(
+              spacing: gap,
+              runSpacing: gap,
+              children: slots
+                  .map(
+                    (slot) =>
+                        SizedBox(width: width, child: _buildSlotTile(slot)),
+                  )
+                  .toList(),
+            );
+          },
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSlotTile(String slot) {
+    final booked = _isBooked(slot);
+    final selected = _selectedSlots.contains(slot);
+    final background = selected
+        ? AppColors.primary
+        : booked
+        ? const Color(0xFFE7E8EC)
+        : AppColors.surface;
+    final borderColor = selected || !booked
+        ? AppColors.primary
+        : const Color(0xFFE7E8EC);
+    final textColor = selected
+        ? Colors.white
+        : booked
+        ? const Color(0xFF8F93A3)
+        : AppColors.primaryDark;
+
+    return GestureDetector(
+      onTap: booked ? null : () => _toggleSlot(slot),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 140),
+        height: 42,
+        decoration: BoxDecoration(
+          color: background,
+          borderRadius: BorderRadius.circular(6),
+          border: Border.all(color: borderColor, width: booked ? 1 : 1.1),
+        ),
+        alignment: Alignment.center,
+        child: Text(
+          slot,
+          style: TextStyle(
+            fontFamily: 'Poppins',
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+            color: textColor,
+            decoration: booked ? TextDecoration.lineThrough : null,
+            decorationColor: const Color(0xFF8F93A3),
+          ),
+        ),
       ),
     );
   }
@@ -611,12 +744,14 @@ class _CourtDetailScreenState extends State<CourtDetailScreen> {
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 180),
                   padding: const EdgeInsets.symmetric(
-                    horizontal: 20,
-                    vertical: 11,
+                    horizontal: 16,
+                    vertical: 9,
                   ),
                   decoration: BoxDecoration(
-                    color: sel ? AppColors.background : AppColors.surface,
-                    borderRadius: BorderRadius.circular(12),
+                    color: sel
+                        ? const Color(0xFFE8FFF5)
+                        : const Color(0xFFF6F7FA),
+                    borderRadius: BorderRadius.circular(8),
                     border: Border.all(
                       color: sel ? AppColors.primary : AppColors.divider,
                       width: 1.2,
@@ -629,90 +764,13 @@ class _CourtDetailScreenState extends State<CourtDetailScreen> {
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
                       color: sel
-                          ? AppColors.textPrimary
-                          : AppColors.textSecondary,
+                          ? AppColors.primaryDark
+                          : AppColors.textPrimary,
                     ),
                   ),
                 ),
               );
             }).toList(),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // ── Duration ──────────────────────────────────────────────────────────────
-
-  Widget _buildDurationPicker(Court court) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const DetailSectionTitle(title: 'Duration'),
-          const SizedBox(height: 14),
-          Row(
-            children: [
-              _DurationBtn(
-                icon: Icons.remove_rounded,
-                onTap: _durationHours > 1
-                    ? () => setState(() => _durationHours--)
-                    : null,
-              ),
-              const SizedBox(width: 20),
-              Column(
-                children: [
-                  Text(
-                    '$_durationHours',
-                    style: const TextStyle(
-                      fontFamily: 'Poppins',
-                      fontSize: 22,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.textPrimary,
-                    ),
-                  ),
-                  const Text(
-                    'hour(s)',
-                    style: TextStyle(
-                      fontFamily: 'Poppins',
-                      fontSize: 12,
-                      color: AppColors.textSecondary,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(width: 20),
-              _DurationBtn(
-                icon: Icons.add_rounded,
-                onTap: _durationHours < 5
-                    ? () => setState(() => _durationHours++)
-                    : null,
-              ),
-              const Spacer(),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text(
-                    '₹${(court.pricePerHour * _durationHours).toInt()}',
-                    style: const TextStyle(
-                      fontFamily: 'Poppins',
-                      fontSize: 22,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.textPrimary,
-                    ),
-                  ),
-                  const Text(
-                    'total',
-                    style: TextStyle(
-                      fontFamily: 'Poppins',
-                      fontSize: 12,
-                      color: AppColors.textSecondary,
-                    ),
-                  ),
-                ],
-              ),
-            ],
           ),
         ],
       ),
@@ -742,25 +800,27 @@ class _CourtDetailScreenState extends State<CourtDetailScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                '₹${(court.pricePerHour * _durationHours).toInt()}',
+                'Total Price (${_selectedHours} hr${_selectedHours == 1 ? '' : 's'})',
                 style: const TextStyle(
                   fontFamily: 'Poppins',
-                  fontSize: 20,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.textPrimary,
+                  fontSize: 9,
+                  color: AppColors.textSecondary,
                 ),
               ),
+              const SizedBox(height: 2),
               Text(
-                '$_durationHours hr${_durationHours > 1 ? 's' : ''}',
+                '₹${(court.pricePerHour * _selectedHours).toInt()}',
                 style: const TextStyle(
                   fontFamily: 'Poppins',
-                  fontSize: 12,
-                  color: AppColors.textSecondary,
+                  fontSize: 26,
+                  fontWeight: FontWeight.w800,
+                  height: 0.95,
+                  color: AppColors.textPrimary,
                 ),
               ),
             ],
           ),
-          const SizedBox(width: 16),
+          const SizedBox(width: 12),
           Expanded(
             child: ElevatedButton(
               onPressed: _canBook
@@ -770,9 +830,9 @@ class _CourtDetailScreenState extends State<CourtDetailScreen> {
                       arguments: BookingArgs(
                         court: court,
                         date: _selectedDate!,
-                        timeSlot: _selectedTime!,
+                        timeSlot: _orderedSelectedSlots().first,
                         courtType: _selectedType!,
-                        durationHours: _durationHours,
+                        durationHours: _selectedHours,
                       ),
                     )
                   : null,
@@ -782,17 +842,24 @@ class _CourtDetailScreenState extends State<CourtDetailScreen> {
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(14),
+                  borderRadius: BorderRadius.circular(8),
                 ),
                 elevation: 0,
               ),
-              child: Text(
-                _canBook ? 'Review & Book' : 'Select Date, Time & Sport',
-                style: const TextStyle(
-                  fontFamily: 'Poppins',
-                  fontWeight: FontWeight.w600,
-                  fontSize: 14,
-                ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    _canBook ? 'Proceed to Book' : 'Select Date, Sport & Slots',
+                    style: const TextStyle(
+                      fontFamily: 'Poppins',
+                      fontWeight: FontWeight.w600,
+                      fontSize: 16,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  const Icon(Icons.arrow_forward_rounded, size: 18),
+                ],
               ),
             ),
           ),
@@ -807,6 +874,47 @@ class _CourtDetailScreenState extends State<CourtDetailScreen> {
     indent: 20,
     endIndent: 20,
   );
+}
+
+class _SlotLegend extends StatelessWidget {
+  final String label;
+  final Color color;
+  final bool outlined;
+
+  const _SlotLegend({
+    required this.label,
+    required this.color,
+    this.outlined = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 11,
+          height: 11,
+          decoration: BoxDecoration(
+            color: color,
+            borderRadius: BorderRadius.circular(2),
+            border: outlined
+                ? Border.all(color: AppColors.primary, width: 1)
+                : null,
+          ),
+        ),
+        const SizedBox(width: 5),
+        Text(
+          label,
+          style: const TextStyle(
+            fontFamily: 'Poppins',
+            fontSize: 11,
+            color: AppColors.textSecondary,
+          ),
+        ),
+      ],
+    );
+  }
 }
 
 // ── Reusable sub-widgets ──────────────────────────────────────────────────────
@@ -966,35 +1074,6 @@ class _DistBadge extends StatelessWidget {
           ),
         ),
       ],
-    ),
-  );
-}
-
-class _DurationBtn extends StatelessWidget {
-  final IconData icon;
-  final VoidCallback? onTap;
-  const _DurationBtn({required this.icon, this.onTap});
-
-  @override
-  Widget build(BuildContext context) => GestureDetector(
-    onTap: onTap,
-    child: AnimatedContainer(
-      duration: const Duration(milliseconds: 150),
-      width: 42,
-      height: 42,
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: onTap != null ? AppColors.primary : AppColors.divider,
-          width: 1,
-        ),
-      ),
-      child: Icon(
-        icon,
-        color: onTap != null ? AppColors.textPrimary : AppColors.textMuted,
-        size: 22,
-      ),
     ),
   );
 }
