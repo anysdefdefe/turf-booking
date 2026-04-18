@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart';
+
 import '../models/customer_booking.dart';
 import 'court_repository.dart';
 
@@ -9,6 +11,12 @@ class CustomerBookingRepository {
 
   final CourtRepository _courtRepo = CourtRepository.instance;
   final List<CustomerBooking> _bookings = [];
+  final ValueNotifier<List<CustomerBooking>> bookingsNotifier =
+      ValueNotifier<List<CustomerBooking>>(const []);
+
+  void _syncNotifier() {
+    bookingsNotifier.value = List<CustomerBooking>.unmodifiable(_bookings);
+  }
 
   void _bootstrapIfNeeded() {
     if (_bookings.isNotEmpty) {
@@ -50,6 +58,7 @@ class CustomerBookingRepository {
         courtType: courts[1].courtTypes.first,
       ),
     ]);
+    _syncNotifier();
   }
 
   List<CustomerBooking> getAllBookings() {
@@ -58,6 +67,7 @@ class CustomerBookingRepository {
   }
 
   List<CustomerBooking> getByStatus(BookingStatus status) {
+    _bootstrapIfNeeded();
     return _bookings.where((booking) => booking.status == status).toList();
   }
 
@@ -75,11 +85,13 @@ class CustomerBookingRepository {
       status: BookingStatus.cancelled,
       cancelledAt: DateTime.now(),
     );
+    _syncNotifier();
   }
 
   void addBooking(CustomerBooking booking) {
     _bootstrapIfNeeded();
     _bookings.insert(0, booking);
+    _syncNotifier();
   }
 
   void updateBookingStatus(String bookingId, BookingStatus status) {
@@ -89,5 +101,6 @@ class CustomerBookingRepository {
       return;
     }
     _bookings[index] = _bookings[index].copyWith(status: status);
+    _syncNotifier();
   }
 }

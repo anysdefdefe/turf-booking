@@ -13,6 +13,7 @@ import 'package:turf_booking/features/customer/screens/court_detail_screen.dart'
 import 'package:turf_booking/features/customer/screens/home_screen.dart';
 import 'package:turf_booking/features/customer/screens/my_bookings_screen.dart';
 import 'package:turf_booking/features/customer/screens/profile_screen.dart';
+import 'package:turf_booking/features/customer/screens/cart_screen.dart';
 import 'package:turf_booking/features/customer/screens/booking_confirmation_screen.dart';
 import 'package:turf_booking/features/customer/data/models/booking_args.dart';
 import 'package:turf_booking/features/owner/screens/owner_dashboard_screen.dart';
@@ -111,6 +112,10 @@ GoRouter router(Ref ref) {
       GoRoute(
         path: '/customer/my-bookings',
         builder: (context, state) => const MyBookingsScreen(),
+      ),
+      GoRoute(
+        path: '/customer/cart',
+        builder: (context, state) => const CartScreen(),
       ),
       GoRoute(
         path: '/customer/profile',

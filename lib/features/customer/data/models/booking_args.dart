@@ -1,19 +1,17 @@
-import 'court_model.dart';
+import 'booking_cart_item.dart';
 
 class BookingArgs {
-  final Court court;
-  final DateTime date;
-  final List<String> slots;
-  final String courtType;
+  final List<BookingCartItem> cartItems;
 
-  BookingArgs({
-    required this.court,
-    required this.date,
-    required this.slots,
-    required this.courtType,
-  });
+  const BookingArgs({required this.cartItems});
 
-  String get timeSlot => slots.isEmpty ? '' : slots.first;
+  int get totalSlots => cartItems.fold<int>(
+    0,
+    (sum, item) => sum + item.durationHours,
+  );
 
-  int get durationHours => slots.length;
+  double get totalAmount => cartItems.fold<double>(
+    0,
+    (sum, item) => sum + item.totalAmount,
+  );
 }

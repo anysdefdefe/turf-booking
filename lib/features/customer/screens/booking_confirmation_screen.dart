@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:intl/intl.dart';
 
 import '../../../app/constants/app_constants.dart';
 import '../../../app/theme/app_colors.dart';
 import '../data/models/booking_args.dart';
+import '../data/models/booking_cart_item.dart';
 import '../data/models/customer_booking.dart';
 import '../data/repositories/customer_booking_repository.dart';
+import '../data/repositories/customer_cart_repository.dart';
 
 class BookingConfirmationScreen extends StatelessWidget {
   final BookingArgs args;
@@ -14,21 +15,20 @@ class BookingConfirmationScreen extends StatelessWidget {
   const BookingConfirmationScreen({super.key, required this.args});
 
   void _onProceedToPay(BuildContext context) {
-    _createBooking(context, BookingStatus.booked);
+    _createBookings();
+    CustomerCartRepository.instance.clear();
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Payment Successful! Booking Confirmed.')),
     );
     context.go(AppConstants.routeMyBookings);
   }
 
-  void _onPayLater(BuildContext context) {
-    _createBooking(context, BookingStatus.unpaid);
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Booking saved. Please pay later to confirm your slots!'),
-      ),
-    );
-    context.go(AppConstants.routeMyBookings);
+  void _onKeepInCart(BuildContext context) {
+    if (context.canPop()) {
+      context.pop();
+    } else {
+      context.go(AppConstants.routeCart);
+    }
   }
 
   void _onCancel(BuildContext context) {
@@ -37,29 +37,35 @@ class BookingConfirmationScreen extends StatelessWidget {
     }
   }
 
-  void _createBooking(BuildContext context, BookingStatus status) {
-    final newId = 'BK-${DateTime.now().millisecondsSinceEpoch.toString().substring(5)}';
-    final newBooking = CustomerBooking(
-      id: newId,
-      court: args.court,
-      status: status,
-      date: args.date,
-      slots: args.slots,
-      courtType: args.courtType,
-    );
-    CustomerBookingRepository.instance.addBooking(newBooking);
+  void _createBookings() {
+    for (final item in args.cartItems) {
+      final newId =
+          'BK-${DateTime.now().microsecondsSinceEpoch.toString().substring(6)}';
+      final newBooking = CustomerBooking(
+        id: newId,
+        court: item.court,
+        status: BookingStatus.booked,
+        date: item.date,
+        slots: item.slots,
+        courtType: item.court.courtTypes.isEmpty
+            ? 'Court Booking'
+            : item.court.courtTypes.first,
+      );
+      CustomerBookingRepository.instance.addBooking(newBooking);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    final double totalAmount = args.court.pricePerHour * args.durationHours;
-    final formattedDate = DateFormat('EEEE, MMM d, yyyy').format(args.date);
+    final items = args.cartItems;
+    final totalAmount = args.totalAmount;
+    final totalSlots = args.totalSlots;
 
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
         title: const Text(
-          'Checkout',
+          'Booking Confirmation',
           style: TextStyle(
             fontFamily: 'Poppins',
             fontWeight: FontWeight.w700,
@@ -81,13 +87,8 @@ class BookingConfirmationScreen extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Turf Card Info
-              _buildCourtCard(),
-              const SizedBox(height: 24),
-
-              // Booking Details Section
               const Text(
-                'Booking Summary',
+                'Review Bookings',
                 style: TextStyle(
                   fontFamily: 'Poppins',
                   fontSize: 16,
@@ -104,38 +105,36 @@ class BookingConfirmationScreen extends StatelessWidget {
                   border: Border.all(color: AppColors.divider),
                 ),
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: items
+                      .map((item) => _BookingSummaryTile(item: item))
+                      .toList(),
+                ),
+              ),
+              const SizedBox(height: 28),
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: AppColors.surface,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: AppColors.divider),
+                ),
+                child: Column(
                   children: [
-                    _buildSummaryRow(Icons.calendar_today_rounded, 'Date', formattedDate),
-                    const Padding(
-                      padding: EdgeInsets.symmetric(vertical: 12),
-                      child: Divider(color: AppColors.divider, height: 1),
-                    ),
                     _buildSummaryRow(
-                      Icons.access_time_rounded,
-                      'Time Slot',
-                      args.slots.join(', '),
+                      Icons.confirmation_number_outlined,
+                      'Total Slots',
+                      '$totalSlots',
                     ),
-                    const Padding(
-                      padding: EdgeInsets.symmetric(vertical: 12),
-                      child: Divider(color: AppColors.divider, height: 1),
-                    ),
-                    _buildSummaryRow(Icons.sports_tennis_rounded, 'Sport', args.courtType),
-                    const Padding(
-                      padding: EdgeInsets.symmetric(vertical: 12),
-                      child: Divider(color: AppColors.divider, height: 1),
-                    ),
+                    const SizedBox(height: 12),
                     _buildSummaryRow(
-                      Icons.timer_rounded,
-                      'Duration',
-                      '${args.durationHours} hr${args.durationHours > 1 ? 's' : ''}',
+                      Icons.summarize_outlined,
+                      'Booking Items',
+                      '${items.length}',
                     ),
                   ],
                 ),
               ),
-              const SizedBox(height: 32),
-
-              // Billing Details Section
+              const SizedBox(height: 26),
               const Text(
                 'Payment Details',
                 style: TextStyle(
@@ -156,13 +155,13 @@ class BookingConfirmationScreen extends StatelessWidget {
                 child: Column(
                   children: [
                     _buildPriceRow(
-                      'Price (1 hr)',
-                      '₹${args.court.pricePerHour.toInt()}',
+                      'Subtotal',
+                      '₹${totalAmount.toInt()}',
                     ),
                     const SizedBox(height: 10),
                     _buildPriceRow(
-                      'Slots',
-                      'x${args.durationHours}',
+                      'Platform fee',
+                      '₹0',
                     ),
                     const Padding(
                       padding: EdgeInsets.symmetric(vertical: 12),
@@ -194,10 +193,7 @@ class BookingConfirmationScreen extends StatelessWidget {
                   ],
                 ),
               ),
-
-              const SizedBox(height: 48),
-
-              // Action Buttons
+              const SizedBox(height: 42),
               Row(
                 children: [
                   Expanded(
@@ -205,11 +201,11 @@ class BookingConfirmationScreen extends StatelessWidget {
                       onPressed: () => _onCancel(context),
                       style: OutlinedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 16),
-                        side: const BorderSide(color: AppColors.divider),
+                        side: const BorderSide(color: AppColors.textPrimary),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
-                        foregroundColor: AppColors.textSecondary,
+                        foregroundColor: AppColors.textPrimary,
                       ),
                       child: const Text(
                         'Cancel',
@@ -224,17 +220,17 @@ class BookingConfirmationScreen extends StatelessWidget {
                   const SizedBox(width: 12),
                   Expanded(
                     child: OutlinedButton(
-                      onPressed: () => _onPayLater(context),
+                      onPressed: () => _onKeepInCart(context),
                       style: OutlinedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 16),
-                        side: const BorderSide(color: AppColors.primary),
+                        side: const BorderSide(color: AppColors.textPrimary),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
-                        foregroundColor: AppColors.primary,
+                        foregroundColor: AppColors.textPrimary,
                       ),
                       child: const Text(
-                        'Pay Later',
+                        'Keep in Cart',
                         style: TextStyle(
                           fontFamily: 'Poppins',
                           fontSize: 14,
@@ -251,14 +247,15 @@ class BookingConfirmationScreen extends StatelessWidget {
                 child: FilledButton(
                   onPressed: () => _onProceedToPay(context),
                   style: FilledButton.styleFrom(
-                    backgroundColor: AppColors.primary,
+                    backgroundColor: AppColors.textPrimary,
+                    foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
                   ),
                   child: const Text(
-                    'Proceed to Pay',
+                    'Pay Now',
                     style: TextStyle(
                       fontFamily: 'Poppins',
                       fontSize: 16,
@@ -271,86 +268,6 @@ class BookingConfirmationScreen extends StatelessWidget {
             ],
           ),
         ),
-      ),
-    );
-  }
-
-  Widget _buildCourtCard() {
-    return Container(
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.divider),
-      ),
-      clipBehavior: Clip.antiAlias,
-      child: Column(
-        children: [
-          Image.network(
-            args.court.imageUrl,
-            height: 140,
-            width: double.infinity,
-            fit: BoxFit.cover,
-            errorBuilder: (_, __, ___) => Container(
-              height: 140,
-              width: double.infinity,
-              color: AppColors.divider,
-              child: const Icon(Icons.sports_tennis_rounded,
-                  size: 40, color: AppColors.textMuted),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        args.court.name,
-                        style: const TextStyle(
-                          fontFamily: 'Poppins',
-                          fontSize: 16,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.textPrimary,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        args.court.stadiumName,
-                        style: const TextStyle(
-                          fontFamily: 'Poppins',
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.textSecondary,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        '${args.court.place}, ${args.court.city}',
-                        style: const TextStyle(
-                          fontFamily: 'Poppins',
-                          fontSize: 12,
-                          color: AppColors.textSecondary,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: AppColors.primary.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: const Icon(Icons.verified_rounded,
-                      color: AppColors.primary, size: 20),
-                ),
-              ],
-            ),
-          ),
-        ],
       ),
     );
   }
@@ -414,5 +331,81 @@ class BookingConfirmationScreen extends StatelessWidget {
         ),
       ],
     );
+  }
+}
+
+class _BookingSummaryTile extends StatelessWidget {
+  final BookingCartItem item;
+
+  const _BookingSummaryTile({required this.item});
+
+  @override
+  Widget build(BuildContext context) {
+    final dateText = _formatDate(item.date);
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 14),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            item.court.name,
+            style: const TextStyle(
+              fontFamily: 'Poppins',
+              fontSize: 14,
+              fontWeight: FontWeight.w700,
+              color: AppColors.textPrimary,
+            ),
+          ),
+          const SizedBox(height: 3),
+          Text(
+            '${item.court.stadiumName} • $dateText',
+            style: const TextStyle(
+              fontFamily: 'Poppins',
+              fontSize: 12,
+              color: AppColors.textSecondary,
+            ),
+          ),
+          const SizedBox(height: 3),
+          Text(
+            'Slots: ${item.slots.join(', ')}',
+            style: const TextStyle(
+              fontFamily: 'Poppins',
+              fontSize: 12,
+              color: AppColors.textSecondary,
+            ),
+          ),
+          const SizedBox(height: 3),
+          Text(
+            'Sports available: ${item.sportsLabel}',
+            style: const TextStyle(
+              fontFamily: 'Poppins',
+              fontSize: 12,
+              color: AppColors.textSecondary,
+            ),
+          ),
+          const SizedBox(height: 6),
+          const Divider(color: AppColors.divider, height: 1),
+        ],
+      ),
+    );
+  }
+
+  String _formatDate(DateTime d) {
+    const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+    const months = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
+    ];
+    return '${days[d.weekday - 1]}, ${d.day} ${months[d.month - 1]} ${d.year}';
   }
 }

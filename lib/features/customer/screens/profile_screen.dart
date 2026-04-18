@@ -142,12 +142,16 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   }
 
   void _onNavTap(int index) {
-    if (index == 2) return;
+    if (index == 3) return;
     if (index == 0) {
       context.go('/customer/home');
       return;
     }
     if (index == 1) {
+      context.go('/customer/cart');
+      return;
+    }
+    if (index == 2) {
       context.go('/customer/my-bookings');
     }
   }
@@ -334,7 +338,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     return Scaffold(
       backgroundColor: AppColors.background,
       bottomNavigationBar: CustomerFloatingNavBar(
-        selectedIndex: 2,
+        selectedIndex: 3,
         onTap: _onNavTap,
       ),
       appBar: AppBar(

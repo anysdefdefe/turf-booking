@@ -7,14 +7,12 @@ class CourtCompactCard extends StatelessWidget {
   final CustomerBooking booking;
   final VoidCallback onTap;
   final VoidCallback? onCancel;
-  final VoidCallback? onPayNow;
 
   const CourtCompactCard({
     super.key,
     required this.booking,
     required this.onTap,
     this.onCancel,
-    this.onPayNow,
   });
 
   @override
@@ -82,7 +80,16 @@ class CourtCompactCard extends StatelessWidget {
             ),
             const SizedBox(height: 6),
             Text(
-              '${booking.courtType} • ${booking.durationHours} hr${booking.durationHours > 1 ? 's' : ''}',
+              'Sports: ${court.courtTypes.join(', ')}',
+              style: const TextStyle(
+                fontFamily: 'Poppins',
+                fontSize: 12.5,
+                color: AppColors.textSecondary,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              '${booking.durationHours} slot${booking.durationHours > 1 ? 's' : ''}',
               style: const TextStyle(
                 fontFamily: 'Poppins',
                 fontSize: 12.5,
@@ -132,17 +139,7 @@ class CourtCompactCard extends StatelessWidget {
                 ),
               ],
             ),
-            const SizedBox(height: 10),
-            const Text(
-              'Money not refundable',
-              style: TextStyle(
-                fontFamily: 'Poppins',
-                fontSize: 11.5,
-                fontWeight: FontWeight.w500,
-                color: AppColors.textSecondary,
-              ),
-            ),
-            if (onCancel != null || onPayNow != null) ...[
+            if (onCancel != null) ...[
               const SizedBox(height: 10),
               Row(
                 mainAxisAlignment: MainAxisAlignment.end,
@@ -155,25 +152,6 @@ class CourtCompactCard extends StatelessWidget {
                       style: OutlinedButton.styleFrom(
                         foregroundColor: Colors.red.shade700,
                         side: BorderSide(color: Colors.red.shade200),
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 14,
-                          vertical: 10,
-                        ),
-                        minimumSize: const Size(0, 40),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                      ),
-                    ),
-                  if (onCancel != null && onPayNow != null)
-                    const SizedBox(width: 8),
-                  if (onPayNow != null)
-                    FilledButton.icon(
-                      onPressed: onPayNow,
-                      icon: const Icon(Icons.payment_rounded, size: 16),
-                      label: const Text('Pay Now'),
-                      style: FilledButton.styleFrom(
-                        backgroundColor: AppColors.primary,
                         padding: const EdgeInsets.symmetric(
                           horizontal: 14,
                           vertical: 10,
