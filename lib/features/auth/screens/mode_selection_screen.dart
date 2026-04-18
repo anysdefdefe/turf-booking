@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:turf_booking/app/theme/app_colors.dart';
 import 'package:turf_booking/features/auth/providers/auth_controller.dart';
+import 'package:turf_booking/features/auth/providers/auth_providers.dart';
 import 'package:turf_booking/shared/widgets/fade_slide_transition.dart';
 
 class ModeSelectionScreen extends ConsumerWidget {
@@ -11,6 +12,7 @@ class ModeSelectionScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final authState = ref.watch(authControllerProvider);
+    final user = ref.watch(authStateProvider).value;
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -65,9 +67,10 @@ class ModeSelectionScreen extends ConsumerWidget {
               ),
             ),
             const SizedBox(height: 56),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.start,
+            Wrap(
+              alignment: WrapAlignment.center,
+              spacing: 24,
+              runSpacing: 24,
               children: [
                 FadeSlideTransition(
                   delay: const Duration(milliseconds: 100),
@@ -81,7 +84,6 @@ class ModeSelectionScreen extends ConsumerWidget {
                     onTap: () => context.go('/customer/home'),
                   ),
                 ),
-                const SizedBox(width: 32),
                 FadeSlideTransition(
                   delay: const Duration(milliseconds: 150),
                   child: _ProfileAvatar(
@@ -89,11 +91,24 @@ class ModeSelectionScreen extends ConsumerWidget {
                     icon: Icons.store_rounded,
                     gradientColors: const [
                       Color(0xFF3F3F46),
-                      Color(0xFF27272A), // Zinc scale
+                      Color(0xFF27272A),
                     ],
                     onTap: () => context.go('/owner/dashboard'),
                   ),
                 ),
+                if (user != null && user.isAdmin)
+                  FadeSlideTransition(
+                    delay: const Duration(milliseconds: 200),
+                    child: _ProfileAvatar(
+                      label: 'Admin Panel',
+                      icon: Icons.admin_panel_settings_rounded,
+                      gradientColors: const [
+                        Color(0xFFDC2626),
+                        Color(0xFF991B1B),
+                      ],
+                      onTap: () => context.go('/admin'),
+                    ),
+                  ),
               ],
             ),
             const Spacer(flex: 3),

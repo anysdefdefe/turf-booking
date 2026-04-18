@@ -19,6 +19,7 @@ import 'package:turf_booking/features/owner/screens/owner_application_screen.dar
 import 'package:turf_booking/features/owner/screens/owner_bookings_screen.dart';
 import 'package:turf_booking/features/owner/screens/owner_my_stadiums_screen.dart';
 import 'package:turf_booking/features/owner/screens/owner_add_stadium_screen.dart';
+import 'package:turf_booking/features/admin/screens/admin_main_screen.dart';
 
 part 'router.g.dart';
 
@@ -66,6 +67,12 @@ GoRouter router(Ref ref) {
         else if (!user.isApproved && state.matchedLocation != '/owner/pending-approval') {
           return '/owner/pending-approval';
         }
+      }
+
+      // 5. Role-based Route Protection for Admins
+      final isGoingToAdminArea = state.matchedLocation.startsWith('/admin');
+      if (isGoingToAdminArea && !user.isAdmin) {
+        return '/mode-selection';
       }
 
       return null; // All checks passed, let them proceed
@@ -130,6 +137,10 @@ GoRouter router(Ref ref) {
       GoRoute(
         path: '/owner/add-stadium',
         builder: (context, state) => const OwnerAddStadiumScreen(),
+      ),
+      GoRoute(
+        path: '/admin',
+        builder: (context, state) => const AdminMainScreen(),
       ),
     ],
   );
