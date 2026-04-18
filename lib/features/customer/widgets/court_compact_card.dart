@@ -6,11 +6,13 @@ import '../data/models/customer_booking.dart';
 class CourtCompactCard extends StatelessWidget {
   final CustomerBooking booking;
   final VoidCallback onTap;
+  final VoidCallback? onCancel;
 
   const CourtCompactCard({
     super.key,
     required this.booking,
     required this.onTap,
+    this.onCancel,
   });
 
   @override
@@ -47,7 +49,7 @@ class CourtCompactCard extends StatelessWidget {
                 ),
                 const SizedBox(width: 10),
                 Text(
-                  '₹${court.pricePerHour.toInt()}/hr',
+                  '₹${booking.totalAmount.toInt()}',
                   style: const TextStyle(
                     fontFamily: 'Poppins',
                     fontSize: 13,
@@ -78,12 +80,40 @@ class CourtCompactCard extends StatelessWidget {
             ),
             const SizedBox(height: 6),
             Text(
-              booking.courtType,
+              '${booking.courtType} • ${booking.durationHours} hr${booking.durationHours > 1 ? 's' : ''}',
               style: const TextStyle(
                 fontFamily: 'Poppins',
                 fontSize: 12.5,
                 color: AppColors.textSecondary,
               ),
+            ),
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 6,
+              runSpacing: 6,
+              children: booking.slots
+                  .map(
+                    (slot) => Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppColors.background,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: AppColors.divider),
+                      ),
+                      child: Text(
+                        slot,
+                        style: const TextStyle(
+                          fontFamily: 'Poppins',
+                          fontSize: 11,
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                    ),
+                  )
+                  .toList(),
             ),
             const SizedBox(height: 10),
             Row(
@@ -100,6 +130,34 @@ class CourtCompactCard extends StatelessWidget {
                 ),
               ],
             ),
+            const SizedBox(height: 10),
+            const Text(
+              'Money not refundable',
+              style: TextStyle(
+                fontFamily: 'Poppins',
+                fontSize: 11.5,
+                fontWeight: FontWeight.w500,
+                color: AppColors.textSecondary,
+              ),
+            ),
+            if (onCancel != null) ...[
+              const SizedBox(height: 10),
+              Align(
+                alignment: Alignment.centerRight,
+                child: OutlinedButton.icon(
+                  onPressed: onCancel,
+                  icon: const Icon(Icons.cancel_outlined, size: 16),
+                  label: const Text('Cancel booking'),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: Colors.red.shade700,
+                    side: BorderSide(color: Colors.red.shade200),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ],
         ),
       ),
@@ -121,7 +179,8 @@ class CourtCompactCard extends StatelessWidget {
       'Nov',
       'Dec',
     ];
-    return '${d.day} ${months[d.month - 1]} • ${booking.timeSlot}';
+    final firstSlot = booking.slots.isEmpty ? '-' : booking.slots.first;
+    return '${d.day} ${months[d.month - 1]} • $firstSlot';
   }
 }
 
@@ -132,19 +191,19 @@ class _StatusChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isApproved = status == BookingStatus.approved;
+    final isCancelled = status == BookingStatus.cancelled;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(
-          color: isApproved ? AppColors.primary : AppColors.divider,
+          color: isCancelled ? Colors.red.shade200 : AppColors.primary,
           width: 1,
         ),
       ),
       child: Text(
-        isApproved ? 'Approved' : 'Pending',
+        isCancelled ? 'Cancelled' : 'Booked',
         style: const TextStyle(
           fontFamily: 'Poppins',
           fontSize: 11.5,

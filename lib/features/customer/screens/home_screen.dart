@@ -22,18 +22,32 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  static const String _currentLocation = 'Mumbai, IN';
-
   final CourtRepository _repo = CourtRepository.instance;
   final CustomerPreferencesRepository _prefs =
       CustomerPreferencesRepository.instance;
   late final List<String> _allCities;
+  late final List<String> _allSports;
+  late final List<String> _allTeamSizes;
   late final List<Stadium> _stadiums;
   late List<Court> _courts;
   final List<String> _selectedCities = [];
+  final List<String> _selectedSports = [];
+  final List<String> _selectedTeamSizes = [];
+  RangeValues _priceRange = const RangeValues(0, 3000);
+  RangeValues _distanceRange = const RangeValues(0, 12);
   String _searchQuery = '';
   _HomeFeedType _activeFeed = _HomeFeedType.all;
   bool _hasAppliedRouteArgs = false;
+
+  bool get _hasActiveFilters {
+    return _selectedCities.isNotEmpty ||
+        _selectedSports.isNotEmpty ||
+        _selectedTeamSizes.isNotEmpty ||
+        _priceRange.start > 0 ||
+        _priceRange.end < 3000 ||
+        _distanceRange.start > 0 ||
+        _distanceRange.end < 12;
+  }
 
   List<Court> get _visibleCourts {
     if (_activeFeed == _HomeFeedType.all) {
@@ -71,6 +85,8 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     _allCities = _repo.getAllCities();
+    _allSports = _repo.getAllSports();
+    _allTeamSizes = _repo.getAllTeamSizes();
     _stadiums = _repo.getAllStadiums();
     _courts = _repo.getAllCourts();
   }
@@ -110,12 +126,38 @@ class _HomeScreenState extends State<HomeScreen> {
   void _clearFilters() {
     setState(() {
       _selectedCities.clear();
+      _selectedSports.clear();
+      _selectedTeamSizes.clear();
+      _priceRange = const RangeValues(0, 3000);
+      _distanceRange = const RangeValues(0, 12);
       _applyFilters();
     });
   }
 
   void _applyFilters() {
-    List<Court> result = _repo.filterByCities(_selectedCities);
+    List<Court> result = _repo.getAllCourts().where((court) {
+      final cityMatch =
+          _selectedCities.isEmpty || _selectedCities.contains(court.city);
+      final sportMatch =
+          _selectedSports.isEmpty ||
+          court.courtTypes.any((type) => _selectedSports.contains(type));
+      final teamSizeMatch =
+          _selectedTeamSizes.isEmpty ||
+          _selectedTeamSizes.contains(court.teamSize);
+      final priceMatch =
+          court.pricePerHour >= _priceRange.start &&
+          court.pricePerHour <= _priceRange.end;
+      final distanceMatch =
+          court.distanceKm >= _distanceRange.start &&
+          court.distanceKm <= _distanceRange.end;
+
+      return cityMatch &&
+          sportMatch &&
+          teamSizeMatch &&
+          priceMatch &&
+          distanceMatch;
+    }).toList();
+
     if (_searchQuery.isNotEmpty) {
       final query = _searchQuery.toLowerCase();
       result = result
@@ -143,12 +185,53 @@ class _HomeScreenState extends State<HomeScreen> {
       builder: (context) {
         return StatefulBuilder(
           builder: (context, setModalState) {
-            return _LocationFilterSheet(
-              currentLocation: _currentLocation,
+            return _AdvancedFilterSheet(
               cities: _allCities,
+              sports: _allSports,
+              teamSizes: _allTeamSizes,
               selectedCities: _selectedCities,
+              selectedSports: _selectedSports,
+              selectedTeamSizes: _selectedTeamSizes,
+              priceRange: _priceRange,
+              distanceRange: _distanceRange,
               onToggleCity: (city) {
                 _onCityToggle(city);
+                setModalState(() {});
+              },
+              onToggleSport: (sport) {
+                setState(() {
+                  if (_selectedSports.contains(sport)) {
+                    _selectedSports.remove(sport);
+                  } else {
+                    _selectedSports.add(sport);
+                  }
+                  _applyFilters();
+                });
+                setModalState(() {});
+              },
+              onToggleTeamSize: (teamSize) {
+                setState(() {
+                  if (_selectedTeamSizes.contains(teamSize)) {
+                    _selectedTeamSizes.remove(teamSize);
+                  } else {
+                    _selectedTeamSizes.add(teamSize);
+                  }
+                  _applyFilters();
+                });
+                setModalState(() {});
+              },
+              onPriceChanged: (range) {
+                setState(() {
+                  _priceRange = range;
+                  _applyFilters();
+                });
+                setModalState(() {});
+              },
+              onDistanceChanged: (range) {
+                setState(() {
+                  _distanceRange = range;
+                  _applyFilters();
+                });
                 setModalState(() {});
               },
               onClear: () {
@@ -230,7 +313,7 @@ class _HomeScreenState extends State<HomeScreen> {
           slivers: [
             _buildHeader(),
             _buildSearchRow(),
-            if (_selectedCities.isNotEmpty) _buildFilterSummary(),
+            if (_hasActiveFilters) _buildFilterSummary(),
             _buildFeedToggle(),
             _buildResultsHeader(),
             _buildCourtsSection(),
@@ -244,64 +327,16 @@ class _HomeScreenState extends State<HomeScreen> {
   SliverToBoxAdapter _buildHeader() {
     return SliverToBoxAdapter(
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(20, 18, 20, 12),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: const [
-                  Text(
-                    'My Location',
-                    style: TextStyle(
-                      fontFamily: 'Poppins',
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
-                      color: AppColors.textSecondary,
-                    ),
-                  ),
-                  SizedBox(height: 6),
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        Icons.location_on_rounded,
-                        size: 16,
-                        color: AppColors.primary,
-                      ),
-                      SizedBox(width: 4),
-                      Text(
-                        _currentLocation,
-                        style: TextStyle(
-                          fontFamily: 'Poppins',
-                          fontSize: 13.5,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.textPrimary,
-                        ),
-                      ),
-                      Icon(
-                        Icons.keyboard_arrow_down_rounded,
-                        size: 18,
-                        color: AppColors.textSecondary,
-                      ),
-                    ],
-                  ),
-                  SizedBox(height: 14),
-                  Text(
-                    'Find your Court',
-                    style: TextStyle(
-                      fontFamily: 'Poppins',
-                      fontSize: 24,
-                      fontWeight: FontWeight.w800,
-                      color: AppColors.textPrimary,
-                      height: 1.1,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
+        padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
+        child: const Text(
+          'Find your Court',
+          style: TextStyle(
+            fontFamily: 'Poppins',
+            fontSize: 28,
+            fontWeight: FontWeight.w800,
+            color: AppColors.textPrimary,
+            height: 1.05,
+          ),
         ),
       ),
     );
@@ -318,7 +353,7 @@ class _HomeScreenState extends State<HomeScreen> {
             _OutlineIconButton(
               icon: Icons.filter_alt_outlined,
               onTap: _openLocationSheet,
-              isActive: _selectedCities.isNotEmpty,
+              isActive: _hasActiveFilters,
             ),
           ],
         ),
@@ -327,9 +362,17 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   SliverToBoxAdapter _buildFilterSummary() {
-    final label = _selectedCities.length == 1
-        ? '1 location selected'
-        : '${_selectedCities.length} locations selected';
+    final tags = <String>[];
+    if (_selectedCities.isNotEmpty)
+      tags.add('${_selectedCities.length} locations');
+    if (_selectedSports.isNotEmpty)
+      tags.add('${_selectedSports.length} sports');
+    if (_selectedTeamSizes.isNotEmpty)
+      tags.add('${_selectedTeamSizes.length} team sizes');
+    if (_priceRange.start > 0 || _priceRange.end < 3000) tags.add('price');
+    if (_distanceRange.start > 0 || _distanceRange.end < 12)
+      tags.add('distance');
+    final label = tags.join(' • ');
 
     return SliverToBoxAdapter(
       child: Padding(
@@ -687,18 +730,36 @@ class _OutlineIconButton extends StatelessWidget {
   }
 }
 
-class _LocationFilterSheet extends StatelessWidget {
-  final String currentLocation;
+class _AdvancedFilterSheet extends StatelessWidget {
   final List<String> cities;
+  final List<String> sports;
+  final List<String> teamSizes;
   final List<String> selectedCities;
+  final List<String> selectedSports;
+  final List<String> selectedTeamSizes;
+  final RangeValues priceRange;
+  final RangeValues distanceRange;
   final ValueChanged<String> onToggleCity;
+  final ValueChanged<String> onToggleSport;
+  final ValueChanged<String> onToggleTeamSize;
+  final ValueChanged<RangeValues> onPriceChanged;
+  final ValueChanged<RangeValues> onDistanceChanged;
   final VoidCallback onClear;
 
-  const _LocationFilterSheet({
-    required this.currentLocation,
+  const _AdvancedFilterSheet({
     required this.cities,
+    required this.sports,
+    required this.teamSizes,
     required this.selectedCities,
+    required this.selectedSports,
+    required this.selectedTeamSizes,
+    required this.priceRange,
+    required this.distanceRange,
     required this.onToggleCity,
+    required this.onToggleSport,
+    required this.onToggleTeamSize,
+    required this.onPriceChanged,
+    required this.onDistanceChanged,
     required this.onClear,
   });
 
@@ -713,117 +774,181 @@ class _LocationFilterSheet extends StatelessWidget {
           borderRadius: BorderRadius.circular(24),
           border: Border.all(color: AppColors.divider, width: 1),
         ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
+        child: ConstrainedBox(
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.of(context).size.height * 0.82,
+          ),
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  'Your Location',
-                  style: TextStyle(
-                    fontFamily: 'Poppins',
-                    fontSize: 14,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.textPrimary,
-                  ),
-                ),
-                const Spacer(),
-                TextButton(
-                  onPressed: onClear,
-                  style: TextButton.styleFrom(
-                    foregroundColor: AppColors.textSecondary,
-                    padding: EdgeInsets.zero,
-                    minimumSize: Size.zero,
-                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                  ),
-                  child: const Text('Clear all'),
-                ),
-              ],
-            ),
-            const SizedBox(height: 10),
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-              decoration: BoxDecoration(
-                color: AppColors.background,
-                borderRadius: BorderRadius.circular(18),
-                border: Border.all(color: AppColors.divider, width: 1),
-              ),
-              child: Row(
-                children: [
-                  const Icon(
-                    Icons.my_location_rounded,
-                    size: 18,
-                    color: AppColors.primary,
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Text(
-                      currentLocation,
-                      style: const TextStyle(
+                Row(
+                  children: [
+                    const Text(
+                      'Filters',
+                      style: TextStyle(
                         fontFamily: 'Poppins',
-                        fontSize: 13.5,
-                        fontWeight: FontWeight.w600,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
                         color: AppColors.textPrimary,
                       ),
                     ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 18),
-            const Text(
-              'Other locations',
-              style: TextStyle(
-                fontFamily: 'Poppins',
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
-                color: AppColors.textSecondary,
-              ),
-            ),
-            const SizedBox(height: 12),
-            Wrap(
-              spacing: 10,
-              runSpacing: 10,
-              children: cities
-                  .map(
-                    (city) => _LocationChip(
-                      label: city,
-                      isSelected: selectedCities.contains(city),
-                      onTap: () => onToggleCity(city),
+                    const Spacer(),
+                    TextButton(
+                      onPressed: onClear,
+                      style: TextButton.styleFrom(
+                        foregroundColor: AppColors.textSecondary,
+                        padding: EdgeInsets.zero,
+                        minimumSize: Size.zero,
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      ),
+                      child: const Text('Clear all'),
                     ),
-                  )
-                  .toList(),
-            ),
-            const SizedBox(height: 18),
-            Align(
-              alignment: Alignment.centerRight,
-              child: TextButton(
-                onPressed: () => Navigator.pop(context),
-                style: TextButton.styleFrom(foregroundColor: AppColors.primary),
-                child: const Text(
-                  'Done',
+                  ],
+                ),
+                const SizedBox(height: 18),
+                const Text(
+                  'Sports',
                   style: TextStyle(
                     fontFamily: 'Poppins',
+                    fontSize: 13,
                     fontWeight: FontWeight.w600,
+                    color: AppColors.textSecondary,
                   ),
                 ),
-              ),
+                const SizedBox(height: 12),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: sports
+                      .map(
+                        (sport) => _FilterChipPill(
+                          label: sport,
+                          isSelected: selectedSports.contains(sport),
+                          onTap: () => onToggleSport(sport),
+                        ),
+                      )
+                      .toList(),
+                ),
+                const SizedBox(height: 18),
+                Text(
+                  'Distance (${distanceRange.start.toStringAsFixed(1)} - ${distanceRange.end.toStringAsFixed(1)} km)',
+                  style: const TextStyle(
+                    fontFamily: 'Poppins',
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+                RangeSlider(
+                  values: distanceRange,
+                  min: 0,
+                  max: 12,
+                  divisions: 24,
+                  labels: RangeLabels(
+                    '${distanceRange.start.toStringAsFixed(1)} km',
+                    '${distanceRange.end.toStringAsFixed(1)} km',
+                  ),
+                  onChanged: onDistanceChanged,
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Price (₹${priceRange.start.toInt()} - ₹${priceRange.end.toInt()})',
+                  style: const TextStyle(
+                    fontFamily: 'Poppins',
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+                RangeSlider(
+                  values: priceRange,
+                  min: 0,
+                  max: 3000,
+                  divisions: 30,
+                  labels: RangeLabels(
+                    '₹${priceRange.start.toInt()}',
+                    '₹${priceRange.end.toInt()}',
+                  ),
+                  onChanged: onPriceChanged,
+                ),
+                const SizedBox(height: 8),
+                const Text(
+                  'Team Size',
+                  style: TextStyle(
+                    fontFamily: 'Poppins',
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: teamSizes
+                      .map(
+                        (teamSize) => _FilterChipPill(
+                          label: teamSize,
+                          isSelected: selectedTeamSizes.contains(teamSize),
+                          onTap: () => onToggleTeamSize(teamSize),
+                        ),
+                      )
+                      .toList(),
+                ),
+                const SizedBox(height: 18),
+                const Text(
+                  'Location',
+                  style: TextStyle(
+                    fontFamily: 'Poppins',
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: cities
+                      .map(
+                        (city) => _FilterChipPill(
+                          label: city,
+                          isSelected: selectedCities.contains(city),
+                          onTap: () => onToggleCity(city),
+                        ),
+                      )
+                      .toList(),
+                ),
+                const SizedBox(height: 20),
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: FilledButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: const Text(
+                      'Apply filters',
+                      style: TextStyle(
+                        fontFamily: 'Poppins',
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );
   }
 }
 
-class _LocationChip extends StatelessWidget {
+class _FilterChipPill extends StatelessWidget {
   final String label;
   final bool isSelected;
   final VoidCallback onTap;
 
-  const _LocationChip({
+  const _FilterChipPill({
     required this.label,
     required this.isSelected,
     required this.onTap,

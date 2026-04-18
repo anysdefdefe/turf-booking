@@ -846,47 +846,19 @@ class _ProfileHeroCard extends StatelessWidget {
                     letterSpacing: -0.2,
                   ),
                 ),
-                const SizedBox(height: 4),
-                _HeroInfoRow(
-                  icon: Icons.mail_outline_rounded,
-                  text: profile.email,
-                ),
-                const SizedBox(height: 3),
-                _HeroInfoRow(
-                  icon: Icons.phone_outlined,
-                  text: profile.phone.isEmpty
-                      ? 'No phone added'
-                      : profile.phone,
+                const SizedBox(height: 6),
+                Text(
+                  'Member since ${MaterialLocalizations.of(context).formatMediumDate(profile.createdAt)}',
+                  style: const TextStyle(
+                    fontSize: 12.5,
+                    color: AppColors.textSecondary,
+                  ),
                 ),
               ],
             ),
           ),
         ],
       ),
-    );
-  }
-}
-
-class _HeroInfoRow extends StatelessWidget {
-  final IconData icon;
-  final String text;
-
-  const _HeroInfoRow({required this.icon, required this.text});
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Icon(icon, size: 13, color: AppColors.textSecondary),
-        const SizedBox(width: 6),
-        Expanded(
-          child: Text(
-            text,
-            style: TextStyle(fontSize: 12.5, color: AppColors.textSecondary),
-            overflow: TextOverflow.ellipsis,
-          ),
-        ),
-      ],
     );
   }
 }
