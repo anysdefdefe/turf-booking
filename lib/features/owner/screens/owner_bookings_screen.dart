@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:turf_booking/app/theme/app_colors.dart';
 import 'package:turf_booking/app/constants/app_constants.dart';
+import 'package:turf_booking/app/theme/app_colors.dart';
 import '../widgets/owner_bottom_nav_bar.dart';
-
-// ── MOCK DATA ─────────────────────────────────────────────────────────────────
 
 class BookingEntry {
   final String id;
@@ -49,7 +47,7 @@ const List<BookingEntry> _mockBookings = [
     date: 'Today',
     startTime: '7:00 AM',
     endTime: '8:00 AM',
-    status: 'confirmed',
+    status: 'pending',
     amount: 600,
   ),
   BookingEntry(
@@ -71,7 +69,7 @@ const List<BookingEntry> _mockBookings = [
     date: 'Tomorrow',
     startTime: '10:00 AM',
     endTime: '11:00 AM',
-    status: 'confirmed',
+    status: 'pending',
     amount: 450,
   ),
   BookingEntry(
@@ -98,8 +96,6 @@ const List<BookingEntry> _mockBookings = [
   ),
 ];
 
-// ── SCREEN ────────────────────────────────────────────────────────────────────
-
 class OwnerBookingsScreen extends StatefulWidget {
   const OwnerBookingsScreen({super.key});
 
@@ -114,7 +110,7 @@ class _OwnerBookingsScreenState extends State<OwnerBookingsScreen>
   String? _dateFilter;
   String? _courtFilter;
 
-  final List<String> _tabs = ['All', 'Confirmed', 'Cancelled'];
+  final List<String> _tabs = ['All', 'Pending', 'Confirmed', 'Cancelled'];
 
   @override
   void initState() {
@@ -133,9 +129,12 @@ class _OwnerBookingsScreenState extends State<OwnerBookingsScreen>
     List<BookingEntry> result = _mockBookings;
 
     if (tabIndex == 1) {
-      result = result.where((b) => b.status == 'confirmed').toList();
+      result = result.where((b) => b.status == 'pending').toList();
     }
     if (tabIndex == 2) {
+      result = result.where((b) => b.status == 'confirmed').toList();
+    }
+    if (tabIndex == 3) {
       result = result.where((b) => b.status == 'cancelled').toList();
     }
 
@@ -164,7 +163,6 @@ class _OwnerBookingsScreenState extends State<OwnerBookingsScreen>
 
   bool get _hasActiveFilters => _dateFilter != null || _courtFilter != null;
 
-  // ── REVENUE SUMMARY ────────────────────────────────────────────
   double get _todayRevenue => _mockBookings
       .where((b) => b.date == 'Today' && b.status == 'confirmed')
       .fold(0, (sum, b) => sum + b.amount);
@@ -192,6 +190,27 @@ class _OwnerBookingsScreenState extends State<OwnerBookingsScreen>
       context: context,
       backgroundColor: Colors.transparent,
       builder: (context) => _BookingDetailSheet(booking: booking),
+    );
+  }
+
+  void _approveBooking(BookingEntry booking) {
+    _showSnackbar('Booking by ${booking.customerName} approved');
+  }
+
+  void _rejectBooking(BookingEntry booking) {
+    _showSnackbar('Booking by ${booking.customerName} rejected');
+  }
+
+  void _showSnackbar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message, style: const TextStyle(fontFamily: 'Poppins')),
+        backgroundColor: AppColors.primary,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppConstants.radiusM),
+        ),
+      ),
     );
   }
 
@@ -251,7 +270,6 @@ class _OwnerBookingsScreenState extends State<OwnerBookingsScreen>
       ),
       body: Column(
         children: [
-          // ── TODAY SUMMARY BAR ────────────────────────────────────
           Container(
             margin: const EdgeInsets.fromLTRB(16, 16, 16, 0),
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -266,7 +284,7 @@ class _OwnerBookingsScreenState extends State<OwnerBookingsScreen>
               children: [
                 _SummaryItem(
                   label: "Today's Revenue",
-                  value: '₹${_todayRevenue.toStringAsFixed(0)}',
+                  value: 'Rs ${_todayRevenue.toStringAsFixed(0)}',
                   icon: Icons.currency_rupee_rounded,
                 ),
                 Container(
@@ -283,8 +301,6 @@ class _OwnerBookingsScreenState extends State<OwnerBookingsScreen>
               ],
             ),
           ),
-
-          // ── SEARCH + FILTER ──────────────────────────────────────
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
             child: Row(
@@ -370,8 +386,6 @@ class _OwnerBookingsScreenState extends State<OwnerBookingsScreen>
               ],
             ),
           ),
-
-          // ── ACTIVE FILTER CHIPS ──────────────────────────────────
           if (_hasActiveFilters)
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
@@ -392,8 +406,6 @@ class _OwnerBookingsScreenState extends State<OwnerBookingsScreen>
                 ],
               ),
             ),
-
-          // ── BOOKING LIST ─────────────────────────────────────────
           Expanded(
             child: _filteredBookings.isEmpty
                 ? _buildEmpty()
@@ -406,6 +418,8 @@ class _OwnerBookingsScreenState extends State<OwnerBookingsScreen>
                       return _BookingCard(
                         booking: booking,
                         onTap: () => _showBookingDetail(booking),
+                        onApproveTap: () => _approveBooking(booking),
+                        onRejectTap: () => _rejectBooking(booking),
                       );
                     },
                   ),
@@ -449,8 +463,6 @@ class _OwnerBookingsScreenState extends State<OwnerBookingsScreen>
     );
   }
 }
-
-// ── SUMMARY ITEM ──────────────────────────────────────────────────────────────
 
 class _SummaryItem extends StatelessWidget {
   final String label;
@@ -498,8 +510,6 @@ class _SummaryItem extends StatelessWidget {
   }
 }
 
-// ── ACTIVE FILTER CHIP ────────────────────────────────────────────────────────
-
 class _ActiveFilterChip extends StatelessWidget {
   final String label;
   final VoidCallback onRemove;
@@ -538,18 +548,25 @@ class _ActiveFilterChip extends StatelessWidget {
   }
 }
 
-// ── BOOKING CARD ──────────────────────────────────────────────────────────────
-
 class _BookingCard extends StatelessWidget {
   final BookingEntry booking;
   final VoidCallback onTap;
+  final VoidCallback onApproveTap;
+  final VoidCallback onRejectTap;
 
-  const _BookingCard({required this.booking, required this.onTap});
+  const _BookingCard({
+    required this.booking,
+    required this.onTap,
+    required this.onApproveTap,
+    required this.onRejectTap,
+  });
 
   Color get _statusColor {
     switch (booking.status) {
       case 'confirmed':
         return AppColors.primary;
+      case 'pending':
+        return const Color(0xFFE6A800);
       case 'cancelled':
         return Colors.redAccent;
       default:
@@ -561,6 +578,8 @@ class _BookingCard extends StatelessWidget {
     switch (booking.status) {
       case 'confirmed':
         return AppColors.badgeBg;
+      case 'pending':
+        return const Color(0xFFFFF8E1);
       case 'cancelled':
         return const Color(0xFFFFEBEB);
       default:
@@ -632,8 +651,7 @@ class _BookingCard extends StatelessWidget {
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Text(
-                    booking.status[0].toUpperCase() +
-                        booking.status.substring(1),
+                    booking.status[0].toUpperCase() + booking.status.substring(1),
                     style: TextStyle(
                       fontFamily: 'Poppins',
                       fontSize: 11,
@@ -680,7 +698,7 @@ class _BookingCard extends StatelessWidget {
                 ),
                 const Spacer(),
                 Text(
-                  '₹${booking.amount.toStringAsFixed(0)}',
+                  'Rs ${booking.amount.toStringAsFixed(0)}',
                   style: const TextStyle(
                     fontFamily: 'Poppins',
                     fontSize: 14,
@@ -690,14 +708,74 @@ class _BookingCard extends StatelessWidget {
                 ),
               ],
             ),
+            if (booking.status == 'pending') ...[
+              const SizedBox(height: 10),
+              const Divider(color: AppColors.divider, height: 1),
+              const SizedBox(height: 10),
+              Row(
+                children: [
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: onApproveTap,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        decoration: BoxDecoration(
+                          color: AppColors.badgeBg,
+                          borderRadius: BorderRadius.circular(
+                            AppConstants.radiusS,
+                          ),
+                          border: Border.all(color: AppColors.primary),
+                        ),
+                        child: const Center(
+                          child: Text(
+                            'Approve',
+                            style: TextStyle(
+                              fontFamily: 'Poppins',
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.primary,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: onRejectTap,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFFFEBEB),
+                          borderRadius: BorderRadius.circular(
+                            AppConstants.radiusS,
+                          ),
+                          border: Border.all(color: Colors.redAccent),
+                        ),
+                        child: const Center(
+                          child: Text(
+                            'Reject',
+                            style: TextStyle(
+                              fontFamily: 'Poppins',
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.redAccent,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ],
         ),
       ),
     );
   }
 }
-
-// ── BOOKING DETAIL SHEET ──────────────────────────────────────────────────────
 
 class _BookingDetailSheet extends StatelessWidget {
   final BookingEntry booking;
@@ -719,7 +797,6 @@ class _BookingDetailSheet extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Handle
             Center(
               child: Container(
                 width: 36,
@@ -769,7 +846,7 @@ class _BookingDetailSheet extends StatelessWidget {
             _DetailRow(
               icon: Icons.currency_rupee_rounded,
               label: 'Amount',
-              value: '₹${booking.amount.toStringAsFixed(0)}',
+              value: 'Rs ${booking.amount.toStringAsFixed(0)}',
             ),
             _DetailRow(
               icon: Icons.check_circle_outline_rounded,
@@ -827,8 +904,6 @@ class _DetailRow extends StatelessWidget {
     );
   }
 }
-
-// ── FILTER SHEET ──────────────────────────────────────────────────────────────
 
 class _FilterSheet extends StatefulWidget {
   final String? selectedDate;
