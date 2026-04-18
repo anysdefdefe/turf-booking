@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:turf_booking/features/auth/providers/auth_controller.dart';
 import 'package:go_router/go_router.dart';
-import '../../../app/constants/app_constants.dart';
 import '../../../app/theme/app_colors.dart';
 import '../data/repositories/customer_preferences_repository.dart';
 import '../widgets/customer_floating_nav_bar.dart';
