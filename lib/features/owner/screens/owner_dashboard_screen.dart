@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:turf_booking/app/constants/app_constants.dart';
 import 'package:turf_booking/app/theme/app_colors.dart';
 import '../data/owner_dummy_data.dart';
 import '../widgets/owner_bottom_nav_bar.dart';
-import 'package:go_router/go_router.dart';
 
 class OwnerDashboardScreen extends StatelessWidget {
   const OwnerDashboardScreen({super.key});
@@ -161,73 +161,23 @@ class OwnerDashboardScreen extends StatelessWidget {
               label: 'Add New Stadium',
               icon: Icons.add_business_rounded,
               isLocked: !owner.isApproved,
-              onTap: () {
-                if (owner.isApproved) {
-                  context.go('/owner/add-stadium');
-                } else {
-                  _showLockedSnackbar(context);
-                }
-              },
+              onTap: () => context.go('/owner/add-stadium'),
             ),
             const SizedBox(height: 12),
             _ActionButton(
               label: 'My Stadiums',
               icon: Icons.stadium_rounded,
               isLocked: !owner.isApproved,
-              onTap: () {
-                if (owner.isApproved) {
-                  context.go('/owner/my-stadiums');
-                } else {
-                  _showLockedSnackbar(context);
-                }
-              },
-            ),
-            const SizedBox(height: 12),
-            _ActionButton(
-              label: 'My Stadiums',
-              icon: Icons.stadium_rounded,
-              isLocked: !owner.isApproved,
-              onTap: () {
-                if (owner.isApproved) {
-                  Navigator.pushNamed(
-                    context,
-                    AppConstants.routeOwnerMyStadiums,
-                  );
-                } else {
-                  _showLockedSnackbar(context);
-                }
-              },
+              onTap: () => context.go('/owner/my-stadiums'),
             ),
             const SizedBox(height: 12),
             _ActionButton(
               label: 'Manage Bookings',
               icon: Icons.book_online_rounded,
               isLocked: !owner.isApproved,
-              onTap: () {
-                if (owner.isApproved) {
-                  context.go('/owner/bookings');
-                } else {
-                  _showLockedSnackbar(context);
-                }
-              },
+              onTap: () => context.go('/owner/bookings'),
             ),
           ],
-        ),
-      ),
-    );
-  }
-
-  void _showLockedSnackbar(BuildContext context) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: const Text(
-          'Available after admin approves your account',
-          style: TextStyle(fontFamily: 'Poppins'),
-        ),
-        backgroundColor: AppColors.primary,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppConstants.radiusM),
         ),
       ),
     );
