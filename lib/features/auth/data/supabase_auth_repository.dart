@@ -1,6 +1,7 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:turf_booking/shared/models/user_model.dart';
 import 'package:turf_booking/shared/repositories/auth_repository.dart';
+import 'package:turf_booking/shared/exceptions/app_exceptions.dart';
 
 class SupabaseAuthRepository implements AuthRepository {
   final SupabaseClient _client;
@@ -28,8 +29,10 @@ class SupabaseAuthRepository implements AuthRepository {
       if (response.session != null) {
         await _client.auth.signOut();
       }
+    } on AuthException catch (e) {
+      throw AppAuthException(e.message, e.statusCode, e);
     } catch (e) {
-      throw Exception('Sign up failed: ${e.toString()}');
+      throw UnknownException('Sign up failed: ${e.toString()}', e);
     }
   }
 
@@ -49,8 +52,10 @@ class SupabaseAuthRepository implements AuthRepository {
       }
 
       return _waitForUserProfile(response.user!.id);
+    } on AuthException catch (e) {
+      throw AppAuthException(e.message, e.statusCode, e);
     } catch (e) {
-      throw Exception('Sign in failed: ${e.toString()}');
+      throw UnknownException('Sign in failed: ${e.toString()}', e);
     }
   }
 
@@ -70,8 +75,10 @@ class SupabaseAuthRepository implements AuthRepository {
   Future<void> signOut() async {
     try {
       await _client.auth.signOut();
+    } on AuthException catch (e) {
+      throw AppAuthException(e.message, e.statusCode, e);
     } catch (e) {
-      throw Exception('Sign out failed: ${e.toString()}');
+      throw UnknownException('Sign out failed: ${e.toString()}', e);
     }
   }
 
@@ -80,7 +87,7 @@ class SupabaseAuthRepository implements AuthRepository {
     final user = _client.auth.currentUser;
     if (user == null) return null;
 
-    return _fetchUserProfile(user.id);
+    return _waitForUserProfile(user.id);
   }
 
   @override
