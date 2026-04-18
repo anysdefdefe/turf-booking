@@ -17,32 +17,38 @@ class CustomerFloatingNavBar extends StatelessWidget {
     return SafeArea(
       top: false,
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(20, 0, 20, 14),
-        child: Container(
-          height: 64,
-          decoration: BoxDecoration(
-            color: AppColors.surface.withOpacity(0.98),
-            borderRadius: BorderRadius.circular(22),
-            border: Border.all(color: AppColors.divider, width: 1),
-          ),
-          child: Row(
-            children: [
-              _NavItem(
-                icon: Icons.sports_tennis_rounded,
-                isSelected: selectedIndex == 0,
-                onTap: () => onTap(0),
-              ),
-              _NavItem(
-                icon: Icons.calendar_month_rounded,
-                isSelected: selectedIndex == 1,
-                onTap: () => onTap(1),
-              ),
-              _NavItem(
-                icon: Icons.person_outline_rounded,
-                isSelected: selectedIndex == 2,
-                onTap: () => onTap(2),
-              ),
-            ],
+        padding: const EdgeInsets.fromLTRB(20, 0, 20, 18),
+        child: Material(
+          color: Colors.transparent,
+          elevation: 12,
+          shadowColor: Colors.black.withOpacity(0.14),
+          borderRadius: BorderRadius.circular(24),
+          child: Container(
+            height: 66,
+            decoration: BoxDecoration(
+              color: AppColors.surface,
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(color: AppColors.divider, width: 1),
+            ),
+            child: Row(
+              children: [
+                _NavItem(
+                  icon: Icons.sports_tennis_rounded,
+                  isSelected: selectedIndex == 0,
+                  onTap: () => onTap(0),
+                ),
+                _NavItem(
+                  icon: Icons.calendar_month_rounded,
+                  isSelected: selectedIndex == 1,
+                  onTap: () => onTap(1),
+                ),
+                _NavItem(
+                  icon: Icons.person_outline_rounded,
+                  isSelected: selectedIndex == 2,
+                  onTap: () => onTap(2),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -73,16 +79,16 @@ class _NavItem extends StatelessWidget {
         child: Center(
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 180),
-            width: 38,
-            height: 38,
+            width: 40,
+            height: 40,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               border: Border.all(
                 color: isSelected ? AppColors.primary : Colors.transparent,
-                width: 1.4,
+                width: 1.25,
               ),
             ),
-            child: Icon(icon, size: 22, color: iconColor),
+            child: Icon(icon, size: 19, color: iconColor),
           ),
         ),
       ),
