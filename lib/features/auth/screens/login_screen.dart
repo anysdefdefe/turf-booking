@@ -264,7 +264,7 @@ class _HeroImage extends StatelessWidget {
                   ),
                   SizedBox(height: 6),
                   Text(
-                    'Book your turf, play your game',
+                    'Book a venue, play your game',
                     style: TextStyle(color: AppColors.textMuted, fontSize: 13),
                   ),
                 ],
