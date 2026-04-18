@@ -66,5 +66,11 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+	<key>NSCameraUsageDescription</key>
+	<string>Used to take stadium photos</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Used to pick stadium photos</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Used to set your stadium location</string>
 </dict>
 </plist>
