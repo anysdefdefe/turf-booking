@@ -237,6 +237,17 @@ class _CourtInfo extends StatelessWidget {
               ],
             ],
           ),
+          const SizedBox(height: 4),
+          Text(
+            '${court.place}, ${court.city}',
+            style: const TextStyle(
+              fontFamily: 'Poppins',
+              fontSize: 12,
+              color: AppColors.textSecondary,
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
           const SizedBox(height: 10),
           Row(
             children: [
