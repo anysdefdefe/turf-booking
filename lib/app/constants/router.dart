@@ -13,6 +13,9 @@ import 'package:turf_booking/features/customer/screens/my_bookings_screen.dart';
 import 'package:turf_booking/features/customer/screens/profile_screen.dart';
 import 'package:turf_booking/features/owner/screens/owner_dashboard_screen.dart';
 import 'package:turf_booking/features/owner/screens/pending_approval_screen.dart';
+import 'package:turf_booking/features/owner/screens/owner_bookings_screen.dart';
+import 'package:turf_booking/features/owner/screens/owner_my_stadiums_screen.dart';
+import 'package:turf_booking/features/owner/screens/owner_add_stadium_screen.dart';
 
 part 'router.g.dart';
 
@@ -30,10 +33,12 @@ GoRouter router(Ref ref) {
       final user = authState.value;
       final isGoingToLogin = state.matchedLocation == '/login';
       final isGoingToRegister = state.matchedLocation == '/register';
-      final isGoingToEmailConfirmation = state.matchedLocation == '/email-confirmation';
-      
+      final isGoingToEmailConfirmation =
+          state.matchedLocation == '/email-confirmation';
+
       // Unauthenticated users are allowed on Login, Register, and Email Confirmation
-      final isAuthScreen = isGoingToLogin || isGoingToRegister || isGoingToEmailConfirmation;
+      final isAuthScreen =
+          isGoingToLogin || isGoingToRegister || isGoingToEmailConfirmation;
 
       // 2. Unauthenticated users can ONLY go to auth screens
       if (user == null) {
@@ -49,7 +54,8 @@ GoRouter router(Ref ref) {
       final isGoingToOwnerArea = state.matchedLocation.startsWith('/owner');
       if (isGoingToOwnerArea) {
         // If they aren't approved, force them to the pending screen
-        if (!user.isApproved && state.matchedLocation != '/owner/pending-approval') {
+        if (!user.isApproved &&
+            state.matchedLocation != '/owner/pending-approval') {
           return '/owner/pending-approval';
         }
       }
@@ -57,10 +63,7 @@ GoRouter router(Ref ref) {
       return null; // All checks passed, let them proceed
     },
     routes: [
-      GoRoute(
-        path: '/login',
-        builder: (context, state) => const LoginScreen(),
-      ),
+      GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
       GoRoute(
         path: '/register',
         builder: (context, state) => const RegisterScreen(),
@@ -95,6 +98,18 @@ GoRouter router(Ref ref) {
       GoRoute(
         path: '/owner/pending-approval',
         builder: (context, state) => const PendingApprovalScreen(),
+      ),
+      GoRoute(
+        path: '/owner/bookings',
+        builder: (context, state) => const OwnerBookingsScreen(),
+      ),
+      GoRoute(
+        path: '/owner/my-stadiums',
+        builder: (context, state) => const OwnerMyStadiumsScreen(),
+      ),
+      GoRoute(
+        path: '/owner/add-stadium',
+        builder: (context, state) => const OwnerAddStadiumScreen(),
       ),
     ],
   );

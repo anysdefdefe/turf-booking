@@ -4,6 +4,7 @@ import 'package:turf_booking/app/constants/app_constants.dart';
 import 'package:turf_booking/app/theme/app_colors.dart';
 import '../data/owner_dummy_data.dart';
 import '../widgets/owner_bottom_nav_bar.dart';
+import 'package:go_router/go_router.dart';
 
 class OwnerDashboardScreen extends StatelessWidget {
   const OwnerDashboardScreen({super.key});
@@ -162,10 +163,7 @@ class OwnerDashboardScreen extends StatelessWidget {
               isLocked: !owner.isApproved,
               onTap: () {
                 if (owner.isApproved) {
-                  Navigator.pushNamed(
-                    context,
-                    AppConstants.routeOwnerAddStadium,
-                  );
+                  context.go('/owner/add-stadium');
                 } else {
                   _showLockedSnackbar(context);
                 }
@@ -178,10 +176,7 @@ class OwnerDashboardScreen extends StatelessWidget {
               isLocked: !owner.isApproved,
               onTap: () {
                 if (owner.isApproved) {
-                  Navigator.pushNamed(
-                    context,
-                    AppConstants.routeOwnerMyStadiums,
-                  );
+                  context.go('/owner/my-stadiums');
                 } else {
                   _showLockedSnackbar(context);
                 }
@@ -194,7 +189,7 @@ class OwnerDashboardScreen extends StatelessWidget {
               isLocked: !owner.isApproved,
               onTap: () {
                 if (owner.isApproved) {
-                  Navigator.pushNamed(context, AppConstants.routeOwnerBookings);
+                  context.go('/owner/bookings');
                 } else {
                   _showLockedSnackbar(context);
                 }

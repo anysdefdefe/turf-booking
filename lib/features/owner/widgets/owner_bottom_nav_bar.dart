@@ -1,34 +1,20 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:turf_booking/app/theme/app_colors.dart';
-import 'package:turf_booking/app/constants/app_constants.dart';
 
 class OwnerBottomNavBar extends StatelessWidget {
   final int selectedIndex;
-
   const OwnerBottomNavBar({super.key, required this.selectedIndex});
 
   void _onTap(BuildContext context, int index) {
     if (index == selectedIndex) return;
-
     switch (index) {
       case 0:
-        Navigator.pushReplacementNamed(
-          context,
-          AppConstants.routeOwnerDashboard,
-        );
-        break;
+        context.go('/owner/dashboard');
       case 1:
-        Navigator.pushReplacementNamed(
-          context,
-          AppConstants.routeOwnerMyStadiums,
-        );
-        break;
+        context.go('/owner/my-stadiums');
       case 2:
-        Navigator.pushReplacementNamed(
-          context,
-          AppConstants.routeOwnerBookings,
-        );
-        break;
+        context.go('/owner/bookings');
     }
   }
 
