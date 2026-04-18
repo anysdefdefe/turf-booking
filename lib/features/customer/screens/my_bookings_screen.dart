@@ -3,10 +3,8 @@ import 'package:go_router/go_router.dart';
 import '../../../app/constants/app_constants.dart';
 import '../../../app/theme/app_colors.dart';
 import '../../../shared/widgets/empty_state.dart';
-import '../data/models/court_detail_args.dart';
 import '../data/models/customer_booking.dart';
 import '../data/repositories/customer_booking_repository.dart';
-import '../data/repositories/court_repository.dart';
 import '../widgets/court_compact_card.dart';
 import '../widgets/customer_floating_nav_bar.dart';
 
@@ -19,18 +17,72 @@ class MyBookingsScreen extends StatefulWidget {
 
 class _MyBookingsScreenState extends State<MyBookingsScreen> {
   final CustomerBookingRepository _repo = CustomerBookingRepository.instance;
-  final CourtRepository _courtRepo = CourtRepository.instance;
   int _selectedFilterIndex = 0;
 
   List<CustomerBooking> get _bookings {
     final all = _repo.getAllBookings();
     if (_selectedFilterIndex == 1) {
-      return all.where((b) => b.status == BookingStatus.pending).toList();
+      return all
+          .where((b) => b.status == BookingStatus.booked && !b.isPast)
+          .toList();
     }
     if (_selectedFilterIndex == 2) {
-      return all.where((b) => b.status == BookingStatus.approved).toList();
+      return all
+          .where((b) => b.status == BookingStatus.booked && b.isPast)
+          .toList();
+    }
+    if (_selectedFilterIndex == 3) {
+      return all.where((b) => b.status == BookingStatus.cancelled).toList();
     }
     return all;
+  }
+
+  Future<void> _onCancelBooking(CustomerBooking booking) async {
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Cancel booking?'),
+        content: const Text(
+          'Money not refundable. This action cannot be undone.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Keep booking'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Cancel booking'),
+          ),
+        ],
+      ),
+    );
+
+    if (ok != true) {
+      return;
+    }
+
+    setState(() {
+      _repo.cancelBooking(booking.id);
+    });
+  }
+
+  void _openReceiptPlaceholder(CustomerBooking booking) {
+    showDialog<void>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Digital receipt'),
+        content: Text(
+          'Receipt for booking ${booking.id} will be available soon.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Close'),
+          ),
+        ],
+      ),
+    );
   }
 
   void _onNavTap(int index) {
@@ -72,8 +124,7 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
             child: _bookings.isEmpty
                 ? const EmptyState(
                     title: 'No bookings yet',
-                    subtitle:
-                        'Your pending and approved bookings will appear here',
+                    subtitle: 'Your bookings will appear here',
                     icon: Icons.event_note_rounded,
                   )
                 : ListView.builder(
@@ -83,16 +134,10 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
                       final booking = _bookings[index];
                       return CourtCompactCard(
                         booking: booking,
-                        onTap: () => Navigator.pushNamed(
-                          context,
-                          AppConstants.routeCourtDetail,
-                          arguments: CourtDetailArgs(
-                            selectedCourt: booking.court,
-                            stadiumCourts: _courtRepo.getCourtsByStadium(
-                              booking.court.stadiumId,
-                            ),
-                          ),
-                        ),
+                        onTap: () => _openReceiptPlaceholder(booking),
+                        onCancel: booking.canCancel
+                            ? () => _onCancelBooking(booking)
+                            : null,
                       );
                     },
                   ),
@@ -103,7 +148,7 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
   }
 
   Widget _buildFilterRow() {
-    const labels = ['All', 'Pending', 'Approved'];
+    const labels = ['All', 'Upcoming', 'Past', 'Cancelled'];
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 6, 20, 8),
       child: Row(

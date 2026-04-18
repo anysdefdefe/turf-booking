@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../app/constants/app_constants.dart';
 import '../../../app/theme/app_colors.dart';
 import '../data/models/court_model.dart';
+import 'sport_icon_mapper.dart';
 
 class CourtCard extends StatelessWidget {
   final Court court;
@@ -46,6 +47,7 @@ class CourtCard extends StatelessWidget {
 
 class _CourtImage extends StatelessWidget {
   final Court court;
+
   const _CourtImage({required this.court});
 
   @override
@@ -79,20 +81,15 @@ class _CourtImage extends StatelessWidget {
               color: AppColors.divider,
               child: const Icon(
                 Icons.sports_tennis_rounded,
-                size: 48,
+                size: 44,
                 color: AppColors.textMuted,
               ),
             ),
           ),
         ),
         Positioned(
-          top: 14,
-          left: 14,
-          child: _AvailabilityBadge(isAvailable: court.isAvailable),
-        ),
-        Positioned(
-          top: 14,
-          right: 14,
+          top: 12,
+          right: 12,
           child: _DistanceChip(distanceKm: court.distanceKm),
         ),
       ],
@@ -100,60 +97,18 @@ class _CourtImage extends StatelessWidget {
   }
 }
 
-class _AvailabilityBadge extends StatelessWidget {
-  final bool isAvailable;
-  const _AvailabilityBadge({required this.isAvailable});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-      decoration: BoxDecoration(
-        color: AppColors.surface.withOpacity(0.94),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: isAvailable ? AppColors.primary : Colors.red.shade300,
-          width: 1,
-        ),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 6,
-            height: 6,
-            decoration: const BoxDecoration(
-              color: AppColors.primary,
-              shape: BoxShape.circle,
-            ),
-          ),
-          const SizedBox(width: 5),
-          Text(
-            isAvailable ? 'Available' : 'Booked',
-            style: const TextStyle(
-              fontFamily: 'Poppins',
-              color: AppColors.textPrimary,
-              fontSize: 11,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
 class _DistanceChip extends StatelessWidget {
   final double distanceKm;
+
   const _DistanceChip({required this.distanceKm});
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
       decoration: BoxDecoration(
         color: AppColors.surface.withOpacity(0.94),
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(18),
         border: Border.all(color: AppColors.divider, width: 1),
       ),
       child: Row(
@@ -162,7 +117,7 @@ class _DistanceChip extends StatelessWidget {
           const Icon(
             Icons.near_me_rounded,
             color: AppColors.textSecondary,
-            size: 12,
+            size: 11,
           ),
           const SizedBox(width: 4),
           Text(
@@ -170,7 +125,7 @@ class _DistanceChip extends StatelessWidget {
             style: const TextStyle(
               fontFamily: 'Poppins',
               color: AppColors.textSecondary,
-              fontSize: 11,
+              fontSize: 10.5,
               fontWeight: FontWeight.w500,
             ),
           ),
@@ -193,8 +148,22 @@ class _CourtInfo extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final visibleSports = <_SportBadgeModel>[];
+    final seenIconKeys = <String>{};
+    for (final sport in court.courtTypes) {
+      final badge = _SportBadgeModel(
+        label: sport,
+        icon: sportIconForName(sport),
+      );
+      final iconKey =
+          '${badge.icon.codePoint}:${badge.icon.fontFamily ?? ''}:${badge.icon.fontPackage ?? ''}';
+      if (seenIconKeys.add(iconKey)) {
+        visibleSports.add(badge);
+      }
+    }
+
     return Padding(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(14),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -221,7 +190,7 @@ class _CourtInfo extends StatelessWidget {
                       text: '₹${court.pricePerHour.toInt()}',
                       style: const TextStyle(
                         fontFamily: 'Poppins',
-                        fontSize: 16,
+                        fontSize: 15,
                         fontWeight: FontWeight.w700,
                         color: AppColors.textPrimary,
                       ),
@@ -230,7 +199,7 @@ class _CourtInfo extends StatelessWidget {
                       text: '/hr',
                       style: TextStyle(
                         fontFamily: 'Poppins',
-                        fontSize: 12,
+                        fontSize: 11,
                         fontWeight: FontWeight.w500,
                         color: AppColors.textSecondary,
                       ),
@@ -242,10 +211,10 @@ class _CourtInfo extends StatelessWidget {
                 const SizedBox(width: 6),
                 InkWell(
                   onTap: onLikeToggle,
-                  borderRadius: BorderRadius.circular(14),
+                  borderRadius: BorderRadius.circular(12),
                   child: Container(
-                    width: 30,
-                    height: 30,
+                    width: 26,
+                    height: 26,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       color: AppColors.surface,
@@ -258,7 +227,7 @@ class _CourtInfo extends StatelessWidget {
                       isLiked
                           ? Icons.favorite_rounded
                           : Icons.favorite_border_rounded,
-                      size: 18,
+                      size: 15,
                       color: isLiked
                           ? AppColors.primary
                           : AppColors.textSecondary,
@@ -268,56 +237,57 @@ class _CourtInfo extends StatelessWidget {
               ],
             ],
           ),
-          const SizedBox(height: 6),
-          Text(
-            court.stadiumName,
-            style: const TextStyle(
-              fontFamily: 'Poppins',
-              fontSize: 12.5,
-              fontWeight: FontWeight.w600,
-              color: AppColors.textPrimary,
-            ),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-          const SizedBox(height: 4),
+          const SizedBox(height: 10),
           Row(
             children: [
-              const Icon(
-                Icons.location_on_rounded,
-                size: 14,
-                color: AppColors.primary,
-              ),
-              const SizedBox(width: 4),
-              Expanded(
-                child: Text(
-                  '${court.place}, ${court.city}',
+              ...visibleSports
+                  .take(3)
+                  .map(
+                    (badge) => Padding(
+                      padding: const EdgeInsets.only(right: 8),
+                      child: Tooltip(
+                        message: badge.label,
+                        child: Container(
+                          width: 24,
+                          height: 24,
+                          decoration: BoxDecoration(
+                            color: AppColors.background,
+                            borderRadius: BorderRadius.circular(7),
+                            border: Border.all(
+                              color: AppColors.divider,
+                              width: 1,
+                            ),
+                          ),
+                          child: Icon(
+                            badge.icon,
+                            size: 14,
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+              if (visibleSports.length > 3)
+                Text(
+                  '+${visibleSports.length - 3} more',
                   style: const TextStyle(
                     fontFamily: 'Poppins',
-                    fontSize: 12.5,
-                    color: AppColors.textSecondary,
-                    fontWeight: FontWeight.w400,
+                    fontSize: 11.5,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.primary,
                   ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
                 ),
-              ),
             ],
-          ),
-          const SizedBox(height: 10),
-          Text(
-            court.courtTypes.join('  •  '),
-            style: const TextStyle(
-              fontFamily: 'Poppins',
-              fontSize: 12.5,
-              fontWeight: FontWeight.w500,
-              color: AppColors.textSecondary,
-            ),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
           ),
         ],
       ),
     );
   }
+}
+
+class _SportBadgeModel {
+  final String label;
+  final IconData icon;
+
+  const _SportBadgeModel({required this.label, required this.icon});
 }
