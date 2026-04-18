@@ -1,27 +1,31 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../app/theme/app_colors.dart';
 import '../../../shared/widgets/empty_state.dart';
 import '../data/models/customer_booking.dart';
 import '../data/repositories/customer_booking_repository.dart';
+import '../providers/customer_bookings_controller.dart';
 import '../widgets/court_compact_card.dart';
 import '../widgets/customer_floating_nav_bar.dart';
 
-class MyBookingsScreen extends StatefulWidget {
+class MyBookingsScreen extends ConsumerStatefulWidget {
   const MyBookingsScreen({super.key});
 
   @override
-  State<MyBookingsScreen> createState() => _MyBookingsScreenState();
+  ConsumerState<MyBookingsScreen> createState() => _MyBookingsScreenState();
 }
 
-class _MyBookingsScreenState extends State<MyBookingsScreen> {
+class _MyBookingsScreenState extends ConsumerState<MyBookingsScreen> {
   final CustomerBookingRepository _repo = CustomerBookingRepository.instance;
   int _selectedFilterIndex = 0;
 
   @override
   void initState() {
     super.initState();
-    _repo.getAllBookings();
+    Future<void>.microtask(
+      () => ref.read(customerBookingsControllerProvider.future),
+    );
   }
 
   List<CustomerBooking> _bookingsForFilter(List<CustomerBooking> all) {
@@ -66,9 +70,16 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
       return;
     }
 
-    setState(() {
-      _repo.cancelBooking(booking.id);
-    });
+    await ref
+        .read(customerBookingsControllerProvider.notifier)
+        .cancelBooking(booking);
+
+    if (!mounted) {
+      return;
+    }
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Booking cancelled.')),
+    );
   }
 
   void _openReceiptPlaceholder(CustomerBooking booking) {
@@ -106,6 +117,8 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final bookingState = ref.watch(customerBookingsControllerProvider);
+
     return Scaffold(
       backgroundColor: AppColors.background,
       bottomNavigationBar: CustomerFloatingNavBar(
@@ -127,6 +140,8 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
       ),
       body: Column(
         children: [
+          if (bookingState.isLoading)
+            const LinearProgressIndicator(minHeight: 2),
           _buildFilterRow(),
           ValueListenableBuilder<List<CustomerBooking>>(
             valueListenable: _repo.bookingsNotifier,

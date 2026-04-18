@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../app/constants/app_constants.dart';
 import '../../../app/theme/app_colors.dart';
@@ -8,28 +9,29 @@ import '../data/models/court_model.dart';
 import '../data/models/stadium_model.dart';
 import '../data/repositories/customer_preferences_repository.dart';
 import '../data/repositories/court_repository.dart';
+import '../providers/customer_catalog_controller.dart';
 import '../widgets/court_card.dart';
 import '../widgets/court_search_bar.dart';
 import '../widgets/customer_floating_nav_bar.dart';
 
 enum _HomeFeedType { all, wishlist, stadiums }
 
-class HomeScreen extends StatefulWidget {
+class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
 
   @override
-  State<HomeScreen> createState() => _HomeScreenState();
+  ConsumerState<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _HomeScreenState extends ConsumerState<HomeScreen> {
   final CourtRepository _repo = CourtRepository.instance;
   final CustomerPreferencesRepository _prefs =
       CustomerPreferencesRepository.instance;
-  late final List<String> _allCities;
-  late final List<String> _allSports;
-  late final List<String> _allTeamSizes;
-  late final List<Stadium> _stadiums;
-  late List<Court> _courts;
+  List<String> _allCities = const [];
+  List<String> _allSports = const [];
+  List<String> _allTeamSizes = const [];
+  List<Stadium> _stadiums = const [];
+  List<Court> _courts = const [];
   final List<String> _selectedCities = [];
   final List<String> _selectedSports = [];
   final List<String> _selectedTeamSizes = [];
@@ -84,6 +86,19 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
+    _syncCatalogFromRepository();
+    Future<void>.microtask(_loadCatalog);
+  }
+
+  Future<void> _loadCatalog() async {
+    await ref.read(customerCatalogControllerProvider.future);
+    if (!mounted) {
+      return;
+    }
+    setState(_syncCatalogFromRepository);
+  }
+
+  void _syncCatalogFromRepository() {
     _allCities = _repo.getAllCities();
     _allSports = _repo.getAllSports();
     _allTeamSizes = _repo.getAllTeamSizes();
@@ -305,6 +320,54 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final catalogState = ref.watch(customerCatalogControllerProvider);
+
+    if (catalogState.hasError && _courts.isEmpty) {
+      return Scaffold(
+        backgroundColor: AppColors.background,
+        bottomNavigationBar: CustomerFloatingNavBar(
+          selectedIndex: 0,
+          onTap: _onNavTap,
+        ),
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.wifi_off_rounded, size: 42),
+                const SizedBox(height: 12),
+                const Text(
+                  'Failed to load courts and stadiums.',
+                  style: TextStyle(
+                    fontFamily: 'Poppins',
+                    color: AppColors.textPrimary,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                FilledButton(
+                  onPressed: () => ref
+                      .read(customerCatalogControllerProvider.notifier)
+                      .refresh()
+                      .then((_) {
+                        if (mounted) {
+                          setState(_syncCatalogFromRepository);
+                        }
+                      }),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: AppColors.textPrimary,
+                    foregroundColor: Colors.white,
+                  ),
+                  child: const Text('Retry'),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
     return Scaffold(
       backgroundColor: AppColors.background,
       bottomNavigationBar: CustomerFloatingNavBar(
@@ -314,12 +377,19 @@ class _HomeScreenState extends State<HomeScreen> {
       body: SafeArea(
         child: CustomScrollView(
           slivers: [
+            if (catalogState.isLoading && _courts.isEmpty)
+              const SliverFillRemaining(
+                hasScrollBody: false,
+                child: Center(child: CircularProgressIndicator()),
+              )
+            else ...[
             _buildHeader(),
             if (_hasActiveFilters) _buildFilterSummary(),
             _buildFeedToggle(),
             _buildResultsHeader(),
             _buildCourtsSection(),
             const SliverToBoxAdapter(child: SizedBox(height: 24)),
+            ],
           ],
         ),
       ),

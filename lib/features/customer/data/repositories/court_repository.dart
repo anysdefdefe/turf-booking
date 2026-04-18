@@ -1,294 +1,125 @@
+import 'package:supabase_flutter/supabase_flutter.dart';
+
 import '../models/court_model.dart';
 import '../models/stadium_model.dart';
 
 class CourtRepository {
-  CourtRepository._();
-  static final CourtRepository instance = CourtRepository._();
+  CourtRepository._(this._client);
 
-  final List<Stadium> _stadiums = [
-    Stadium(
-      id: 'std-001',
-      ownerId: 'owner-001',
-      name: 'Andheri Sports Dome',
-      description:
-          'Indoor premium complex with badminton and squash courts for all skill levels.',
-      address: 'Andheri Sports Complex, SV Road',
-      city: 'Andheri West',
-      latitude: 19.1197,
-      longitude: 72.8468,
-      imageUrl:
-          'https://images.unsplash.com/photo-1626224583764-f87db24ac4ea?w=1200&q=80',
-      isActive: true,
-      createdAt: DateTime(2025, 1, 10),
-    ),
-    Stadium(
-      id: 'std-002',
-      ownerId: 'owner-002',
-      name: 'Powai Racket Arena',
-      description:
-          'Open-air and covered courts with coaching, night lights, and equipment rental.',
-      address: 'Powai Lake Area, Main Access Road',
-      city: 'Powai',
-      latitude: 19.1176,
-      longitude: 72.9060,
-      imageUrl:
-          'https://images.unsplash.com/photo-1554068865-24cecd4e34b8?w=1200&q=80',
-      isActive: true,
-      createdAt: DateTime(2025, 2, 2),
-    ),
-    Stadium(
-      id: 'std-003',
-      ownerId: 'owner-003',
-      name: 'Bandra Multi-Sport Hub',
-      description:
-          'Multi-sport venue with basketball, futsal, and volleyball courts under one roof.',
-      address: 'Bandra Reclamation, Sports Lane',
-      city: 'Bandra West',
-      latitude: 19.0582,
-      longitude: 72.8295,
-      imageUrl:
-          'https://images.unsplash.com/photo-1546519638-68e109498ffc?w=1200&q=80',
-      isActive: true,
-      createdAt: DateTime(2025, 2, 24),
-    ),
-    Stadium(
-      id: 'std-004',
-      ownerId: 'owner-004',
-      name: 'Seaside Sports Club',
-      description:
-          'Water-front sports complex with cricket nets, swimming lanes, and indoor training spaces.',
-      address: 'Marine Drive Promenade, Block B',
-      city: 'South Mumbai',
-      latitude: 18.9440,
-      longitude: 72.8235,
-      imageUrl:
-          'https://images.unsplash.com/photo-1547347298-4074fc3086f0?w=1200&q=80',
-      isActive: true,
-      createdAt: DateTime(2025, 3, 12),
-    ),
-  ];
+  final SupabaseClient _client;
 
-  final List<Court> _courts = const [
-    Court(
-      id: '1',
-      stadiumId: 'std-001',
-      stadiumName: 'Andheri Sports Dome',
-      name: 'Court 1 - Badminton Pro',
-      place: 'Andheri Sports Complex',
-      city: 'Andheri West',
-      imageUrl:
-          'https://images.unsplash.com/photo-1626224583764-f87db24ac4ea?w=800&q=80',
-      rating: 4.8,
-      reviewCount: 234,
-      pricePerHour: 600,
-      courtTypes: ['Badminton', 'Squash'],
-      isAvailable: true,
-      description:
-          'State-of-the-art badminton facility with 6 professional courts, wooden flooring, and high-speed shuttles. Perfect for casual play and tournaments alike.',
-      amenities: [
-        'Parking',
-        'Changing Room',
-        'Cafeteria',
-        'AC Courts',
-        'Equipment Rental',
-      ],
-      openTime: '06:00 AM',
-      closeTime: '11:00 PM',
-      distanceKm: 1.2,
-      teamSize: 'Singles',
-    ),
-    Court(
-      id: '2',
-      stadiumId: 'std-001',
-      stadiumName: 'Andheri Sports Dome',
-      name: 'Court 2 - Squash Elite',
-      place: 'Andheri Sports Complex',
-      city: 'Andheri West',
-      imageUrl:
-          'https://images.unsplash.com/photo-1592656094267-764a45160876?w=800&q=80',
-      rating: 4.6,
-      reviewCount: 154,
-      pricePerHour: 650,
-      courtTypes: ['Squash'],
-      isAvailable: true,
-      description:
-          'Professional squash court with cushioned flooring, live score panel, and modern ventilation.',
-      amenities: ['Parking', 'Changing Room', 'AC Courts', 'Equipment Rental'],
-      openTime: '06:00 AM',
-      closeTime: '11:00 PM',
-      distanceKm: 1.4,
-      teamSize: 'Singles',
-    ),
-    Court(
-      id: '3',
-      stadiumId: 'std-002',
-      stadiumName: 'Powai Racket Arena',
-      name: 'Court A - Tennis Outdoor',
-      place: 'Powai Lake Area',
-      city: 'Powai',
-      imageUrl:
-          'https://images.unsplash.com/photo-1554068865-24cecd4e34b8?w=800&q=80',
-      rating: 4.5,
-      reviewCount: 189,
-      pricePerHour: 800,
-      courtTypes: ['Tennis', 'Padel'],
-      isAvailable: true,
-      description:
-          'Premium outdoor tennis courts with floodlights for night play. Hard-court surface maintained to international standards.',
-      amenities: [
-        'Parking',
-        'Coaching Available',
-        'Equipment Rental',
-        'Night Lights',
-      ],
-      openTime: '05:30 AM',
-      closeTime: '10:00 PM',
-      distanceKm: 3.5,
-      teamSize: 'Singles',
-    ),
-    Court(
-      id: '4',
-      stadiumId: 'std-002',
-      stadiumName: 'Powai Racket Arena',
-      name: 'Court B - Padel Club',
-      place: 'Powai Lake Area',
-      city: 'Powai',
-      imageUrl:
-          'https://images.unsplash.com/photo-1529900748604-07564a03e7a6?w=800&q=80',
-      rating: 4.4,
-      reviewCount: 132,
-      pricePerHour: 900,
-      courtTypes: ['Padel'],
-      isAvailable: true,
-      description:
-          'Modern padel court with anti-slip surface, perimeter glass, and dedicated evening lighting.',
-      amenities: ['Parking', 'Coaching Available', 'Equipment Rental'],
-      openTime: '06:00 AM',
-      closeTime: '10:30 PM',
-      distanceKm: 3.7,
-      teamSize: '2v2',
-    ),
-    Court(
-      id: '5',
-      stadiumId: 'std-003',
-      stadiumName: 'Bandra Multi-Sport Hub',
-      name: 'Court X - Futsal 5s',
-      place: 'Bandra Reclamation',
-      city: 'Bandra West',
-      imageUrl:
-          'https://images.unsplash.com/photo-1461896836934-ffe607ba8211?q=80&w=1470&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
-      rating: 4.6,
-      reviewCount: 312,
-      pricePerHour: 1200,
-      courtTypes: ['Futsal', 'Football'],
-      isAvailable: false,
-      description:
-          'Indoor synthetic-turf futsal arena with 5-a-side and 7-a-side pitches. Fully air-conditioned with professional-grade goals.',
-      amenities: [
-        'Parking',
-        'Changing Room',
-        'Shower',
-        'Canteen',
-        'Scoreboard',
-      ],
-      openTime: '07:00 AM',
-      closeTime: '11:00 PM',
-      distanceKm: 5.1,
-      teamSize: '5v5',
-    ),
-    Court(
-      id: '6',
-      stadiumId: 'std-003',
-      stadiumName: 'Bandra Multi-Sport Hub',
-      name: 'Court Y - Basketball Indoor',
-      place: 'Bandra Reclamation',
-      city: 'Bandra West',
-      imageUrl:
-          'https://images.unsplash.com/photo-1546519638-68e109498ffc?w=800&q=80',
-      rating: 4.3,
-      reviewCount: 98,
-      pricePerHour: 700,
-      courtTypes: ['Basketball'],
-      isAvailable: true,
-      description:
-          'Full-size NBA-standard indoor basketball courts. Hardwood flooring, professional ring height and backboards, with seating for spectators.',
-      amenities: ['Parking', 'AC', 'Scoreboard', 'Spectator Seating'],
-      openTime: '06:00 AM',
-      closeTime: '10:00 PM',
-      distanceKm: 7.8,
-      teamSize: '5v5',
-    ),
-    Court(
-      id: '7',
-      stadiumId: 'std-004',
-      stadiumName: 'Seaside Sports Club',
-      name: 'Court C - Cricket Nets',
-      place: 'Marine Drive Promenade',
-      city: 'South Mumbai',
-      imageUrl:
-          'https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?w=800&q=80',
-      rating: 4.7,
-      reviewCount: 221,
-      pricePerHour: 950,
-      courtTypes: ['Cricket'],
-      isAvailable: true,
-      description:
-          'Professional cricket practice nets with turf pitch, bowling machine support, and evening flood lights.',
-      amenities: ['Parking', 'Changing Room', 'Coaching Available', 'Nets'],
-      openTime: '06:00 AM',
-      closeTime: '10:00 PM',
-      distanceKm: 4.2,
-      teamSize: 'Practice Net',
-    ),
-    Court(
-      id: '8',
-      stadiumId: 'std-004',
-      stadiumName: 'Seaside Sports Club',
-      name: 'Court D - Aquatic Lanes',
-      place: 'Marine Drive Promenade',
-      city: 'South Mumbai',
-      imageUrl:
-          'https://images.unsplash.com/photo-1530549387789-4c1017266635?w=800&q=80',
-      rating: 4.4,
-      reviewCount: 88,
-      pricePerHour: 500,
-      courtTypes: ['Swimming'],
-      isAvailable: true,
-      description:
-          'Lane-swim pool with dedicated timing slots, warm-up area, and family changing rooms.',
-      amenities: ['Changing Room', 'Washroom', 'Parking', 'Drinking Water'],
-      openTime: '05:00 AM',
-      closeTime: '09:00 PM',
-      distanceKm: 4.5,
-      teamSize: 'Singles',
-    ),
-    Court(
-      id: '9',
-      stadiumId: 'std-004',
-      stadiumName: 'Seaside Sports Club',
-      name: 'Court E - Volleyball Arena',
-      place: 'Marine Drive Promenade',
-      city: 'South Mumbai',
-      imageUrl:
-          'https://images.unsplash.com/photo-1518611012118-696072aa579a?w=800&q=80',
-      rating: 4.5,
-      reviewCount: 117,
-      pricePerHour: 750,
-      courtTypes: ['Volleyball'],
-      isAvailable: true,
-      description:
-          'Indoor sand-free volleyball arena with tournament-grade net height and spectator seating.',
-      amenities: ['Parking', 'Scoreboard', 'Spectator Seating', 'Lighting'],
-      openTime: '06:00 AM',
-      closeTime: '11:00 PM',
-      distanceKm: 4.8,
-      teamSize: '6v6',
-    ),
-  ];
+  static final CourtRepository instance =
+      CourtRepository._(Supabase.instance.client);
+
+  List<Stadium> _stadiums = const [];
+  List<Court> _courts = const [];
+
+  Future<void> refreshCatalog() async {
+    final stadiumRows = await _client
+        .from('stadiums')
+      .select()
+        .eq('is_active', true)
+        .order('created_at', ascending: false);
+
+    final stadiums = stadiumRows
+        .cast<Map<String, dynamic>>()
+        .map(_mapStadium)
+        .toList(growable: false);
+    final stadiumById = {
+      for (final stadium in stadiums) stadium.id: stadium,
+    };
+
+    final courtRows = await _client
+        .from('courts')
+      .select()
+        .eq('is_active', true)
+        .order('created_at', ascending: false);
+
+    final courts = courtRows
+        .cast<Map<String, dynamic>>()
+        .map((row) => _mapCourt(row, stadiumById[row['stadium_id'] as String?]))
+        .whereType<Court>()
+        .toList(growable: false);
+
+    _stadiums = stadiums;
+    _courts = courts;
+  }
+
+  Future<List<String>> getBookedSlotsForDate({
+    required String courtId,
+    required DateTime date,
+  }) async {
+    final dayStart = DateTime(date.year, date.month, date.day);
+    final dayEnd = dayStart.add(const Duration(days: 1));
+
+    final slotRows = await _client
+        .from('slots')
+        .select('start_time, status')
+        .eq('court_id', courtId)
+        .gte('start_time', dayStart.toIso8601String())
+        .lt('start_time', dayEnd.toIso8601String());
+
+    final booked = <String>[];
+    for (final raw in slotRows) {
+      final row = raw;
+      final status = (row['status'] as String? ?? '').toLowerCase();
+      if (status == 'cancelled' || status == 'available') {
+        continue;
+      }
+
+      final startTime = DateTime.tryParse(row['start_time']?.toString() ?? '');
+      if (startTime == null) {
+        continue;
+      }
+      booked.add(_formatTo12Hour(startTime));
+    }
+
+    return booked;
+  }
+
+  List<String> generateHourlySlots(Court court) {
+    final open = _parseTimeOfDay(court.openTime);
+    final close = _parseTimeOfDay(court.closeTime);
+    if (open == null || close == null) {
+      return const [];
+    }
+
+    final baseDate = DateTime(2000, 1, 1);
+    var cursor = DateTime(
+      baseDate.year,
+      baseDate.month,
+      baseDate.day,
+      open.hour,
+      open.minute,
+    );
+    final closeDateTime = DateTime(
+      baseDate.year,
+      baseDate.month,
+      baseDate.day,
+      close.hour,
+      close.minute,
+    );
+
+    final slots = <String>[];
+    while (cursor.isBefore(closeDateTime)) {
+      slots.add(_formatTo12Hour(cursor));
+      cursor = cursor.add(const Duration(hours: 1));
+    }
+    return slots;
+  }
 
   List<Court> getAllCourts() => List.unmodifiable(_courts);
 
   List<Stadium> getAllStadiums() => List.unmodifiable(_stadiums);
+
+  Court? getCourtById(String id) {
+    for (final court in _courts) {
+      if (court.id == id) {
+        return court;
+      }
+    }
+    return null;
+  }
 
   Stadium? getStadiumById(String id) {
     for (final stadium in _stadiums) {
@@ -302,7 +133,7 @@ class CourtRepository {
   }
 
   List<String> getAllCities() {
-    final cities = _courts.map((c) => c.city).toSet().toList();
+    final cities = _stadiums.map((s) => s.city).toSet().toList();
     cities.sort();
     return cities;
   }
@@ -342,4 +173,170 @@ class CourtRepository {
     teamSizes.sort();
     return teamSizes;
   }
+
+  Stadium _mapStadium(Map<String, dynamic> row) {
+    String imageUrl = row['image_url'] as String? ?? '';
+    if (imageUrl.isEmpty && row['image_urls'] is List) {
+      final urls = row['image_urls'] as List;
+      if (urls.isNotEmpty) {
+        imageUrl = urls.first.toString();
+      }
+    }
+
+    return Stadium(
+      id: row['id'] as String,
+      ownerId: row['owner_id'] as String? ?? '',
+      name: row['name'] as String? ?? '',
+      description: row['description'] as String? ?? '',
+      address: row['address'] as String? ?? '',
+      city: row['city'] as String? ?? '',
+      latitude: (row['latitude'] as num?)?.toDouble() ?? 0,
+      longitude: (row['longitude'] as num?)?.toDouble() ?? 0,
+      imageUrl: imageUrl,
+      isActive: row['is_active'] as bool? ?? true,
+      createdAt: DateTime.tryParse(row['created_at']?.toString() ?? '') ??
+          DateTime.now(),
+    );
+  }
+
+  Court? _mapCourt(Map<String, dynamic> row, Stadium? stadium) {
+    if (stadium == null) {
+      return null;
+    }
+
+    final sportRaw =
+      row['sport_type'] as String? ?? row['sport'] as String? ?? '';
+    final courtTypes = sportRaw
+        .split(RegExp(r'[,/]'))
+        .map((e) => e.trim())
+        .where((e) => e.isNotEmpty)
+        .toList(growable: false);
+
+    final amenitiesRaw = row['amenities'];
+    final amenities = amenitiesRaw is List
+        ? amenitiesRaw.map((e) => e.toString()).toList(growable: false)
+        : <String>[];
+
+    String imageUrl = row['image_url'] as String? ?? '';
+    if (imageUrl.isEmpty && row['image_urls'] is List) {
+      final urls = row['image_urls'] as List;
+      if (urls.isNotEmpty) {
+        imageUrl = urls.first.toString();
+      }
+    }
+
+    final openTime = _formatTimeString(row['open_time']?.toString());
+    final closeTime = _formatTimeString(row['close_time']?.toString());
+
+    return Court(
+      id: row['id'] as String,
+      stadiumId: row['stadium_id'] as String? ?? stadium.id,
+      stadiumName: stadium.name,
+      name: row['name'] as String? ?? 'Court',
+      place: stadium.address,
+      city: stadium.city,
+        imageUrl: imageUrl.isEmpty ? stadium.imageUrl : imageUrl,
+      rating: 0,
+      reviewCount: 0,
+        pricePerHour:
+          (row['price_per_hour'] as num?)?.toDouble() ??
+          (row['hourly_rate'] as num?)?.toDouble() ??
+          0,
+      courtTypes: courtTypes.isEmpty ? const ['Court'] : courtTypes,
+      isAvailable: row['is_active'] as bool? ?? true,
+      description: row['description'] as String? ?? '',
+      amenities: amenities,
+      openTime: openTime,
+      closeTime: closeTime,
+      distanceKm: 0,
+      teamSize: _defaultTeamSizeForSport(courtTypes.isEmpty ? 'Court' : courtTypes.first),
+    );
+  }
+
+  String _defaultTeamSizeForSport(String sport) {
+    final key = sport.toLowerCase();
+    if (key.contains('badminton') || key.contains('tennis') || key.contains('squash')) {
+      return 'Singles';
+    }
+    if (key.contains('basketball')) {
+      return '5v5';
+    }
+    if (key.contains('football') || key.contains('futsal')) {
+      return '5v5';
+    }
+    if (key.contains('volleyball')) {
+      return '6v6';
+    }
+    if (key.contains('cricket')) {
+      return 'Practice Net';
+    }
+    return 'Standard';
+  }
+
+  String _formatTimeString(String? source) {
+    final parsed = _parseTimeOfDay(source);
+    if (parsed == null) {
+      return '06:00 AM';
+    }
+    final temp = DateTime(2000, 1, 1, parsed.hour, parsed.minute);
+    return _formatTo12Hour(temp);
+  }
+
+  _SimpleTime? _parseTimeOfDay(String? source) {
+    if (source == null || source.isEmpty) {
+      return null;
+    }
+
+    final meridiemMatch = RegExp(r'^(\d{1,2}):(\d{2})\s*([APap][Mm])$')
+        .firstMatch(source.trim());
+    if (meridiemMatch != null) {
+      final hourRaw = int.tryParse(meridiemMatch.group(1)!);
+      final minute = int.tryParse(meridiemMatch.group(2)!);
+      final meridiem = meridiemMatch.group(3)!.toUpperCase();
+      if (hourRaw != null && minute != null) {
+        var hour = hourRaw % 12;
+        if (meridiem == 'PM') {
+          hour += 12;
+        }
+        return _SimpleTime(hour: hour, minute: minute);
+      }
+    }
+
+    final direct = DateTime.tryParse('2000-01-01T$source');
+    if (direct != null) {
+      return _SimpleTime(hour: direct.hour, minute: direct.minute);
+    }
+
+    final parts = source.split(':');
+    if (parts.length < 2) {
+      return null;
+    }
+
+    final hour = int.tryParse(parts[0]);
+    final minute = int.tryParse(parts[1]);
+    if (hour == null || minute == null) {
+      return null;
+    }
+    return _SimpleTime(hour: hour, minute: minute);
+  }
+
+  String _formatTo12Hour(DateTime dt) {
+    var hour = dt.hour;
+    final minute = dt.minute;
+    final suffix = hour >= 12 ? 'PM' : 'AM';
+    hour = hour % 12;
+    if (hour == 0) {
+      hour = 12;
+    }
+    final minuteText = minute.toString().padLeft(2, '0');
+    final hourText = hour.toString().padLeft(2, '0');
+    return '$hourText:$minuteText $suffix';
+  }
+}
+
+class _SimpleTime {
+  final int hour;
+  final int minute;
+
+  const _SimpleTime({required this.hour, required this.minute});
 }
