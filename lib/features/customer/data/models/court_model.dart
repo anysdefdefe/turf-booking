@@ -6,8 +6,6 @@ class Court {
   final String place;
   final String city;
   final String imageUrl;
-  final double rating;
-  final int reviewCount;
   final double pricePerHour;
   final List<String> courtTypes;
   final bool isAvailable;
@@ -26,8 +24,6 @@ class Court {
     required this.place,
     required this.city,
     required this.imageUrl,
-    required this.rating,
-    required this.reviewCount,
     required this.pricePerHour,
     required this.courtTypes,
     required this.isAvailable,

@@ -1,29 +1,71 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../app/constants/app_constants.dart';
 import '../../../app/theme/app_colors.dart';
 import '../data/models/booking_args.dart';
 import '../data/models/booking_cart_item.dart';
-import '../data/models/customer_booking.dart';
-import '../data/repositories/customer_booking_repository.dart';
-import '../data/repositories/customer_cart_repository.dart';
+import '../data/models/payment_models.dart';
+import '../providers/payment_providers.dart';
 
-class BookingConfirmationScreen extends StatelessWidget {
+class BookingConfirmationScreen extends ConsumerStatefulWidget {
   final BookingArgs args;
 
   const BookingConfirmationScreen({super.key, required this.args});
 
+  @override
+  ConsumerState<BookingConfirmationScreen> createState() =>
+      _BookingConfirmationScreenState();
+}
+
+class _BookingConfirmationScreenState
+    extends ConsumerState<BookingConfirmationScreen> {
+  bool _isProcessing = false;
+
   Future<void> _onProceedToPay(BuildContext context) async {
-    await _createBookings();
-    CustomerCartRepository.instance.clear();
+    if (_isProcessing) {
+      return;
+    }
+
+    setState(() => _isProcessing = true);
+    final result = await ref
+        .read(paymentControllerProvider.notifier)
+        .checkout(widget.args, method: PaymentMethod.dummy);
+
+    if (mounted) {
+      setState(() => _isProcessing = false);
+    }
+
     if (!context.mounted) {
       return;
     }
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Payment Successful! Booking Confirmed.')),
-    );
-    context.go(AppConstants.routeMyBookings);
+
+    if (result.isFullySuccessful) {
+      final successText =
+          'Payment successful. ${result.successfulBookings.length} booking(s) confirmed.';
+      context.go(
+        '${AppConstants.routeMyBookings}?toast=${Uri.encodeComponent(successText)}',
+      );
+      return;
+    }
+
+    if (result.hasAnySuccess) {
+      final partialText =
+          '${result.successfulBookings.length} booking(s) confirmed, ${result.failedItems.length} failed. Please retry failed items.';
+      context.go(
+        '${AppConstants.routeMyBookings}?toast=${Uri.encodeComponent(partialText)}',
+      );
+      return;
+    }
+
+    final errorMessage = result.bookingErrors.isNotEmpty
+        ? 'Booking failed: ${result.bookingErrors.first}'
+        : (result.paymentResult.errorMessage ??
+              'Payment failed. Please try again.');
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(errorMessage)));
   }
 
   void _onKeepInCart(BuildContext context) {
@@ -40,29 +82,11 @@ class BookingConfirmationScreen extends StatelessWidget {
     }
   }
 
-  Future<void> _createBookings() async {
-    for (final item in args.cartItems) {
-      final newId =
-          'BK-${DateTime.now().microsecondsSinceEpoch.toString().substring(6)}';
-      final newBooking = CustomerBooking(
-        id: newId,
-        court: item.court,
-        status: BookingStatus.booked,
-        date: item.date,
-        slots: item.slots,
-        courtType: item.court.courtTypes.isEmpty
-            ? 'Court Booking'
-            : item.court.courtTypes.first,
-      );
-      await CustomerBookingRepository.instance.addBooking(newBooking);
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
-    final items = args.cartItems;
-    final totalAmount = args.totalAmount;
-    final totalSlots = args.totalSlots;
+    final items = widget.args.cartItems;
+    final totalAmount = widget.args.totalAmount;
+    final totalSlots = widget.args.totalSlots;
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -157,15 +181,9 @@ class BookingConfirmationScreen extends StatelessWidget {
                 ),
                 child: Column(
                   children: [
-                    _buildPriceRow(
-                      'Subtotal',
-                      '₹${totalAmount.toInt()}',
-                    ),
+                    _buildPriceRow('Subtotal', '₹${totalAmount.toInt()}'),
                     const SizedBox(height: 10),
-                    _buildPriceRow(
-                      'Platform fee',
-                      '₹0',
-                    ),
+                    _buildPriceRow('Platform fee', '₹0'),
                     const Padding(
                       padding: EdgeInsets.symmetric(vertical: 12),
                       child: Divider(color: AppColors.divider, height: 1),
@@ -248,7 +266,9 @@ class BookingConfirmationScreen extends StatelessWidget {
               SizedBox(
                 width: double.infinity,
                 child: FilledButton(
-                  onPressed: () async => _onProceedToPay(context),
+                  onPressed: _isProcessing
+                      ? null
+                      : () async => _onProceedToPay(context),
                   style: FilledButton.styleFrom(
                     backgroundColor: AppColors.textPrimary,
                     foregroundColor: Colors.white,
@@ -257,14 +277,23 @@ class BookingConfirmationScreen extends StatelessWidget {
                       borderRadius: BorderRadius.circular(12),
                     ),
                   ),
-                  child: const Text(
-                    'Pay Now',
-                    style: TextStyle(
-                      fontFamily: 'Poppins',
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
+                  child: _isProcessing
+                      ? const SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        )
+                      : const Text(
+                          'Pay Now',
+                          style: TextStyle(
+                            fontFamily: 'Poppins',
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
                 ),
               ),
               const SizedBox(height: 32),
