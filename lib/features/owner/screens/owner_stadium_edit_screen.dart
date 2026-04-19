@@ -20,16 +20,17 @@ class _OwnerStadiumEditScreenState
   final _addressController = TextEditingController();
   final _cityController = TextEditingController();
   final _amenitiesController = TextEditingController();
+  final _descriptionController = TextEditingController();
   late bool _isActive;
   bool _isSaving = false;
   bool _initialized = false;
 
-  @override
   void dispose() {
     _nameController.dispose();
     _addressController.dispose();
     _cityController.dispose();
     _amenitiesController.dispose();
+    _descriptionController.dispose();
     super.dispose();
   }
 
@@ -38,6 +39,7 @@ class _OwnerStadiumEditScreenState
     required String name,
     required String address,
     required String city,
+    String? description,
     required List<String> amenities,
     required bool isActive,
   }) {
@@ -45,6 +47,7 @@ class _OwnerStadiumEditScreenState
     _nameController.text = name;
     _addressController.text = address;
     _cityController.text = city;
+    _descriptionController.text = description ?? '';
     _amenitiesController.text = amenities.join(', ');
     _isActive = isActive;
     _initialized = true;
@@ -62,6 +65,7 @@ class _OwnerStadiumEditScreenState
     final name = _nameController.text.trim();
     final address = _addressController.text.trim();
     final city = _cityController.text.trim();
+    final description = _descriptionController.text.trim();
     final amenities = _parseCsv(_amenitiesController.text);
 
     if (name.isEmpty || address.isEmpty || city.isEmpty) {
@@ -75,6 +79,7 @@ class _OwnerStadiumEditScreenState
       await ref.read(stadiumRepositoryProvider).updateStadium(
             stadiumId: stadiumId,
             name: name,
+            description: description.isEmpty ? null : description,
             amenities: amenities,
             address: address,
             city: city,
@@ -135,6 +140,7 @@ class _OwnerStadiumEditScreenState
           name: stadium.name,
           address: stadium.address,
           city: stadium.city,
+          description: stadium.description,
           amenities: stadium.amenities,
           isActive: stadium.isActive,
         );
@@ -161,6 +167,9 @@ class _OwnerStadiumEditScreenState
               children: [
                 _buildLabel('Stadium Name'),
                 _buildField(_nameController, hint: 'e.g. Green Arena'),
+                const SizedBox(height: 16),
+                _buildLabel('Description / About'),
+                _buildField(_descriptionController, hint: 'e.g. Premium turf for all ages...', maxLines: 3),
                 const SizedBox(height: 16),
                 _buildLabel('Address'),
                 _buildField(_addressController, hint: 'e.g. 12, MG Road'),
@@ -267,9 +276,10 @@ class _OwnerStadiumEditScreenState
       );
 
   Widget _buildField(TextEditingController controller,
-          {String hint = ''}) =>
+          {String hint = '', int maxLines = 1}) =>
       TextField(
         controller: controller,
+        maxLines: maxLines,
         style: const TextStyle(
           fontFamily: 'Poppins',
           fontSize: 14,

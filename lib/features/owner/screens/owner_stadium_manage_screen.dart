@@ -357,12 +357,14 @@ class _VenueDetails extends StatelessWidget {
               const Icon(Icons.location_on_outlined,
                   size: 15, color: AppColors.textSecondary),
               const SizedBox(width: 4),
-              Text(
-                '$address, $city',
-                style: const TextStyle(
-                  fontFamily: 'Poppins',
-                  fontSize: 13,
-                  color: AppColors.textSecondary,
+              Expanded(
+                child: Text(
+                  '$address, $city',
+                  style: const TextStyle(
+                    fontFamily: 'Poppins',
+                    fontSize: 13,
+                    color: AppColors.textSecondary,
+                  ),
                 ),
               ),
             ],
@@ -717,6 +719,8 @@ class _CourtTile extends ConsumerWidget {
                     fontWeight: FontWeight.w600,
                     color: AppColors.textPrimary,
                   ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
                 const SizedBox(height: 2),
                 Text(
@@ -726,6 +730,8 @@ class _CourtTile extends ConsumerWidget {
                     fontSize: 11,
                     color: AppColors.textSecondary,
                   ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ],
             ),
