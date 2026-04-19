@@ -264,16 +264,33 @@ class StadiumRepository {
     required TimeOfDay endTime,
   }) async {
     try {
-      final stStr = '${date.year.toString().padLeft(4, '0')}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')} ${startTime.hour.toString().padLeft(2, '0')}:${startTime.minute.toString().padLeft(2, '0')}:00';
-      final etStr = '${date.year.toString().padLeft(4, '0')}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')} ${endTime.hour.toString().padLeft(2, '0')}:${endTime.minute.toString().padLeft(2, '0')}:00';
+      final start = DateTime(date.year, date.month, date.day, startTime.hour, startTime.minute);
+      final end = DateTime(date.year, date.month, date.day, endTime.hour, endTime.minute);
 
-      await _client.from('slots').insert({
-        'court_id': courtId,
-        'start_time': stStr,
-        'end_time': etStr,
-        'status': 'maintenance',
-        'booking_id': null,
-      });
+      if (end.isBefore(start) || end.isAtSameMomentAs(start)) {
+        throw Exception('End time must be after start time.');
+      }
+
+      final inserts = <Map<String, dynamic>>[];
+      var cursor = start;
+      while (cursor.isBefore(end)) {
+        final nextCursor = cursor.add(const Duration(hours: 1));
+        
+        final stStr = '${cursor.year.toString().padLeft(4, '0')}-${cursor.month.toString().padLeft(2, '0')}-${cursor.day.toString().padLeft(2, '0')} ${cursor.hour.toString().padLeft(2, '0')}:${cursor.minute.toString().padLeft(2, '0')}:00';
+        final etStr = '${nextCursor.year.toString().padLeft(4, '0')}-${nextCursor.month.toString().padLeft(2, '0')}-${nextCursor.day.toString().padLeft(2, '0')} ${nextCursor.hour.toString().padLeft(2, '0')}:${nextCursor.minute.toString().padLeft(2, '0')}:00';
+
+        inserts.add({
+          'court_id': courtId,
+          'start_time': stStr,
+          'end_time': etStr,
+          'status': 'maintenance',
+          'booking_id': null,
+        });
+
+        cursor = nextCursor;
+      }
+
+      await _client.from('slots').insert(inserts);
     } catch (e) {
       throw UnknownException('Failed to create maintenance slot: $e', e);
     }

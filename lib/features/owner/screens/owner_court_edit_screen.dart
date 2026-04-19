@@ -519,7 +519,9 @@ class _MaintenanceBlockSheetState extends ConsumerState<_MaintenanceBlockSheet> 
         Navigator.pop(context);
       }
     } catch (e) {
+      print('MAINTENANCE ERROR: $e');
       if (mounted) {
+        Navigator.pop(context); // Pop bottom sheet to reveal the original screen
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Error: $e', style: const TextStyle(fontFamily: 'Poppins')),
