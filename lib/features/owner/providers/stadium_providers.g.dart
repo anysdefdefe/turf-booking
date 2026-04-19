@@ -57,3 +57,54 @@ final class CurrentStadiumProvider
 }
 
 String _$currentStadiumHash() => r'43d7e7ff4137cdc0ad3674e27db6bd40ff3687d8';
+
+/// AsyncNotifier that manages the Add Stadium form submission lifecycle.
+
+@ProviderFor(AddStadiumController)
+final addStadiumControllerProvider = AddStadiumControllerProvider._();
+
+/// AsyncNotifier that manages the Add Stadium form submission lifecycle.
+final class AddStadiumControllerProvider
+    extends $AsyncNotifierProvider<AddStadiumController, void> {
+  /// AsyncNotifier that manages the Add Stadium form submission lifecycle.
+  AddStadiumControllerProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'addStadiumControllerProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$addStadiumControllerHash();
+
+  @$internal
+  @override
+  AddStadiumController create() => AddStadiumController();
+}
+
+String _$addStadiumControllerHash() =>
+    r'1dede05914852bcd216ff34b02dc3e20c44526cb';
+
+/// AsyncNotifier that manages the Add Stadium form submission lifecycle.
+
+abstract class _$AddStadiumController extends $AsyncNotifier<void> {
+  FutureOr<void> build();
+  @$mustCallSuper
+  @override
+  void runBuild() {
+    final ref = this.ref as $Ref<AsyncValue<void>, void>;
+    final element =
+        ref.element
+            as $ClassProviderElement<
+              AnyNotifier<AsyncValue<void>, void>,
+              AsyncValue<void>,
+              Object?,
+              Object?
+            >;
+    element.handleCreate(ref, build);
+  }
+}
