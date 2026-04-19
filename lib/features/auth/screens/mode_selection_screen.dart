@@ -93,7 +93,7 @@ class ModeSelectionScreen extends ConsumerWidget {
                       Color(0xFF3F3F46),
                       Color(0xFF27272A),
                     ],
-                    onTap: () => context.go('/owner/dashboard'),
+                    onTap: () => context.go('/owner/gateway'),
                   ),
                 ),
                 if (user != null && user.isAdmin)

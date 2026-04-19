@@ -1,59 +1,73 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:turf_booking/app/constants/app_constants.dart';
 import 'package:turf_booking/app/theme/app_colors.dart';
+import 'package:turf_booking/features/owner/data/repositories/stadium_repository.dart';
+import 'package:turf_booking/features/owner/providers/stadium_providers.dart';
 import '../widgets/owner_bottom_nav_bar.dart';
 
-// ── MODELS ────────────────────────────────────────────────────────────────────
+// ── FORM STATE MODEL ──────────────────────────────────────────────────────────
+// Lightweight mutable class for UI form state only. NOT a DB model.
 
-class CourtEntry {
+class _CourtFormEntry {
   String sportType;
   String amenities;
-  double hourlyRate;
-  double monthlyRate;
-  double yearlyRate;
-  List<File> images;
+  double pricePerHour;
 
-  CourtEntry({
+  _CourtFormEntry({
     this.sportType = '',
     this.amenities = '',
-    this.hourlyRate = 0,
-    this.monthlyRate = 0,
-    this.yearlyRate = 0,
-    List<File>? images,
-  }) : images = images ?? [];
+    this.pricePerHour = 0,
+  });
+
+  /// Converts the raw form data into the repository's DTO.
+  CourtInsertPayload toPayload() {
+    final amenitiesList = amenities
+        .split(',')
+        .map((s) => s.trim())
+        .where((s) => s.isNotEmpty)
+        .toList();
+
+    return CourtInsertPayload(
+      name: sportType.trim(),
+      sportType: sportType.trim(),
+      pricePerHour: pricePerHour,
+      amenities: amenitiesList,
+    );
+  }
 }
 
 // ── SCREEN ────────────────────────────────────────────────────────────────────
 
-class OwnerAddStadiumScreen extends StatefulWidget {
+class OwnerAddStadiumScreen extends ConsumerStatefulWidget {
   const OwnerAddStadiumScreen({super.key});
 
   @override
-  State<OwnerAddStadiumScreen> createState() => _OwnerAddStadiumScreenState();
+  ConsumerState<OwnerAddStadiumScreen> createState() =>
+      _OwnerAddStadiumScreenState();
 }
 
-class _OwnerAddStadiumScreenState extends State<OwnerAddStadiumScreen> {
+class _OwnerAddStadiumScreenState extends ConsumerState<OwnerAddStadiumScreen> {
   final _stadiumNameController = TextEditingController();
   final _contactController = TextEditingController();
   final _locationController = TextEditingController();
+  final _cityController = TextEditingController();
 
   TimeOfDay _openTime = const TimeOfDay(hour: 6, minute: 0);
   TimeOfDay _closeTime = const TimeOfDay(hour: 22, minute: 0);
 
-  final List<CourtEntry> _courts = [CourtEntry()];
-  final List<File> _stadiumImages = [];
+  final List<_CourtFormEntry> _courts = [_CourtFormEntry()];
+  final List<File> _stadiumImages = []; // Kept for UI preview, not uploaded
 
-  LatLng? _selectedLatLng; // latlong2.LatLng — no API key needed
-  bool _isSaving = false;
+  LatLng? _selectedLatLng;
 
-  final _supabase = Supabase.instance.client;
   final _imagePicker = ImagePicker();
 
   @override
@@ -61,6 +75,7 @@ class _OwnerAddStadiumScreenState extends State<OwnerAddStadiumScreen> {
     _stadiumNameController.dispose();
     _contactController.dispose();
     _locationController.dispose();
+    _cityController.dispose();
     super.dispose();
   }
 
@@ -72,15 +87,16 @@ class _OwnerAddStadiumScreenState extends State<OwnerAddStadiumScreen> {
     );
     if (picked != null) {
       setState(() {
-        if (isOpen)
+        if (isOpen) {
           _openTime = picked;
-        else
+        } else {
           _closeTime = picked;
+        }
       });
     }
   }
 
-  // ── IMAGE PICKER ───────────────────────────────────────────────
+  // ── IMAGE PICKER (preview only — no upload) ────────────────────
   Future<void> _pickImages({required bool forCourt, int? courtIndex}) async {
     showModalBottomSheet<void>(
       context: context,
@@ -117,11 +133,7 @@ class _OwnerAddStadiumScreenState extends State<OwnerAddStadiumScreen> {
                   );
                   if (xfile != null) {
                     setState(() {
-                      if (forCourt && courtIndex != null) {
-                        _courts[courtIndex].images.add(File(xfile.path));
-                      } else {
-                        _stadiumImages.add(File(xfile.path));
-                      }
+                      _stadiumImages.add(File(xfile.path));
                     });
                   }
                 },
@@ -137,13 +149,7 @@ class _OwnerAddStadiumScreenState extends State<OwnerAddStadiumScreen> {
                   );
                   if (files.isNotEmpty) {
                     setState(() {
-                      if (forCourt && courtIndex != null) {
-                        _courts[courtIndex].images.addAll(
-                          files.map((f) => File(f.path)),
-                        );
-                      } else {
-                        _stadiumImages.addAll(files.map((f) => File(f.path)));
-                      }
+                      _stadiumImages.addAll(files.map((f) => File(f.path)));
                     });
                   }
                 },
@@ -187,20 +193,12 @@ class _OwnerAddStadiumScreenState extends State<OwnerAddStadiumScreen> {
           final p = placemarks.first;
           _locationController.text =
               '${p.street}, ${p.subLocality}, ${p.locality}, ${p.administrativeArea}';
+          // Auto-fill city if empty
+          if (_cityController.text.isEmpty && p.locality != null) {
+            _cityController.text = p.locality!;
+          }
         }
       } catch (_) {}
-    }
-  }
-
-  // ── UPLOAD IMAGE ───────────────────────────────────────────────
-  Future<String?> _uploadImage(File file, String bucket) async {
-    try {
-      final fileName =
-          '${DateTime.now().millisecondsSinceEpoch}_${file.path.split('/').last}';
-      await _supabase.storage.from(bucket).upload(fileName, file);
-      return _supabase.storage.from(bucket).getPublicUrl(fileName);
-    } catch (e) {
-      return null;
     }
   }
 
@@ -214,68 +212,50 @@ class _OwnerAddStadiumScreenState extends State<OwnerAddStadiumScreen> {
       _showSnackbar('Please enter or pick a location');
       return false;
     }
+    if (_cityController.text.trim().isEmpty) {
+      _showSnackbar('Please enter a city');
+      return false;
+    }
     for (int i = 0; i < _courts.length; i++) {
       if (_courts[i].sportType.trim().isEmpty) {
         _showSnackbar('Please enter sport type for Court ${i + 1}');
+        return false;
+      }
+      if (_courts[i].pricePerHour <= 0) {
+        _showSnackbar('Please enter a valid hourly rate for Court ${i + 1}');
         return false;
       }
     }
     return true;
   }
 
-  // ── SAVE TO SUPABASE ───────────────────────────────────────────
+  // ── SAVE VIA CONTROLLER ────────────────────────────────────────
   Future<void> _save() async {
     if (!_validate()) return;
-    setState(() => _isSaving = true);
-    try {
-      final ownerId = _supabase.auth.currentUser!.id;
 
-      final List<String> stadiumImageUrls = [];
-      for (final img in _stadiumImages) {
-        final url = await _uploadImage(img, 'stadium-images');
-        if (url != null) stadiumImageUrls.add(url);
-      }
+    final courtPayloads = _courts.map((c) => c.toPayload()).toList();
 
-      final stadiumResponse = await _supabase
-          .from('stadiums')
-          .insert({
-            'owner_id': ownerId,
-            'name': _stadiumNameController.text.trim(),
-            'address': _locationController.text.trim(),
-            'latitude': _selectedLatLng?.latitude,
-            'longitude': _selectedLatLng?.longitude,
-            'image_urls': stadiumImageUrls,
-            'is_active': true,
-          })
-          .select()
-          .single();
+    final success = await ref
+        .read(addStadiumControllerProvider.notifier)
+        .submitStadium(
+          name: _stadiumNameController.text.trim(),
+          address: _locationController.text.trim(),
+          city: _cityController.text.trim(),
+          latitude: _selectedLatLng?.latitude,
+          longitude: _selectedLatLng?.longitude,
+          openTime: _openTime,
+          closeTime: _closeTime,
+          courts: courtPayloads,
+        );
 
-      final stadiumId = stadiumResponse['id'] as String;
+    if (!mounted) return;
 
-      for (final court in _courts) {
-        final List<String> courtImageUrls = [];
-        for (final img in court.images) {
-          final url = await _uploadImage(img, 'court-images');
-          if (url != null) courtImageUrls.add(url);
-        }
-        await _supabase.from('courts').insert({
-          'stadium_id': stadiumId,
-          'name': court.sportType.trim(),
-          'sport': court.sportType.trim(),
-          'hourly_rate': court.hourlyRate,
-          'monthly_rate': court.monthlyRate,
-          'yearly_rate': court.yearlyRate,
-          'is_available': true,
-        });
-      }
-
-      if (!mounted) return;
-      _showSnackbar('✓ Stadium added successfully!');
-      Navigator.pop(context);
-    } catch (e) {
-      _showSnackbar('Error saving: ${e.toString()}');
-    } finally {
-      if (mounted) setState(() => _isSaving = false);
+    if (success) {
+      _showSnackbar('✓ Stadium created successfully!');
+      context.go('/owner/dashboard');
+    } else {
+      final error = ref.read(addStadiumControllerProvider).error;
+      _showSnackbar('Error: ${error ?? 'Unknown error'}');
     }
   }
 
@@ -294,6 +274,9 @@ class _OwnerAddStadiumScreenState extends State<OwnerAddStadiumScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final controllerState = ref.watch(addStadiumControllerProvider);
+    final isSaving = controllerState.isLoading;
+
     return Scaffold(
       backgroundColor: AppColors.background,
       bottomNavigationBar: const OwnerBottomNavBar(selectedIndex: 1),
@@ -312,7 +295,7 @@ class _OwnerAddStadiumScreenState extends State<OwnerAddStadiumScreen> {
         actions: [
           Padding(
             padding: const EdgeInsets.only(right: 12),
-            child: _isSaving
+            child: isSaving
                 ? const Padding(
                     padding: EdgeInsets.all(14),
                     child: SizedBox(
@@ -359,6 +342,13 @@ class _OwnerAddStadiumScreenState extends State<OwnerAddStadiumScreen> {
               hint: 'e.g. +91 98765 43210',
               icon: Icons.phone_outlined,
               keyboardType: TextInputType.phone,
+            ),
+            const SizedBox(height: 12),
+            _InputField(
+              controller: _cityController,
+              label: 'City',
+              hint: 'e.g. Bengaluru',
+              icon: Icons.location_city_rounded,
             ),
             const SizedBox(height: 12),
             const _FieldLabel(label: 'Location / Address'),
@@ -491,15 +481,11 @@ class _OwnerAddStadiumScreenState extends State<OwnerAddStadiumScreen> {
                 onRemove: _courts.length > 1
                     ? () => setState(() => _courts.removeAt(index))
                     : null,
-                onAddImages: () =>
-                    _pickImages(forCourt: true, courtIndex: index),
-                onRemoveImage: (imgIndex) =>
-                    setState(() => _courts[index].images.removeAt(imgIndex)),
               ),
             ),
             const SizedBox(height: 16),
             GestureDetector(
-              onTap: () => setState(() => _courts.add(CourtEntry())),
+              onTap: () => setState(() => _courts.add(_CourtFormEntry())),
               child: Container(
                 width: double.infinity,
                 padding: const EdgeInsets.symmetric(vertical: 14),
@@ -596,12 +582,10 @@ class _MapPickerScreenState extends State<_MapPickerScreen> {
               },
             ),
             children: [
-              // OpenStreetMap tile layer — completely free, no key
               TileLayer(
                 urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
                 userAgentPackageName: 'com.example.turf_booking',
               ),
-              // Draggable marker
               MarkerLayer(
                 markers: [
                   Marker(
@@ -609,7 +593,7 @@ class _MapPickerScreenState extends State<_MapPickerScreen> {
                     width: 40,
                     height: 40,
                     child: GestureDetector(
-                      onTap: () {}, // marker tap (optional)
+                      onTap: () {},
                       child: const Icon(
                         Icons.location_pin,
                         color: Colors.red,
@@ -621,13 +605,13 @@ class _MapPickerScreenState extends State<_MapPickerScreen> {
               ),
             ],
           ),
-          // Instruction banner
           Positioned(
             top: 12,
             left: 16,
             right: 16,
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(AppConstants.radiusM),
@@ -649,7 +633,6 @@ class _MapPickerScreenState extends State<_MapPickerScreen> {
               ),
             ),
           ),
-          // My location button
           Positioned(
             bottom: 20,
             right: 16,
@@ -676,7 +659,7 @@ class _MapPickerScreenState extends State<_MapPickerScreen> {
   }
 }
 
-// ── All widgets below are UNCHANGED from original ─────────────────────────────
+// ── REUSABLE WIDGETS ──────────────────────────────────────────────────────────
 
 class _ImageGrid extends StatelessWidget {
   final List<File> images;
@@ -813,17 +796,13 @@ class _ImageSourceTile extends StatelessWidget {
 
 class _CourtCard extends StatelessWidget {
   final int courtNumber;
-  final CourtEntry court;
+  final _CourtFormEntry court;
   final VoidCallback? onRemove;
-  final VoidCallback onAddImages;
-  final void Function(int) onRemoveImage;
 
   const _CourtCard({
     required this.courtNumber,
     required this.court,
     required this.onRemove,
-    required this.onAddImages,
-    required this.onRemoveImage,
   });
 
   InputDecoration _inputDecoration(String label, String hint, IconData icon) {
@@ -923,26 +902,17 @@ class _CourtCard extends StatelessWidget {
             ),
             decoration: _inputDecoration(
               'Amenities',
-              'e.g. Bat, Ball, Racket',
+              'e.g. Bat, Ball, Racket (comma separated)',
               Icons.inventory_2_outlined,
             ),
           ),
           const SizedBox(height: 14),
-          const _FieldLabel(label: 'Court Images'),
-          const SizedBox(height: 8),
-          _ImageGrid(
-            images: court.images,
-            onAddTap: onAddImages,
-            onRemove: onRemoveImage,
-          ),
-          const SizedBox(height: 14),
-          const _FieldLabel(label: 'Booking Rates (₹)'),
+          const _FieldLabel(label: 'Hourly Rate (₹)'),
           const SizedBox(height: 10),
-          _RateRow(label: 'Hourly', onChanged: (v) => court.hourlyRate = v),
-          const SizedBox(height: 8),
-          _RateRow(label: 'Monthly', onChanged: (v) => court.monthlyRate = v),
-          const SizedBox(height: 8),
-          _RateRow(label: 'Yearly', onChanged: (v) => court.yearlyRate = v),
+          _RateRow(
+            label: 'Hourly',
+            onChanged: (v) => court.pricePerHour = v,
+          ),
         ],
       ),
     );

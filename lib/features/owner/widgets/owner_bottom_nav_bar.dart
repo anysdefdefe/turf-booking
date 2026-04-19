@@ -12,7 +12,7 @@ class OwnerBottomNavBar extends StatelessWidget {
       case 0:
         context.go('/owner/dashboard');
       case 1:
-        context.go('/owner/my-stadiums');
+        context.go('/owner/manage');
       case 2:
         context.go('/owner/bookings');
     }
@@ -39,7 +39,7 @@ class OwnerBottomNavBar extends StatelessWidget {
               ),
               _NavItem(
                 icon: Icons.stadium_rounded,
-                label: 'My Stadiums',
+                label: 'Manage',
                 isSelected: selectedIndex == 1,
                 onTap: () => _onTap(context, 1),
               ),

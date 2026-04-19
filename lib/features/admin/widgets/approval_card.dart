@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../data/models/owner_application_model.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class ApprovalCard extends StatelessWidget {
   final OwnerApplicationModel application;
@@ -101,9 +102,46 @@ class ApprovalCard extends StatelessWidget {
           if (application.documentUrl != null) ...[
             const SizedBox(height: 12),
             GestureDetector(
-              onTap: () {
-                // PDF viewer - next step
-              },
+            onTap: () async {
+                 if (application.documentUrl == null || 
+                application.documentUrl!.isEmpty) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('No document uploaded by owner'),
+                  backgroundColor: Colors.orange,
+                ),
+              );
+              return;
+            }
+
+            try {
+              final url = Uri.parse(application.documentUrl!);
+              if (await canLaunchUrl(url)) {
+                await launchUrl(
+                  url,
+                  mode: LaunchMode.externalApplication,
+                );
+              } else {
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Cannot open document'),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                }
+              }
+            } catch (e) {
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('Invalid document URL: $e'),
+                    backgroundColor: Colors.red,
+                  ),
+                );
+              }
+            }
+          },
               child: Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(

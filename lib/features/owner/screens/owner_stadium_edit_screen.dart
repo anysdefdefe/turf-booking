@@ -1,31 +1,27 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:turf_booking/app/theme/app_colors.dart';
 import 'package:turf_booking/app/constants/app_constants.dart';
-import 'owner_my_stadiums_screen.dart';
+import 'package:turf_booking/features/owner/data/repositories/stadium_repository.dart';
+import 'package:turf_booking/features/owner/providers/stadium_providers.dart';
 
-class OwnerStadiumEditScreen extends StatefulWidget {
-  final StadiumModel stadium;
-  const OwnerStadiumEditScreen({super.key, required this.stadium});
+class OwnerStadiumEditScreen extends ConsumerStatefulWidget {
+  const OwnerStadiumEditScreen({super.key});
 
   @override
-  State<OwnerStadiumEditScreen> createState() => _OwnerStadiumEditScreenState();
+  ConsumerState<OwnerStadiumEditScreen> createState() =>
+      _OwnerStadiumEditScreenState();
 }
 
-class _OwnerStadiumEditScreenState extends State<OwnerStadiumEditScreen> {
-  late final TextEditingController _nameController;
-  late final TextEditingController _addressController;
-  late final TextEditingController _cityController;
+class _OwnerStadiumEditScreenState
+    extends ConsumerState<OwnerStadiumEditScreen> {
+  final _nameController = TextEditingController();
+  final _addressController = TextEditingController();
+  final _cityController = TextEditingController();
   late bool _isActive;
   bool _isSaving = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _nameController = TextEditingController(text: widget.stadium.name);
-    _addressController = TextEditingController(text: widget.stadium.address);
-    _cityController = TextEditingController(text: widget.stadium.city);
-    _isActive = widget.stadium.isActive;
-  }
+  bool _initialized = false;
 
   @override
   void dispose() {
@@ -35,143 +31,222 @@ class _OwnerStadiumEditScreenState extends State<OwnerStadiumEditScreen> {
     super.dispose();
   }
 
-  Future<void> _save() async {
+  /// Pre-fill the form with current stadium data — exactly once.
+  void _initFields({
+    required String name,
+    required String address,
+    required String city,
+    required bool isActive,
+  }) {
+    if (_initialized) return;
+    _nameController.text = name;
+    _addressController.text = address;
+    _cityController.text = city;
+    _isActive = isActive;
+    _initialized = true;
+  }
+
+  Future<void> _save(String stadiumId) async {
+    final name = _nameController.text.trim();
+    final address = _addressController.text.trim();
+    final city = _cityController.text.trim();
+
+    if (name.isEmpty || address.isEmpty || city.isEmpty) {
+      _showSnackbar('All fields are required');
+      return;
+    }
+
     setState(() => _isSaving = true);
-    // TODO: call your repo/service to persist changes
-    await Future.delayed(const Duration(milliseconds: 800)); // simulate network
-    if (mounted) {
-      setState(() => _isSaving = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Stadium updated successfully')),
-      );
-      Navigator.of(context).pop();
+
+    try {
+      await ref.read(stadiumRepositoryProvider).updateStadium(
+            stadiumId: stadiumId,
+            name: name,
+            address: address,
+            city: city,
+            isActive: _isActive,
+          );
+
+      // Invalidate so dashboard + manage screens reflect the change.
+      ref.invalidate(currentStadiumProvider);
+
+      if (mounted) {
+        _showSnackbar('✓ Stadium updated');
+        context.pop();
+      }
+    } catch (e) {
+      _showSnackbar('Error: $e');
+    } finally {
+      if (mounted) setState(() => _isSaving = false);
     }
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: AppBar(title: const Text('Edit Stadium')),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(AppConstants.paddingL),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // ── Photo management section ─────────────────────
-            const Text(
-              'Photos',
-              style: TextStyle(
-                fontFamily: 'Poppins',
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-                color: AppColors.textPrimary,
-              ),
-            ),
-            const SizedBox(height: 10),
-            _PhotoManagementSection(stadium: widget.stadium),
-            const SizedBox(height: 24),
-
-            // ── Fields ───────────────────────────────────────
-            _buildLabel('Stadium Name'),
-            _buildField(_nameController, hint: 'e.g. Green Arena'),
-            const SizedBox(height: 16),
-            _buildLabel('Address'),
-            _buildField(_addressController, hint: 'e.g. 12, MG Road'),
-            const SizedBox(height: 16),
-            _buildLabel('City'),
-            _buildField(_cityController, hint: 'e.g. Bengaluru'),
-            const SizedBox(height: 20),
-
-            // ── Active toggle ────────────────────────────────
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              decoration: BoxDecoration(
-                color: AppColors.cardBg,
-                borderRadius: BorderRadius.circular(AppConstants.radiusM),
-                border: Border.all(color: AppColors.divider),
-              ),
-              child: Row(
-                children: [
-                  const Icon(
-                    Icons.power_settings_new_outlined,
-                    size: 18,
-                    color: AppColors.textSecondary,
-                  ),
-                  const SizedBox(width: 12),
-                  const Expanded(
-                    child: Text(
-                      'Stadium Active',
-                      style: TextStyle(
-                        fontFamily: 'Poppins',
-                        fontSize: 14,
-                        color: AppColors.textPrimary,
-                      ),
-                    ),
-                  ),
-                  Switch.adaptive(
-                    value: _isActive,
-                    onChanged: (v) => setState(() => _isActive = v),
-                    activeColor: AppColors.primary,
-                  ),
-                ],
-              ),
-            ),
-
-            const SizedBox(height: 32),
-
-            // ── Save button ───────────────────────────────────
-            SizedBox(
-              width: double.infinity,
-              child: FilledButton(
-                onPressed: _isSaving ? null : _save,
-                style: FilledButton.styleFrom(
-                  backgroundColor: AppColors.primary,
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(AppConstants.radiusM),
-                  ),
-                ),
-                child: _isSaving
-                    ? const SizedBox(
-                        height: 20,
-                        width: 20,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: Colors.white,
-                        ),
-                      )
-                    : const Text(
-                        'Save Changes',
-                        style: TextStyle(
-                          fontFamily: 'Poppins',
-                          fontWeight: FontWeight.w600,
-                          fontSize: 15,
-                          color: Colors.white,
-                        ),
-                      ),
-              ),
-            ),
-          ],
+  void _showSnackbar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message, style: const TextStyle(fontFamily: 'Poppins')),
+        backgroundColor: AppColors.primary,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppConstants.radiusM),
         ),
       ),
     );
   }
 
-  Widget _buildLabel(String label) => Padding(
-    padding: const EdgeInsets.only(bottom: 6),
-    child: Text(
-      label,
-      style: const TextStyle(
-        fontFamily: 'Poppins',
-        fontSize: 13,
-        fontWeight: FontWeight.w500,
-        color: AppColors.textSecondary,
-      ),
-    ),
-  );
+  @override
+  Widget build(BuildContext context) {
+    final stadiumAsync = ref.watch(currentStadiumProvider);
 
-  Widget _buildField(TextEditingController controller, {String hint = ''}) =>
+    return stadiumAsync.when(
+      loading: () => const Scaffold(
+        backgroundColor: AppColors.background,
+        body: Center(
+          child: CircularProgressIndicator(color: AppColors.primary),
+        ),
+      ),
+      error: (error, _) => Scaffold(
+        backgroundColor: AppColors.background,
+        body: Center(child: Text('Error: $error')),
+      ),
+      data: (stadium) {
+        if (stadium == null) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (context.mounted) context.go('/owner/add-stadium');
+          });
+          return const Scaffold(backgroundColor: AppColors.background);
+        }
+
+        _initFields(
+          name: stadium.name,
+          address: stadium.address,
+          city: stadium.city,
+          isActive: stadium.isActive,
+        );
+
+        return Scaffold(
+          backgroundColor: AppColors.background,
+          appBar: AppBar(
+            backgroundColor: AppColors.surface,
+            elevation: 0,
+            title: const Text(
+              'Edit Stadium',
+              style: TextStyle(
+                fontFamily: 'Poppins',
+                fontWeight: FontWeight.w700,
+                fontSize: 18,
+                color: AppColors.textPrimary,
+              ),
+            ),
+          ),
+          body: SingleChildScrollView(
+            padding: const EdgeInsets.all(AppConstants.paddingL),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildLabel('Stadium Name'),
+                _buildField(_nameController, hint: 'e.g. Green Arena'),
+                const SizedBox(height: 16),
+                _buildLabel('Address'),
+                _buildField(_addressController, hint: 'e.g. 12, MG Road'),
+                const SizedBox(height: 16),
+                _buildLabel('City'),
+                _buildField(_cityController, hint: 'e.g. Bengaluru'),
+                const SizedBox(height: 20),
+
+                // ── Active toggle ─────────────────────────────────
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  decoration: BoxDecoration(
+                    color: AppColors.surface,
+                    borderRadius:
+                        BorderRadius.circular(AppConstants.radiusM),
+                    border: Border.all(color: AppColors.divider),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.power_settings_new_outlined,
+                          size: 18, color: AppColors.textSecondary),
+                      const SizedBox(width: 12),
+                      const Expanded(
+                        child: Text(
+                          'Stadium Active',
+                          style: TextStyle(
+                            fontFamily: 'Poppins',
+                            fontSize: 14,
+                            color: AppColors.textPrimary,
+                          ),
+                        ),
+                      ),
+                      Switch.adaptive(
+                        value: _isActive,
+                        onChanged: (v) => setState(() => _isActive = v),
+                        activeColor: AppColors.primary,
+                      ),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(height: 32),
+
+                // ── Save button ───────────────────────────────────
+                SizedBox(
+                  width: double.infinity,
+                  child: FilledButton(
+                    onPressed:
+                        _isSaving ? null : () => _save(stadium.id),
+                    style: FilledButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                        borderRadius:
+                            BorderRadius.circular(AppConstants.radiusM),
+                      ),
+                    ),
+                    child: _isSaving
+                        ? const SizedBox(
+                            height: 20,
+                            width: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
+                          )
+                        : const Text(
+                            'Save Changes',
+                            style: TextStyle(
+                              fontFamily: 'Poppins',
+                              fontWeight: FontWeight.w600,
+                              fontSize: 15,
+                              color: Colors.white,
+                            ),
+                          ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildLabel(String label) => Padding(
+        padding: const EdgeInsets.only(bottom: 6),
+        child: Text(
+          label,
+          style: const TextStyle(
+            fontFamily: 'Poppins',
+            fontSize: 13,
+            fontWeight: FontWeight.w500,
+            color: AppColors.textSecondary,
+          ),
+        ),
+      );
+
+  Widget _buildField(TextEditingController controller,
+          {String hint = ''}) =>
       TextField(
         controller: controller,
         style: const TextStyle(
@@ -187,11 +262,9 @@ class _OwnerStadiumEditScreenState extends State<OwnerStadiumEditScreen> {
             color: AppColors.textMuted,
           ),
           filled: true,
-          fillColor: AppColors.cardBg,
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: 14,
-            vertical: 12,
-          ),
+          fillColor: AppColors.surface,
+          contentPadding:
+              const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(AppConstants.radiusM),
             borderSide: const BorderSide(color: AppColors.divider),
@@ -202,133 +275,9 @@ class _OwnerStadiumEditScreenState extends State<OwnerStadiumEditScreen> {
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(AppConstants.radiusM),
-            borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
+            borderSide:
+                const BorderSide(color: AppColors.primary, width: 1.5),
           ),
         ),
       );
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// PHOTO MANAGEMENT SECTION
-// ─────────────────────────────────────────────────────────────────────────────
-
-class _PhotoManagementSection extends StatefulWidget {
-  final StadiumModel stadium;
-  const _PhotoManagementSection({required this.stadium});
-
-  @override
-  State<_PhotoManagementSection> createState() =>
-      _PhotoManagementSectionState();
-}
-
-class _PhotoManagementSectionState extends State<_PhotoManagementSection> {
-  late List<String> _photos;
-
-  @override
-  void initState() {
-    super.initState();
-    _photos = List.from(widget.stadium.imageUrls);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      height: 100,
-      child: ListView(
-        scrollDirection: Axis.horizontal,
-        children: [
-          // Add photo button
-          GestureDetector(
-            onTap: () {
-              // TODO: implement image_picker
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text(
-                    'Photo picker — integrate image_picker package',
-                  ),
-                ),
-              );
-            },
-            child: Container(
-              width: 90,
-              margin: const EdgeInsets.only(right: 10),
-              decoration: BoxDecoration(
-                border: Border.all(
-                  color: AppColors.primary.withValues(alpha: 0.4),
-                  style: BorderStyle.solid,
-                ),
-                borderRadius: BorderRadius.circular(10),
-                color: AppColors.primary.withValues(alpha: 0.05),
-              ),
-              child: const Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.add_photo_alternate_outlined,
-                    color: AppColors.primary,
-                    size: 28,
-                  ),
-                  SizedBox(height: 4),
-                  Text(
-                    'Add Photo',
-                    style: TextStyle(
-                      fontFamily: 'Poppins',
-                      fontSize: 11,
-                      color: AppColors.primary,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-
-          // Existing photos
-          ..._photos.asMap().entries.map(
-            (entry) => Stack(
-              children: [
-                Container(
-                  width: 90,
-                  margin: const EdgeInsets.only(right: 10),
-                  clipBehavior: Clip.antiAlias,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Image.network(
-                    entry.value,
-                    fit: BoxFit.cover,
-                    errorBuilder: (_, __, ___) => Container(
-                      color: AppColors.divider,
-                      child: const Icon(
-                        Icons.broken_image_outlined,
-                        color: AppColors.textMuted,
-                      ),
-                    ),
-                  ),
-                ),
-                Positioned(
-                  top: 4,
-                  right: 14,
-                  child: GestureDetector(
-                    onTap: () => setState(() => _photos.removeAt(entry.key)),
-                    child: Container(
-                      padding: const EdgeInsets.all(2),
-                      decoration: const BoxDecoration(
-                        color: Colors.black54,
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(
-                        Icons.close,
-                        color: Colors.white,
-                        size: 14,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 }

@@ -20,14 +20,16 @@ import 'package:turf_booking/features/owner/screens/owner_dashboard_screen.dart'
 import 'package:turf_booking/features/owner/screens/pending_approval_screen.dart';
 import 'package:turf_booking/features/owner/screens/owner_application_screen.dart';
 import 'package:turf_booking/features/owner/screens/owner_bookings_screen.dart';
-import 'package:turf_booking/features/owner/screens/owner_my_stadiums_screen.dart';
 import 'package:turf_booking/features/owner/screens/owner_add_stadium_screen.dart';
 
 import 'package:turf_booking/features/admin/screens/admin_main_screen.dart';
 
+import 'package:turf_booking/features/owner/data/models/stadium_model.dart';
+import 'package:turf_booking/features/owner/data/models/court_model.dart';
 import 'package:turf_booking/features/owner/screens/owner_stadium_manage_screen.dart';
 import 'package:turf_booking/features/owner/screens/owner_stadium_edit_screen.dart';
 import 'package:turf_booking/features/owner/screens/owner_court_edit_screen.dart';
+import 'package:turf_booking/features/owner/screens/owner_gateway_screen.dart';
 
 
 part 'router.g.dart';
@@ -126,7 +128,8 @@ GoRouter router(Ref ref) {
       ),
       GoRoute(
         path: '/customer/my-bookings',
-        builder: (context, state) => const MyBookingsScreen(),
+        builder: (context, state) =>
+            MyBookingsScreen(toastMessage: state.uri.queryParameters['toast']),
       ),
       GoRoute(
         path: '/customer/cart',
@@ -135,6 +138,10 @@ GoRouter router(Ref ref) {
       GoRoute(
         path: '/customer/profile',
         builder: (context, state) => const ProfileScreen(),
+      ),
+      GoRoute(
+        path: '/owner/gateway',
+        builder: (context, state) => const OwnerGatewayScreen(),
       ),
       GoRoute(
         path: '/owner/dashboard',
@@ -153,10 +160,6 @@ GoRouter router(Ref ref) {
         builder: (context, state) => const OwnerBookingsScreen(),
       ),
       GoRoute(
-        path: '/owner/my-stadiums',
-        builder: (context, state) => const OwnerMyStadiumsScreen(),
-      ),
-      GoRoute(
         path: '/owner/add-stadium',
         builder: (context, state) => const OwnerAddStadiumScreen(),
       ),
@@ -172,12 +175,14 @@ GoRouter router(Ref ref) {
         return OwnerStadiumManageScreen(stadium: stadium);
        },
       ),
+        GoRoute(
+        path: '/owner/manage',
+        builder: (context, state) => const OwnerStadiumManageScreen(),
+
+      ),
       GoRoute(
-        path: '/owner/stadium/:stadiumId/edit',
-        builder: (context, state) {
-          final stadium = state.extra as StadiumModel;
-          return OwnerStadiumEditScreen(stadium: stadium);
-        },
+        path: '/owner/edit-stadium',
+        builder: (context, state) => const OwnerStadiumEditScreen(),
       ),
       GoRoute(
         path: '/owner/stadium/:stadiumId/court/:courtId/edit',
@@ -185,6 +190,13 @@ GoRouter router(Ref ref) {
           final court = state.extra as CourtModel;
           return OwnerCourtEditScreen(court: court);
         },
+
+      ),
+      GoRoute(
+        path: '/owner/edit-court/:courtId',
+        builder: (context, state) => OwnerCourtEditScreen(
+          courtId: state.pathParameters['courtId']!,
+        ),
 
       ),
     ],

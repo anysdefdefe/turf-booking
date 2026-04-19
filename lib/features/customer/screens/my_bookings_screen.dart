@@ -10,7 +10,9 @@ import '../widgets/court_compact_card.dart';
 import '../widgets/customer_floating_nav_bar.dart';
 
 class MyBookingsScreen extends ConsumerStatefulWidget {
-  const MyBookingsScreen({super.key});
+  const MyBookingsScreen({super.key, this.toastMessage});
+
+  final String? toastMessage;
 
   @override
   ConsumerState<MyBookingsScreen> createState() => _MyBookingsScreenState();
@@ -19,6 +21,7 @@ class MyBookingsScreen extends ConsumerStatefulWidget {
 class _MyBookingsScreenState extends ConsumerState<MyBookingsScreen> {
   final CustomerBookingRepository _repo = CustomerBookingRepository.instance;
   int _selectedFilterIndex = 0;
+  bool _hasShownToast = false;
 
   @override
   void initState() {
@@ -26,6 +29,18 @@ class _MyBookingsScreenState extends ConsumerState<MyBookingsScreen> {
     Future<void>.microtask(
       () => ref.read(customerBookingsControllerProvider.future),
     );
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || _hasShownToast) {
+        return;
+      }
+      final text = widget.toastMessage;
+      if (text == null || text.trim().isEmpty) {
+        return;
+      }
+      _hasShownToast = true;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(text)));
+    });
   }
 
   List<CustomerBooking> _bookingsForFilter(List<CustomerBooking> all) {
@@ -77,9 +92,9 @@ class _MyBookingsScreenState extends ConsumerState<MyBookingsScreen> {
     if (!mounted) {
       return;
     }
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Booking cancelled.')),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('Booking cancelled.')));
   }
 
   void _openReceiptPlaceholder(CustomerBooking booking) {

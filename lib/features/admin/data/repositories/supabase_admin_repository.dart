@@ -63,15 +63,23 @@ class SupabaseAdminRepository implements AdminRepository {
   // ─── USERS ───────────────────────────────────────────────
 
   @override
-  Future<List<Map<String, dynamic>>> getAllUsers() async {
-    final response = await _supabase
-        .from('users')
-        .select()
-         .neq('id', _supabase.auth.currentUser!.id) 
-        .order('created_at', ascending: false);
+  @override
+Future<List<Map<String, dynamic>>> getAllUsers() async {
+  final currentUserId = _supabase.auth.currentUser!.id;
+  
+  print('🔍 Current admin ID: $currentUserId');
+  
+  final response = await _supabase
+      .from('users')
+      .select()
+      .neq('id', currentUserId)
+      .order('created_at', ascending: false);
 
-    return List<Map<String, dynamic>>.from(response);
-  }
+  print('👥 Users fetched: ${response.length}');
+  print('👥 Users data: $response');
+
+  return List<Map<String, dynamic>>.from(response);
+}
 
   @override
   Future<void> blockUser(String userId) async {

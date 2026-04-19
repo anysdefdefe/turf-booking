@@ -4,13 +4,23 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/customer_booking.dart';
 import 'court_repository.dart';
 
+class BookingConflictException implements Exception {
+  final String message;
+
+  BookingConflictException(this.message);
+
+  @override
+  String toString() => message;
+}
+
 class CustomerBookingRepository {
   CustomerBookingRepository._(this._client);
 
   final SupabaseClient _client;
 
-  static final CustomerBookingRepository instance =
-      CustomerBookingRepository._(Supabase.instance.client);
+  static final CustomerBookingRepository instance = CustomerBookingRepository._(
+    Supabase.instance.client,
+  );
 
   final CourtRepository _courtRepo = CourtRepository.instance;
   final List<CustomerBooking> _bookings = [];
@@ -33,7 +43,9 @@ class CustomerBookingRepository {
 
     final bookingRows = await _client
         .from('bookings')
-        .select('id, court_id, booking_date, status, payment_status, created_at')
+        .select(
+          'id, court_id, booking_date, status, payment_status, created_at',
+        )
         .eq('customer_id', user.id)
         .order('created_at', ascending: false);
 
@@ -73,11 +85,15 @@ class CustomerBookingRepository {
       }
 
       final bookingId = row['id'] as String;
-      final slots = (slotsByBooking[bookingId] ?? const <Map<String, dynamic>>[])
-          .map((slotRow) => _slotLabelFromIso(slotRow['start_time']?.toString()))
-          .where((slot) => slot.isNotEmpty)
-          .toList()
-        ..sort(_slotSort);
+      final slots =
+          (slotsByBooking[bookingId] ?? const <Map<String, dynamic>>[])
+              .map(
+                (slotRow) =>
+                    _slotLabelFromIso(slotRow['start_time']?.toString()),
+              )
+              .where((slot) => slot.isNotEmpty)
+              .toList()
+            ..sort(_slotSort);
 
       mapped.add(
         CustomerBooking(
@@ -87,7 +103,8 @@ class CustomerBookingRepository {
             row['status']?.toString(),
             row['payment_status']?.toString(),
           ),
-          date: DateTime.tryParse(row['booking_date']?.toString() ?? '') ??
+          date:
+              DateTime.tryParse(row['booking_date']?.toString() ?? '') ??
               DateTime.now(),
           slots: slots,
           courtType: court.courtTypes.first,
@@ -127,11 +144,11 @@ class CustomerBookingRepository {
 
     await _client
         .from('bookings')
-        .update({'status': 'cancelled'})
+        .update({'status': 'cancelled', 'payment_status': 'refunded'})
         .eq('id', bookingId);
     await _client
         .from('slots')
-        .update({'status': 'cancelled'})
+        .update({'status': 'available'})
         .eq('booking_id', bookingId);
 
     _bookings[index] = booking.copyWith(
@@ -147,37 +164,70 @@ class CustomerBookingRepository {
       return;
     }
 
-    final date = DateTime(booking.date.year, booking.date.month, booking.date.day);
-    final slotTimes = booking.slots
-        .map((slot) => _slotLabelToDateTime(date, slot))
-        .whereType<DateTime>()
-        .toList()
-      ..sort();
+    final date = DateTime(
+      booking.date.year,
+      booking.date.month,
+      booking.date.day,
+    );
+    final slotTimes =
+        booking.slots
+            .map((slot) => _slotLabelToDateTime(date, slot))
+            .whereType<DateTime>()
+            .toList()
+          ..sort();
 
-    final bookingInsert = await _client
-        .from('bookings')
-        .insert({
-          'court_id': booking.court.id,
-          'customer_id': user.id,
-          'booking_date': date.toIso8601String().split('T').first,
-          'start_time': slotTimes.isEmpty
-              ? null
-              : slotTimes.first.toIso8601String(),
-          'end_time': slotTimes.isEmpty
-              ? null
-              : slotTimes.last
-                .add(const Duration(hours: 1))
-                .toIso8601String(),
-          'duration_hours': booking.durationHours,
-          'total_amount': booking.totalAmount,
-          'status': booking.status == BookingStatus.cancelled
-              ? 'cancelled'
-              : 'booked',
-          'payment_status':
-              booking.status == BookingStatus.booked ? 'paid' : 'pending',
-        })
-        .select('id')
-        .single();
+    await _ensureBookingSlotAvailability(
+      courtId: booking.court.id,
+      date: date,
+      slotTimes: slotTimes,
+    );
+
+    final bookingPayload = {
+      'court_id': booking.court.id,
+      'customer_id': user.id,
+      'booking_date': date.toIso8601String().split('T').first,
+      'start_time': slotTimes.isEmpty
+          ? null
+          : slotTimes.first.toIso8601String(),
+      'end_time': slotTimes.isEmpty
+          ? null
+          : slotTimes.last.add(const Duration(hours: 1)).toIso8601String(),
+      'duration_hours': booking.durationHours,
+      'total_amount': booking.totalAmount,
+      'status': booking.status == BookingStatus.cancelled
+          ? 'cancelled'
+          : 'confirmed',
+      'payment_status': booking.status == BookingStatus.cancelled
+          ? 'unpaid'
+          : 'paid',
+    };
+
+    Map<String, dynamic> bookingInsert;
+    try {
+      bookingInsert = await _client
+          .from('bookings')
+          .insert(bookingPayload)
+          .select('id')
+          .single();
+    } on PostgrestException catch (e) {
+      if (!_isTimeTypeSyntaxError(e)) {
+        rethrow;
+      }
+
+      final fallbackPayload = Map<String, dynamic>.from(bookingPayload)
+        ..['start_time'] = slotTimes.isEmpty
+            ? null
+            : _toPostgresTime(slotTimes.first)
+        ..['end_time'] = slotTimes.isEmpty
+            ? null
+            : _toPostgresTime(slotTimes.last.add(const Duration(hours: 1)));
+
+      bookingInsert = await _client
+          .from('bookings')
+          .insert(fallbackPayload)
+          .select('id')
+          .single();
+    }
 
     final bookingId = bookingInsert['id'] as String;
     if (slotTimes.isNotEmpty) {
@@ -187,12 +237,8 @@ class CustomerBookingRepository {
               'court_id': booking.court.id,
               'booking_id': bookingId,
               'start_time': start.toIso8601String(),
-              'end_time': start
-                  .add(const Duration(hours: 1))
-                  .toIso8601String(),
-              'status': booking.status == BookingStatus.cancelled
-                  ? 'cancelled'
-                  : 'booked',
+              'end_time': start.add(const Duration(hours: 1)).toIso8601String(),
+              'status': 'booked',
             },
           )
           .toList(growable: false);
@@ -203,9 +249,64 @@ class CustomerBookingRepository {
     _syncNotifier();
   }
 
-  Future<void> updateBookingStatus(String bookingId, BookingStatus status) async {
-    final dbStatus = status == BookingStatus.cancelled ? 'cancelled' : 'booked';
-    final paymentStatus = status == BookingStatus.booked ? 'paid' : 'pending';
+  Future<void> _ensureBookingSlotAvailability({
+    required String courtId,
+    required DateTime date,
+    required List<DateTime> slotTimes,
+  }) async {
+    if (slotTimes.isEmpty) {
+      return;
+    }
+
+    final day = date.toIso8601String().split('T').first;
+    final existingRows = await _client
+        .from('bookings')
+        .select('id, status, booking_date, start_time, end_time')
+        .eq('court_id', courtId)
+        .eq('booking_date', day);
+
+    final requestedStart = slotTimes.first;
+    final requestedEnd = slotTimes.last.add(const Duration(hours: 1));
+
+    for (final raw in existingRows) {
+      final row = raw;
+      final existingStart = _bookingTimeToDateTime(
+        date,
+        row['start_time']?.toString(),
+      );
+      final existingEnd = _bookingTimeToDateTime(
+        date,
+        row['end_time']?.toString(),
+      );
+
+      if (existingStart == null || existingEnd == null) {
+        continue;
+      }
+
+      final overlaps =
+          requestedStart.isBefore(existingEnd) &&
+          requestedEnd.isAfter(existingStart);
+      if (!overlaps) {
+        continue;
+      }
+
+      final existingStatus = row['status']?.toString() ?? 'unknown';
+      throw BookingConflictException(
+        'Selected slot is already booked for this court. Existing booking status: $existingStatus.',
+      );
+    }
+  }
+
+  Future<void> updateBookingStatus(
+    String bookingId,
+    BookingStatus status,
+  ) async {
+    final dbStatus = status == BookingStatus.cancelled
+        ? 'cancelled'
+        : 'confirmed';
+    final paymentStatus = status == BookingStatus.cancelled
+        ? 'refunded'
+        : 'paid';
 
     await _client
         .from('bookings')
@@ -224,7 +325,8 @@ class CustomerBookingRepository {
     if ((status ?? '').toLowerCase() == 'cancelled') {
       return BookingStatus.cancelled;
     }
-    if ((paymentStatus ?? '').toLowerCase() == 'pending') {
+    if ((status ?? '').toLowerCase() == 'pending' ||
+        (paymentStatus ?? '').toLowerCase() == 'unpaid') {
       return BookingStatus.unpaid;
     }
     return BookingStatus.booked;
@@ -275,6 +377,40 @@ class CustomerBookingRepository {
     return DateTime(date.year, date.month, date.day, hour, minute);
   }
 
+  DateTime? _bookingTimeToDateTime(DateTime date, String? value) {
+    if (value == null || value.isEmpty) {
+      return null;
+    }
+
+    final parsedTimestamp = DateTime.tryParse(value);
+    if (parsedTimestamp != null) {
+      return DateTime(
+        date.year,
+        date.month,
+        date.day,
+        parsedTimestamp.hour,
+        parsedTimestamp.minute,
+        parsedTimestamp.second,
+      );
+    }
+
+    final parts = value.split(':');
+    if (parts.length < 2) {
+      return null;
+    }
+
+    final hour = int.tryParse(parts[0]);
+    final minute = int.tryParse(parts[1]);
+    if (hour == null || minute == null) {
+      return null;
+    }
+
+    final second = parts.length > 2
+        ? int.tryParse(parts[2].split('.').first) ?? 0
+        : 0;
+    return DateTime(date.year, date.month, date.day, hour, minute, second);
+  }
+
   String _formatTo12Hour(DateTime dt) {
     var hour = dt.hour;
     final minute = dt.minute;
@@ -286,5 +422,18 @@ class CustomerBookingRepository {
     final minuteText = minute.toString().padLeft(2, '0');
     final hourText = hour.toString().padLeft(2, '0');
     return '$hourText:$minuteText $suffix';
+  }
+
+  bool _isTimeTypeSyntaxError(PostgrestException e) {
+    final message = e.message.toLowerCase();
+    return message.contains('invalid input syntax for type time') ||
+        message.contains('date/time field value out of range');
+  }
+
+  String _toPostgresTime(DateTime dt) {
+    final hour = dt.hour.toString().padLeft(2, '0');
+    final minute = dt.minute.toString().padLeft(2, '0');
+    final second = dt.second.toString().padLeft(2, '0');
+    return '$hour:$minute:$second';
   }
 }
