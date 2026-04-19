@@ -2,16 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../../app/constants/app_constants.dart';
 import '../../../app/theme/app_colors.dart';
-import '../data/models/booking_args.dart';
+import '../data/models/booking_cart_item.dart';
 import '../data/models/court_detail_args.dart';
 import '../data/models/court_model.dart';
-import '../data/models/customer_booking.dart';
-import '../data/repositories/customer_booking_repository.dart';
+import '../data/repositories/customer_cart_repository.dart';
 import '../data/repositories/customer_preferences_repository.dart';
 import '../data/repositories/court_repository.dart';
 import '../widgets/detail_section_title.dart';
 import '../widgets/info_row_chip.dart';
-import '../widgets/sport_icon_mapper.dart';
 
 class CourtDetailScreen extends StatefulWidget {
   const CourtDetailScreen({super.key});
@@ -22,8 +20,7 @@ class CourtDetailScreen extends StatefulWidget {
 
 class _CourtDetailScreenState extends State<CourtDetailScreen> {
   final CourtRepository _repo = CourtRepository.instance;
-  final CustomerBookingRepository _bookingRepo =
-      CustomerBookingRepository.instance;
+  final CustomerCartRepository _cartRepo = CustomerCartRepository.instance;
 
   bool _initialized = false;
   List<Court> _stadiumCourts = [];
@@ -31,32 +28,14 @@ class _CourtDetailScreenState extends State<CourtDetailScreen> {
   int _dateStartOffset = 0;
 
   DateTime? _selectedDate;
-  String? _selectedType;
+  List<String> _timeSlots = const [];
+  Set<String> _bookedSlots = const <String>{};
+  bool _isLoadingBookedSlots = false;
   final Set<String> _selectedSlots = <String>{};
-
-  final List<String> _timeSlots = [
-    '06:00 AM',
-    '07:00 AM',
-    '08:00 AM',
-    '09:00 AM',
-    '10:00 AM',
-    '11:00 AM',
-    '12:00 PM',
-    '01:00 PM',
-    '02:00 PM',
-    '03:00 PM',
-    '04:00 PM',
-    '05:00 PM',
-    '06:00 PM',
-    '07:00 PM',
-    '08:00 PM',
-    '09:00 PM',
-  ];
 
   bool get _canBook =>
       _selectedDate != null &&
-      _selectedSlots.isNotEmpty &&
-      _selectedType != null;
+      _selectedSlots.isNotEmpty;
 
   int get _selectedHours => _selectedSlots.length;
 
@@ -76,21 +55,44 @@ class _CourtDetailScreenState extends State<CourtDetailScreen> {
           : routeArgs.stadiumCourts;
       _stadiumCourts = siblings;
       _activeCourtIndex = _indexOfCourtId(routeArgs.selectedCourt.id, siblings);
-      _selectedType = routeArgs.selectedCourt.courtTypes.isNotEmpty
-          ? routeArgs.selectedCourt.courtTypes.first
-          : null;
     } else if (routeArgs is Court) {
       final siblings = _repo.getCourtsByStadium(routeArgs.stadiumId);
       _stadiumCourts = siblings.isEmpty ? [routeArgs] : siblings;
       _activeCourtIndex = _indexOfCourtId(routeArgs.id, _stadiumCourts);
-      _selectedType = routeArgs.courtTypes.isNotEmpty
-          ? routeArgs.courtTypes.first
-          : null;
     }
 
     _selectedDate = _stripDate(DateTime.now());
+    _setTimeSlotsForCurrentCourt();
+    _refreshBookedSlots();
 
     _initialized = true;
+  }
+
+  void _setTimeSlotsForCurrentCourt() {
+    _timeSlots = _repo.generateHourlySlots(_currentCourt);
+  }
+
+  Future<void> _refreshBookedSlots() async {
+    final selectedDate = _selectedDate;
+    if (selectedDate == null) {
+      return;
+    }
+
+    setState(() => _isLoadingBookedSlots = true);
+    final booked = await _repo.getBookedSlotsForDate(
+      courtId: _currentCourt.id,
+      date: selectedDate,
+    );
+
+    if (!mounted) {
+      return;
+    }
+
+    setState(() {
+      _bookedSlots = booked.toSet();
+      _selectedSlots.removeWhere((slot) => _bookedSlots.contains(slot));
+      _isLoadingBookedSlots = false;
+    });
   }
 
   int _indexOfCourtId(String courtId, List<Court> courts) {
@@ -112,12 +114,11 @@ class _CourtDetailScreenState extends State<CourtDetailScreen> {
 
     setState(() {
       _activeCourtIndex = nextIndex;
-      _selectedType = _currentCourt.courtTypes.isNotEmpty
-          ? _currentCourt.courtTypes.first
-          : null;
       _selectedSlots.clear();
       _selectedDate = _stripDate(DateTime.now());
+      _setTimeSlotsForCurrentCourt();
     });
+    _refreshBookedSlots();
   }
 
   DateTime _stripDate(DateTime d) => DateTime(d.year, d.month, d.day);
@@ -140,32 +141,6 @@ class _CourtDetailScreenState extends State<CourtDetailScreen> {
 
   bool _isSameDate(DateTime a, DateTime b) =>
       a.year == b.year && a.month == b.month && a.day == b.day;
-
-  Set<String> _bookedSlotsForDate(DateTime date) {
-    final blocked = <String>{};
-    final selectedCourtId = _currentCourt.id;
-    final now = DateTime.now();
-    for (final booking in _bookingRepo.getAllBookings()) {
-      if (booking.court.id != selectedCourtId ||
-          booking.status != BookingStatus.booked ||
-          !_isSameDate(booking.date, date)) {
-        continue;
-      }
-      blocked.addAll(booking.slots);
-    }
-
-    if (_isSameDate(date, now)) {
-      for (final slot in _timeSlots) {
-        final slotDateTime = _slotDateTime(date, slot);
-        if (!slotDateTime.isAfter(now)) {
-          blocked.add(slot);
-        }
-      }
-    }
-
-    blocked.add(_timeSlots.first);
-    return blocked;
-  }
 
   DateTime _slotDateTime(DateTime date, String slot) {
     final parts = slot.split(' ');
@@ -193,7 +168,16 @@ class _CourtDetailScreenState extends State<CourtDetailScreen> {
     if (date == null) {
       return false;
     }
-    return _bookedSlotsForDate(date).contains(slot);
+    if (_bookedSlots.contains(slot)) {
+      return true;
+    }
+
+    if (_isSameDate(date, DateTime.now())) {
+      final slotDateTime = _slotDateTime(date, slot);
+      return !slotDateTime.isAfter(DateTime.now());
+    }
+
+    return false;
   }
 
   void _toggleSlot(String slot) {
@@ -258,8 +242,6 @@ class _CourtDetailScreenState extends State<CourtDetailScreen> {
                 _buildAmenities(court),
                 _divider(),
                 _buildDatePicker(),
-                _divider(),
-                _buildTypePicker(court),
                 _divider(),
                 _buildTimeSlotPicker(),
                 const SizedBox(height: 110),
@@ -483,11 +465,6 @@ class _CourtDetailScreenState extends State<CourtDetailScreen> {
             runSpacing: 8,
             children: [
               InfoRowChip(
-                icon: Icons.star_rounded,
-                label: '${court.rating}  (${court.reviewCount} reviews)',
-                color: AppColors.star,
-              ),
-              InfoRowChip(
                 icon: Icons.access_time_rounded,
                 label: '${court.openTime} – ${court.closeTime}',
                 color: AppColors.primary,
@@ -634,10 +611,12 @@ class _CourtDetailScreenState extends State<CourtDetailScreen> {
                     ? 'Today'
                     : weekdays[date.weekday - 1];
                 return GestureDetector(
-                  onTap: () => setState(() {
-                    _selectedDate = date;
-                    _selectedSlots.removeWhere((slot) => _isBooked(slot));
-                  }),
+                  onTap: () {
+                    setState(() {
+                      _selectedDate = date;
+                    });
+                    _refreshBookedSlots();
+                  },
                   child: AnimatedContainer(
                     duration: const Duration(milliseconds: 180),
                     width: 52,
@@ -708,6 +687,21 @@ class _CourtDetailScreenState extends State<CourtDetailScreen> {
   // ── Time Slot Picker ──────────────────────────────────────────────────────
 
   Widget _buildTimeSlotPicker() {
+    final morningSlots = _timeSlots.where((slot) {
+      final hour = _slotHour(slot);
+      return hour >= 6 && hour < 12;
+    }).toList(growable: false);
+
+    final afternoonSlots = _timeSlots.where((slot) {
+      final hour = _slotHour(slot);
+      return hour >= 12 && hour < 17;
+    }).toList(growable: false);
+
+    final eveningSlots = _timeSlots.where((slot) {
+      final hour = _slotHour(slot);
+      return hour >= 17;
+    }).toList(growable: false);
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
       child: Column(
@@ -742,26 +736,48 @@ class _CourtDetailScreenState extends State<CourtDetailScreen> {
             ],
           ),
           const SizedBox(height: 16),
-          _buildSlotSection(
-            title: 'MORNING',
-            icon: Icons.wb_sunny_outlined,
-            slots: _timeSlots.sublist(0, 6),
-          ),
+          if (_isLoadingBookedSlots)
+            const LinearProgressIndicator(minHeight: 2),
+          if (morningSlots.isNotEmpty)
+            _buildSlotSection(
+              title: 'MORNING',
+              icon: Icons.wb_sunny_outlined,
+              slots: morningSlots,
+            ),
           const SizedBox(height: 14),
-          _buildSlotSection(
-            title: 'AFTERNOON',
-            icon: Icons.wb_twilight_outlined,
-            slots: _timeSlots.sublist(6, 12),
-          ),
+          if (afternoonSlots.isNotEmpty)
+            _buildSlotSection(
+              title: 'AFTERNOON',
+              icon: Icons.wb_twilight_outlined,
+              slots: afternoonSlots,
+            ),
           const SizedBox(height: 14),
-          _buildSlotSection(
-            title: 'EVENING',
-            icon: Icons.nightlight_round,
-            slots: _timeSlots.sublist(12, _timeSlots.length),
-          ),
+          if (eveningSlots.isNotEmpty)
+            _buildSlotSection(
+              title: 'EVENING',
+              icon: Icons.nightlight_round,
+              slots: eveningSlots,
+            ),
         ],
       ),
     );
+  }
+
+  int _slotHour(String slot) {
+    final parts = slot.split(' ');
+    if (parts.length != 2) {
+      return 0;
+    }
+    final hm = parts[0].split(':');
+    if (hm.length != 2) {
+      return 0;
+    }
+    final hourRaw = int.tryParse(hm[0]) ?? 0;
+    var hour = hourRaw % 12;
+    if (parts[1].toUpperCase() == 'PM') {
+      hour += 12;
+    }
+    return hour;
   }
 
   Widget _buildSlotSection({
@@ -852,72 +868,6 @@ class _CourtDetailScreenState extends State<CourtDetailScreen> {
     );
   }
 
-  // ── Court Type ────────────────────────────────────────────────────────────
-
-  Widget _buildTypePicker(Court court) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const DetailSectionTitle(title: 'Sport Type'),
-          const SizedBox(height: 12),
-          Wrap(
-            spacing: 10,
-            runSpacing: 10,
-            children: court.courtTypes.map((type) {
-              final sel = _selectedType == type;
-              return GestureDetector(
-                onTap: () => setState(() => _selectedType = type),
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 180),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 9,
-                  ),
-                  decoration: BoxDecoration(
-                    color: sel
-                        ? const Color(0xFFE8FFF5)
-                        : const Color(0xFFF6F7FA),
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(
-                      color: sel ? AppColors.primary : AppColors.divider,
-                      width: 1.2,
-                    ),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        sportIconForName(type),
-                        size: 16,
-                        color: sel
-                            ? AppColors.primaryDark
-                            : AppColors.textSecondary,
-                      ),
-                      const SizedBox(width: 7),
-                      Text(
-                        type,
-                        style: TextStyle(
-                          fontFamily: 'Poppins',
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
-                          color: sel
-                              ? AppColors.primaryDark
-                              : AppColors.textPrimary,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              );
-            }).toList(),
-          ),
-        ],
-      ),
-    );
-  }
-
   // ── Bottom Bar ────────────────────────────────────────────────────────────
 
   Widget _buildBottomBar(BuildContext context, Court court) {
@@ -941,7 +891,7 @@ class _CourtDetailScreenState extends State<CourtDetailScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Total Price (${_selectedHours} hr${_selectedHours == 1 ? '' : 's'})',
+                'Total Price ($_selectedHours hr${_selectedHours == 1 ? '' : 's'})',
                 style: const TextStyle(
                   fontFamily: 'Poppins',
                   fontSize: 9,
@@ -965,27 +915,45 @@ class _CourtDetailScreenState extends State<CourtDetailScreen> {
           Expanded(
             child: FilledButton.icon(
               onPressed: _canBook
-                  ? () => context.push(
-                      AppConstants.routeBookingConfirm,
-                      extra: BookingArgs(
+                  ? () {
+                      final selectedSlots = _orderedSelectedSlots();
+                      final cartItem = BookingCartItem(
+                        id: 'CART-${DateTime.now().microsecondsSinceEpoch}',
                         court: court,
                         date: _selectedDate!,
-                        slots: _orderedSelectedSlots(),
-                        courtType: _selectedType!,
-                      ),
-                    )
+                        slots: selectedSlots,
+                        createdAt: DateTime.now(),
+                      );
+                      _cartRepo.addItem(cartItem);
+
+                      if (!mounted) {
+                        return;
+                      }
+
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: const Text('Slots added to booking cart.'),
+                          action: SnackBarAction(
+                            label: 'View Cart',
+                            onPressed: () =>
+                                context.go(AppConstants.routeCart),
+                          ),
+                        ),
+                      );
+                    }
                   : null,
               style: FilledButton.styleFrom(
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8),
                 ),
-                backgroundColor: AppColors.primary,
+                backgroundColor: AppColors.textPrimary,
+                foregroundColor: Colors.white,
                 disabledBackgroundColor: AppColors.divider,
               ),
-              icon: const Icon(Icons.arrow_forward_rounded, size: 18),
+              icon: const Icon(Icons.add_shopping_cart_rounded, size: 18),
               label: Text(
-                _canBook ? 'Proceed to Book' : 'Select Date, Sport & Slots',
+                _canBook ? 'Add to Cart' : 'Select Date & Slots',
                 style: const TextStyle(
                   fontFamily: 'Poppins',
                   fontWeight: FontWeight.w600,

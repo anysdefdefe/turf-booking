@@ -1,25 +1,34 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../app/theme/app_colors.dart';
 import '../../../shared/widgets/empty_state.dart';
 import '../data/models/customer_booking.dart';
 import '../data/repositories/customer_booking_repository.dart';
+import '../providers/customer_bookings_controller.dart';
 import '../widgets/court_compact_card.dart';
 import '../widgets/customer_floating_nav_bar.dart';
 
-class MyBookingsScreen extends StatefulWidget {
+class MyBookingsScreen extends ConsumerStatefulWidget {
   const MyBookingsScreen({super.key});
 
   @override
-  State<MyBookingsScreen> createState() => _MyBookingsScreenState();
+  ConsumerState<MyBookingsScreen> createState() => _MyBookingsScreenState();
 }
 
-class _MyBookingsScreenState extends State<MyBookingsScreen> {
+class _MyBookingsScreenState extends ConsumerState<MyBookingsScreen> {
   final CustomerBookingRepository _repo = CustomerBookingRepository.instance;
   int _selectedFilterIndex = 0;
 
-  List<CustomerBooking> get _bookings {
-    final all = _repo.getAllBookings();
+  @override
+  void initState() {
+    super.initState();
+    Future<void>.microtask(
+      () => ref.read(customerBookingsControllerProvider.future),
+    );
+  }
+
+  List<CustomerBooking> _bookingsForFilter(List<CustomerBooking> all) {
     if (_selectedFilterIndex == 1) {
       return all
           .where((b) => b.status == BookingStatus.booked && !b.isPast)
@@ -61,9 +70,16 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
       return;
     }
 
-    setState(() {
-      _repo.cancelBooking(booking.id);
-    });
+    await ref
+        .read(customerBookingsControllerProvider.notifier)
+        .cancelBooking(booking);
+
+    if (!mounted) {
+      return;
+    }
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Booking cancelled.')),
+    );
   }
 
   void _openReceiptPlaceholder(CustomerBooking booking) {
@@ -85,22 +101,28 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
   }
 
   void _onNavTap(int index) {
-    if (index == 1) return;
+    if (index == 2) return;
     if (index == 0) {
       context.go('/customer/home');
       return;
     }
-    if (index == 2) {
+    if (index == 1) {
+      context.go('/customer/cart');
+      return;
+    }
+    if (index == 3) {
       context.go('/customer/profile');
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final bookingState = ref.watch(customerBookingsControllerProvider);
+
     return Scaffold(
       backgroundColor: AppColors.background,
       bottomNavigationBar: CustomerFloatingNavBar(
-        selectedIndex: 1,
+        selectedIndex: 2,
         onTap: _onNavTap,
       ),
       appBar: AppBar(
@@ -118,28 +140,39 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
       ),
       body: Column(
         children: [
+          if (bookingState.isLoading)
+            const LinearProgressIndicator(minHeight: 2),
           _buildFilterRow(),
-          Expanded(
-            child: _bookings.isEmpty
-                ? const EmptyState(
-                    title: 'No bookings yet',
-                    subtitle: 'Your bookings will appear here',
-                    icon: Icons.event_note_rounded,
-                  )
-                : ListView.builder(
-                    padding: const EdgeInsets.only(top: 8, bottom: 24),
-                    itemCount: _bookings.length,
-                    itemBuilder: (context, index) {
-                      final booking = _bookings[index];
-                      return CourtCompactCard(
-                        booking: booking,
-                        onTap: () => _openReceiptPlaceholder(booking),
-                        onCancel: booking.canCancel
-                            ? () => _onCancelBooking(booking)
-                            : null,
-                      );
-                    },
-                  ),
+          ValueListenableBuilder<List<CustomerBooking>>(
+            valueListenable: _repo.bookingsNotifier,
+            builder: (context, allBookings, _) {
+              final ordered = [...allBookings]
+                ..sort((a, b) => b.startDateTime.compareTo(a.startDateTime));
+              final bookings = _bookingsForFilter(ordered);
+
+              return Expanded(
+                child: bookings.isEmpty
+                    ? const EmptyState(
+                        title: 'No bookings yet',
+                        subtitle: 'Your bookings will appear here',
+                        icon: Icons.event_note_rounded,
+                      )
+                    : ListView.builder(
+                        padding: const EdgeInsets.only(top: 8, bottom: 24),
+                        itemCount: bookings.length,
+                        itemBuilder: (context, index) {
+                          final booking = bookings[index];
+                          return CourtCompactCard(
+                            booking: booking,
+                            onTap: () => _openReceiptPlaceholder(booking),
+                            onCancel: booking.canCancel
+                                ? () => _onCancelBooking(booking)
+                                : null,
+                          );
+                        },
+                      ),
+              );
+            },
           ),
         ],
       ),
@@ -150,40 +183,35 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
     const labels = ['All', 'Upcoming', 'Past', 'Cancelled'];
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 6, 20, 8),
-      child: Row(
+      child: Wrap(
+        spacing: 8,
+        runSpacing: 8,
         children: List.generate(labels.length, (index) {
           final selected = _selectedFilterIndex == index;
-          return Expanded(
-            child: Padding(
-              padding: EdgeInsets.only(
-                right: index == labels.length - 1 ? 0 : 8,
+          return InkWell(
+            onTap: () => setState(() => _selectedFilterIndex = index),
+            borderRadius: BorderRadius.circular(999),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 180),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
+              decoration: BoxDecoration(
+                color: AppColors.surface,
+                borderRadius: BorderRadius.circular(999),
+                border: Border.all(
+                  color: selected ? AppColors.primary : AppColors.divider,
+                  width: selected ? 1.4 : 1,
+                ),
               ),
-              child: InkWell(
-                onTap: () => setState(() => _selectedFilterIndex = index),
-                borderRadius: BorderRadius.circular(12),
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 180),
-                  padding: const EdgeInsets.symmetric(vertical: 10),
-                  decoration: BoxDecoration(
-                    color: AppColors.surface,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: selected ? AppColors.primary : AppColors.divider,
-                      width: selected ? 1.4 : 1,
-                    ),
-                  ),
-                  child: Text(
-                    labels[index],
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontFamily: 'Poppins',
-                      fontSize: 12.5,
-                      fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
-                      color: selected
-                          ? AppColors.textPrimary
-                          : AppColors.textSecondary,
-                    ),
-                  ),
+              child: Text(
+                labels[index],
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontFamily: 'Poppins',
+                  fontSize: 12.5,
+                  fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
+                  color: selected
+                      ? AppColors.textPrimary
+                      : AppColors.textSecondary,
                 ),
               ),
             ),

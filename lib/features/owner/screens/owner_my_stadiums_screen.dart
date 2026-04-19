@@ -12,6 +12,7 @@ class StadiumModel {
   final bool isActive;
   final int courtsCount;
   final Color placeholderColor;
+  final List<String> imageUrls; // NEW: list of photo URLs
 
   const StadiumModel({
     required this.id,
@@ -21,6 +22,7 @@ class StadiumModel {
     required this.isActive,
     required this.courtsCount,
     required this.placeholderColor,
+    this.imageUrls = const [],
   });
 }
 
@@ -33,6 +35,10 @@ const List<StadiumModel> _mockStadiums = [
     isActive: true,
     courtsCount: 3,
     placeholderColor: Color(0xFF1D9E75),
+    imageUrls: [
+      'https://images.unsplash.com/photo-1529900748604-07564a03e7a6?w=800',
+      'https://images.unsplash.com/photo-1556056504-5c7696c4c28d?w=800',
+    ],
   ),
   StadiumModel(
     id: '2',
@@ -42,6 +48,9 @@ const List<StadiumModel> _mockStadiums = [
     isActive: true,
     courtsCount: 2,
     placeholderColor: Color(0xFF378ADD),
+    imageUrls: [
+      'https://images.unsplash.com/photo-1459865264687-595d652de67e?w=800',
+    ],
   ),
   StadiumModel(
     id: '3',
@@ -51,6 +60,7 @@ const List<StadiumModel> _mockStadiums = [
     isActive: false,
     courtsCount: 1,
     placeholderColor: Color(0xFF888780),
+    imageUrls: [],
   ),
 ];
 
@@ -62,35 +72,37 @@ class OwnerMyStadiumsScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: AppColors.background,
       bottomNavigationBar: const OwnerBottomNavBar(selectedIndex: 1),
+      // ── FAB replaces AppBar Add button ──────────────────────────
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () => context.go('/owner/add-stadium'),
+        backgroundColor: AppColors.primary,
+        icon: const Icon(Icons.add, color: Colors.white),
+        label: const Text(
+          'Add Stadium',
+          style: TextStyle(
+            fontFamily: 'Poppins',
+            fontWeight: FontWeight.w600,
+            color: Colors.white,
+          ),
+        ),
+      ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
       appBar: AppBar(
         title: const Text('My Stadiums'),
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 12),
-            child: TextButton.icon(
-              // In the appBar actions button:
-              onPressed: () {
-                context.go('/owner/add-stadium');
-              },
-              icon: const Icon(Icons.add, size: 18, color: AppColors.primary),
-              label: const Text(
-                'Add',
-                style: TextStyle(
-                  color: AppColors.primary,
-                  fontFamily: 'Poppins',
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
-          ),
-        ],
+        // No more "Add" action here
       ),
       body: _mockStadiums.isEmpty
           ? _buildEmpty()
           : ListView.separated(
-              padding: const EdgeInsets.all(AppConstants.paddingL),
+              // Extra bottom padding so FAB doesn't overlap last card
+              padding: const EdgeInsets.fromLTRB(
+                AppConstants.paddingL,
+                AppConstants.paddingL,
+                AppConstants.paddingL,
+                100,
+              ),
               itemCount: _mockStadiums.length,
-              separatorBuilder: (context, index) => const SizedBox(height: 12),
+              separatorBuilder: (_, __) => const SizedBox(height: 12),
               itemBuilder: (context, index) =>
                   _StadiumCard(stadium: _mockStadiums[index]),
             ),
@@ -115,7 +127,7 @@ class OwnerMyStadiumsScreen extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           const Text(
-            'Tap Add to create your first stadium',
+            'Tap + Add Stadium below to get started',
             style: TextStyle(
               fontFamily: 'Poppins',
               fontSize: 13,
@@ -128,12 +140,33 @@ class OwnerMyStadiumsScreen extends StatelessWidget {
   }
 }
 
-class _StadiumCard extends StatelessWidget {
+// ─────────────────────────────────────────────────────────────────────────────
+// STADIUM CARD
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _StadiumCard extends StatefulWidget {
   final StadiumModel stadium;
   const _StadiumCard({required this.stadium});
 
   @override
+  State<_StadiumCard> createState() => _StadiumCardState();
+}
+
+class _StadiumCardState extends State<_StadiumCard> {
+  final PageController _pageController = PageController();
+  int _currentPage = 0;
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final stadium = widget.stadium;
+    final hasImages = stadium.imageUrls.isNotEmpty;
+
     return Container(
       decoration: BoxDecoration(
         color: AppColors.cardBg,
@@ -144,20 +177,71 @@ class _StadiumCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // ── PLACEHOLDER IMAGE ──────────────────────────────────
-          Container(
-            height: 140,
-            width: double.infinity,
-            color: stadium.placeholderColor,
+          // ── IMAGE CAROUSEL (or placeholder) ───────────────────
+          SizedBox(
+            height: 160,
             child: Stack(
               children: [
-                Center(
-                  child: Icon(
-                    Icons.stadium_rounded,
-                    size: 56,
-                    color: Colors.white.withValues(alpha: 0.3),
+                // Photo carousel or solid placeholder
+                hasImages
+                    ? PageView.builder(
+                        controller: _pageController,
+                        itemCount: stadium.imageUrls.length,
+                        onPageChanged: (i) => setState(() => _currentPage = i),
+                        itemBuilder: (context, i) => Image.network(
+                          stadium.imageUrls[i],
+                          fit: BoxFit.cover,
+                          width: double.infinity,
+                          loadingBuilder: (context, child, progress) {
+                            if (progress == null) return child;
+                            return Container(
+                              color: stadium.placeholderColor,
+                              child: Center(
+                                child: CircularProgressIndicator(
+                                  value: progress.expectedTotalBytes != null
+                                      ? progress.cumulativeBytesLoaded /
+                                            progress.expectedTotalBytes!
+                                      : null,
+                                  color: Colors.white54,
+                                  strokeWidth: 2,
+                                ),
+                              ),
+                            );
+                          },
+                          errorBuilder: (_, __, ___) => _PlaceholderImage(
+                            color: stadium.placeholderColor,
+                          ),
+                        ),
+                      )
+                    : _PlaceholderImage(color: stadium.placeholderColor),
+
+                // Page dots (only if multiple images)
+                if (hasImages && stadium.imageUrls.length > 1)
+                  Positioned(
+                    bottom: 8,
+                    left: 0,
+                    right: 0,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: List.generate(
+                        stadium.imageUrls.length,
+                        (i) => AnimatedContainer(
+                          duration: const Duration(milliseconds: 200),
+                          margin: const EdgeInsets.symmetric(horizontal: 3),
+                          width: _currentPage == i ? 16 : 6,
+                          height: 6,
+                          decoration: BoxDecoration(
+                            color: _currentPage == i
+                                ? Colors.white
+                                : Colors.white54,
+                            borderRadius: BorderRadius.circular(3),
+                          ),
+                        ),
+                      ),
+                    ),
                   ),
-                ),
+
+                // Active / Inactive badge
                 Positioned(
                   top: 10,
                   right: 10,
@@ -167,20 +251,73 @@ class _StadiumCard extends StatelessWidget {
                       vertical: 4,
                     ),
                     decoration: BoxDecoration(
-                      color: Colors.black.withValues(alpha: 0.35),
+                      color: stadium.isActive
+                          ? Colors.green.withValues(alpha: 0.85)
+                          : Colors.black.withValues(alpha: 0.45),
                       borderRadius: BorderRadius.circular(20),
                     ),
-                    child: Text(
-                      stadium.isActive ? 'Active' : 'Inactive',
-                      style: const TextStyle(
-                        fontFamily: 'Poppins',
-                        fontSize: 11,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.white,
-                      ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          width: 6,
+                          height: 6,
+                          decoration: BoxDecoration(
+                            color: stadium.isActive
+                                ? Colors.greenAccent
+                                : Colors.white54,
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                        const SizedBox(width: 5),
+                        Text(
+                          stadium.isActive ? 'Active' : 'Inactive',
+                          style: const TextStyle(
+                            fontFamily: 'Poppins',
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ),
+
+                // Photo count badge (bottom-left)
+                if (hasImages)
+                  Positioned(
+                    bottom: 8,
+                    left: 10,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 3,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.black.withValues(alpha: 0.45),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(
+                            Icons.photo_library_outlined,
+                            size: 12,
+                            color: Colors.white70,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            '${stadium.imageUrls.length}',
+                            style: const TextStyle(
+                              fontFamily: 'Poppins',
+                              fontSize: 11,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
               ],
             ),
           ),
@@ -209,12 +346,15 @@ class _StadiumCard extends StatelessWidget {
                       color: AppColors.textSecondary,
                     ),
                     const SizedBox(width: 4),
-                    Text(
-                      '${stadium.address}, ${stadium.city}',
-                      style: const TextStyle(
-                        fontFamily: 'Poppins',
-                        fontSize: 13,
-                        color: AppColors.textSecondary,
+                    Expanded(
+                      child: Text(
+                        '${stadium.address}, ${stadium.city}',
+                        style: const TextStyle(
+                          fontFamily: 'Poppins',
+                          fontSize: 13,
+                          color: AppColors.textSecondary,
+                        ),
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
                   ],
@@ -239,21 +379,82 @@ class _StadiumCard extends StatelessWidget {
                       ),
                     ),
                     const Spacer(),
+                    // ── Manage button now navigates ──────────────
                     GestureDetector(
                       onTap: () {
-                        // TODO: navigate to stadium detail/edit
+                        context.push(
+                          '/owner/stadium/${stadium.id}/manage',
+                          extra: stadium,
+                        );
                       },
-                      child: const Text(
-                        'Manage →',
-                        style: TextStyle(
-                          fontFamily: 'Poppins',
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.primary,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 6,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppColors.primary.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(
+                            color: AppColors.primary.withValues(alpha: 0.3),
+                          ),
+                        ),
+                        child: const Text(
+                          'Manage →',
+                          style: TextStyle(
+                            fontFamily: 'Poppins',
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.primary,
+                          ),
                         ),
                       ),
                     ),
                   ],
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PLACEHOLDER IMAGE WIDGET
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _PlaceholderImage extends StatelessWidget {
+  final Color color;
+  const _PlaceholderImage({required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      color: color,
+      child: Stack(
+        children: [
+          Center(
+            child: Icon(
+              Icons.stadium_rounded,
+              size: 56,
+              color: Colors.white.withValues(alpha: 0.25),
+            ),
+          ),
+          Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const SizedBox(height: 48),
+                Text(
+                  'No photos added',
+                  style: TextStyle(
+                    fontFamily: 'Poppins',
+                    fontSize: 12,
+                    color: Colors.white.withValues(alpha: 0.6),
+                  ),
                 ),
               ],
             ),

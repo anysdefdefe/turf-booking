@@ -3,16 +3,18 @@ import 'package:flutter/material.dart';
 class VenueTile extends StatelessWidget {
   final Map<String, dynamic> venue;
   final VoidCallback onSuspend;
+  final VoidCallback onActivate;
 
   const VenueTile({
     super.key,
     required this.venue,
     required this.onSuspend,
+    required this.onActivate,
   });
 
   @override
   Widget build(BuildContext context) {
-    final bool isSuspended = venue['suspended'] == true;
+    final bool isActive = venue['is_active'] == true;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
@@ -59,26 +61,22 @@ class VenueTile extends StatelessWidget {
               ],
             ),
           ),
-          if (isSuspended)
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              decoration: BoxDecoration(
-                color: Colors.red.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: const Text(
-                'Suspended',
-                style: TextStyle(color: Colors.red, fontSize: 11),
-              ),
-            )
-          else
-            TextButton(
-              onPressed: onSuspend,
-              child: const Text(
-                'Suspend',
-                style: TextStyle(color: Colors.red, fontSize: 12),
-              ),
-            ),
+          isActive
+              ? TextButton(
+                  onPressed: onSuspend,
+                  child: const Text(
+                    'Suspend',
+                    style: TextStyle(color: Colors.red, fontSize: 12),
+                  ),
+                )
+              : TextButton(
+                  onPressed: onActivate,
+                  child: const Text(
+                    'Activate',
+                    style: TextStyle(
+                        color: Color(0xFF4CAF50), fontSize: 12),
+                  ),
+                ),
         ],
       ),
     );

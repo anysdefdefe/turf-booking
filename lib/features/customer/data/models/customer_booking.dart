@@ -1,6 +1,6 @@
 import 'court_model.dart';
 
-enum BookingStatus { booked, cancelled }
+enum BookingStatus { booked, unpaid, cancelled }
 
 class CustomerBooking {
   final String id;
@@ -33,7 +33,9 @@ class CustomerBooking {
 
   bool get isPast => endDateTime.isBefore(DateTime.now());
 
-  bool get canCancel => status == BookingStatus.booked && !isPast;
+  bool get canCancel =>
+      (status == BookingStatus.booked || status == BookingStatus.unpaid) &&
+      !isPast;
 
   double get totalAmount => court.pricePerHour * durationHours;
 

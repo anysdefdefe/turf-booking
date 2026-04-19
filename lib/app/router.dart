@@ -13,13 +13,22 @@ import 'package:turf_booking/features/customer/screens/court_detail_screen.dart'
 import 'package:turf_booking/features/customer/screens/home_screen.dart';
 import 'package:turf_booking/features/customer/screens/my_bookings_screen.dart';
 import 'package:turf_booking/features/customer/screens/profile_screen.dart';
+import 'package:turf_booking/features/customer/screens/cart_screen.dart';
+import 'package:turf_booking/features/customer/screens/booking_confirmation_screen.dart';
+import 'package:turf_booking/features/customer/data/models/booking_args.dart';
 import 'package:turf_booking/features/owner/screens/owner_dashboard_screen.dart';
 import 'package:turf_booking/features/owner/screens/pending_approval_screen.dart';
 import 'package:turf_booking/features/owner/screens/owner_application_screen.dart';
 import 'package:turf_booking/features/owner/screens/owner_bookings_screen.dart';
 import 'package:turf_booking/features/owner/screens/owner_my_stadiums_screen.dart';
 import 'package:turf_booking/features/owner/screens/owner_add_stadium_screen.dart';
+
 import 'package:turf_booking/features/admin/screens/admin_main_screen.dart';
+
+import 'package:turf_booking/features/owner/screens/owner_stadium_manage_screen.dart';
+import 'package:turf_booking/features/owner/screens/owner_stadium_edit_screen.dart';
+import 'package:turf_booking/features/owner/screens/owner_court_edit_screen.dart';
+
 
 part 'router.g.dart';
 
@@ -59,12 +68,14 @@ GoRouter router(Ref ref) {
       if (isGoingToOwnerArea) {
         // If they are not an owner yet, they can ONLY access the application or pending screen
         if (!user.isOwner) {
-          if (state.matchedLocation != '/owner/application' && state.matchedLocation != '/owner/pending-approval') {
+          if (state.matchedLocation != '/owner/application' &&
+              state.matchedLocation != '/owner/pending-approval') {
             return '/owner/application';
           }
-        } 
+        }
         // If they ARE an owner but not approved, lock them to pending
-        else if (!user.isApproved && state.matchedLocation != '/owner/pending-approval') {
+        else if (!user.isApproved &&
+            state.matchedLocation != '/owner/pending-approval') {
           return '/owner/pending-approval';
         }
       }
@@ -107,8 +118,19 @@ GoRouter router(Ref ref) {
         ),
       ),
       GoRoute(
+        path: '/booking-confirm',
+        builder: (context, state) {
+          final args = state.extra as BookingArgs;
+          return BookingConfirmationScreen(args: args);
+        },
+      ),
+      GoRoute(
         path: '/customer/my-bookings',
         builder: (context, state) => const MyBookingsScreen(),
+      ),
+      GoRoute(
+        path: '/customer/cart',
+        builder: (context, state) => const CartScreen(),
       ),
       GoRoute(
         path: '/customer/profile',
@@ -139,8 +161,30 @@ GoRouter router(Ref ref) {
         builder: (context, state) => const OwnerAddStadiumScreen(),
       ),
       GoRoute(
+
         path: '/admin',
         builder: (context, state) => const AdminMainScreen(),
+
+        path: '/owner/stadium/:stadiumId/manage',
+        builder: (context, state) {
+          final stadium = state.extra as StadiumModel;
+          return OwnerStadiumManageScreen(stadium: stadium);
+        },
+      ),
+      GoRoute(
+        path: '/owner/stadium/:stadiumId/edit',
+        builder: (context, state) {
+          final stadium = state.extra as StadiumModel;
+          return OwnerStadiumEditScreen(stadium: stadium);
+        },
+      ),
+      GoRoute(
+        path: '/owner/stadium/:stadiumId/court/:courtId/edit',
+        builder: (context, state) {
+          final court = state.extra as CourtModel;
+          return OwnerCourtEditScreen(court: court);
+        },
+
       ),
     ],
   );

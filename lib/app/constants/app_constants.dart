@@ -5,7 +5,8 @@ class AppConstants {
   static const String routeCourtDetail = '/court-detail';
   static const String routeBookingConfirm = '/booking-confirm';
   static const String routeBookingSuccess = '/booking-success';
-  static const String routeMyBookings = '/my-bookings';
+  static const String routeCart = '/customer/cart';
+  static const String routeMyBookings = '/customer/my-bookings';
   static const String routeSplash = '/splash';
   static const String routeOnboarding = '/onboarding';
   static const String routeNotifications = '/notifications';
