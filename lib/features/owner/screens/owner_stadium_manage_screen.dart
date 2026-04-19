@@ -234,7 +234,11 @@ class _HeroImage extends StatelessWidget {
           left: 14,
           child: GestureDetector(
             onTap: () {
-              if (context.canPop()) context.pop();
+              if (context.canPop()) {
+                context.pop();
+              } else {
+                context.go('/owner/dashboard');
+              }
             },
             child: _CircleButton(
               icon: Icons.chevron_left_rounded,
