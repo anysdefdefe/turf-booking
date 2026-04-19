@@ -31,6 +31,16 @@ IconData _sportIcon(String sportType) {
   }
 }
 
+const _kSportOptions = [
+  'Football',
+  'Badminton',
+  'Cricket',
+  'Basketball',
+  'Volleyball',
+  'Tennis',
+  'Padel',
+];
+
 // ── Root screen ───────────────────────────────────────────────────────────────
 
 class OwnerStadiumManageScreen extends ConsumerWidget {
@@ -43,9 +53,7 @@ class OwnerStadiumManageScreen extends ConsumerWidget {
     return stadiumAsync.when(
       loading: () => const Scaffold(
         backgroundColor: Colors.white,
-        body: Center(
-          child: CircularProgressIndicator(color: AppColors.primary),
-        ),
+        body: Center(child: CircularProgressIndicator(color: AppColors.primary)),
       ),
       error: (error, _) => Scaffold(
         backgroundColor: AppColors.background,
@@ -96,33 +104,38 @@ class OwnerStadiumManageScreen extends ConsumerWidget {
           loading: () => const Scaffold(
             backgroundColor: Colors.white,
             body: Center(
-              child: CircularProgressIndicator(color: AppColors.primary),
-            ),
+                child: CircularProgressIndicator(color: AppColors.primary)),
           ),
           error: (err, _) => Scaffold(
             backgroundColor: AppColors.background,
             body: Center(child: Text('Failed to load courts: $err')),
           ),
           data: (courts) {
-            // Lowest price among courts for "onwards" display
             final minPrice = courts.isEmpty
                 ? null
                 : courts
                     .map((c) => c.pricePerHour)
                     .reduce((a, b) => a < b ? a : b);
 
+            final defaultOpen = courts.isNotEmpty
+                ? courts.first.openTime
+                : '06:00:00';
+            final defaultClose = courts.isNotEmpty
+                ? courts.first.closeTime
+                : '22:00:00';
+
             return AnnotatedRegion<SystemUiOverlayStyle>(
               value: SystemUiOverlayStyle.light,
               child: Scaffold(
                 backgroundColor: Colors.white,
-                bottomNavigationBar: const OwnerBottomNavBar(selectedIndex: 1),
+                bottomNavigationBar:
+                    const OwnerBottomNavBar(selectedIndex: 1),
                 body: Column(
                   children: [
-                    // ── scrollable content ────────────────────────────
                     Expanded(
                       child: CustomScrollView(
                         slivers: [
-                          // ── Hero image ──────────────────────────────
+                          // Hero image
                           SliverToBoxAdapter(
                             child: _HeroImage(
                               imageUrl: stadium.imageUrl,
@@ -130,8 +143,7 @@ class OwnerStadiumManageScreen extends ConsumerWidget {
                                   context.push('/owner/edit-stadium'),
                             ),
                           ),
-
-                          // ── Venue details ───────────────────────────
+                          // Venue details
                           SliverToBoxAdapter(
                             child: _VenueDetails(
                               name: stadium.name,
@@ -142,33 +154,28 @@ class OwnerStadiumManageScreen extends ConsumerWidget {
                               minPrice: minPrice,
                             ),
                           ),
-
-                          // ── Sport Types ─────────────────────────────
+                          // Sport Types
                           if (courts.isNotEmpty)
                             SliverToBoxAdapter(
                               child: _SportTypesSection(courts: courts),
                             ),
-
-                          // ── Courts (owner management) ────────────────
+                          // Courts management
                           SliverToBoxAdapter(
                             child: _CourtsSection(
                               courts: courts,
                               stadiumId: stadium.id,
                             ),
                           ),
-
                           const SliverToBoxAdapter(
-                            child: SizedBox(height: 24),
-                          ),
+                              child: SizedBox(height: 24)),
                         ],
                       ),
                     ),
-
-                    // ── CTA bar ───────────────────────────────────────
+                    // CTA bar
                     _CtaBar(
-                      courts: courts,
-                      onAddCourt: () =>
-                          context.push('/owner/edit-stadium'),
+                      stadiumId: stadium.id,
+                      defaultOpenTime: defaultOpen,
+                      defaultCloseTime: defaultClose,
                     ),
                   ],
                 ),
@@ -193,7 +200,6 @@ class _HeroImage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Stack(
       children: [
-        // Image
         SizedBox(
           height: 240,
           width: double.infinity,
@@ -205,8 +211,7 @@ class _HeroImage extends StatelessWidget {
                 )
               : _PlaceholderHero(),
         ),
-
-        // Dark gradient at bottom for readability
+        // Gradient
         Positioned(
           bottom: 0,
           left: 0,
@@ -222,7 +227,6 @@ class _HeroImage extends StatelessWidget {
             ),
           ),
         ),
-
         // Back button
         Positioned(
           top: MediaQuery.of(context).padding.top + 10,
@@ -231,50 +235,57 @@ class _HeroImage extends StatelessWidget {
             onTap: () {
               if (context.canPop()) context.pop();
             },
-            child: Container(
-              width: 38,
-              height: 38,
-              decoration: BoxDecoration(
-                color: Colors.white,
-                shape: BoxShape.circle,
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.12),
-                    blurRadius: 8,
-                  ),
-                ],
-              ),
-              child: const Icon(Icons.chevron_left_rounded,
-                  color: Colors.black87, size: 22),
+            child: _CircleButton(
+              icon: Icons.chevron_left_rounded,
+              iconColor: Colors.black87,
             ),
           ),
         ),
-
-        // Edit button (top right)
+        // Edit button
         Positioned(
           top: MediaQuery.of(context).padding.top + 10,
           right: 14,
           child: GestureDetector(
             onTap: onEdit,
-            child: Container(
-              width: 38,
-              height: 38,
-              decoration: BoxDecoration(
-                color: Colors.white,
-                shape: BoxShape.circle,
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.12),
-                    blurRadius: 8,
-                  ),
-                ],
-              ),
-              child: const Icon(Icons.edit_outlined,
-                  color: AppColors.primary, size: 18),
+            child: _CircleButton(
+              icon: Icons.edit_outlined,
+              iconColor: AppColors.primary,
+              iconSize: 18,
             ),
           ),
         ),
       ],
+    );
+  }
+}
+
+class _CircleButton extends StatelessWidget {
+  final IconData icon;
+  final Color iconColor;
+  final double iconSize;
+
+  const _CircleButton({
+    required this.icon,
+    required this.iconColor,
+    this.iconSize = 22,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 38,
+      height: 38,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        shape: BoxShape.circle,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.12),
+            blurRadius: 8,
+          ),
+        ],
+      ),
+      child: Icon(icon, color: iconColor, size: iconSize),
     );
   }
 }
@@ -318,7 +329,6 @@ class _VenueDetails extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Name
           Text(
             name,
             style: const TextStyle(
@@ -329,10 +339,7 @@ class _VenueDetails extends StatelessWidget {
               height: 1.2,
             ),
           ),
-
           const SizedBox(height: 6),
-
-          // Price
           if (minPrice != null)
             Text(
               '₹ ${minPrice!.toStringAsFixed(0)} onwards',
@@ -343,10 +350,7 @@ class _VenueDetails extends StatelessWidget {
                 color: AppColors.textPrimary,
               ),
             ),
-
           const SizedBox(height: 6),
-
-          // Location
           Row(
             children: [
               const Icon(Icons.location_on_outlined,
@@ -362,10 +366,7 @@ class _VenueDetails extends StatelessWidget {
               ),
             ],
           ),
-
           const SizedBox(height: 20),
-
-          // About Venue
           const Text(
             'About Venue',
             style: TextStyle(
@@ -387,8 +388,6 @@ class _VenueDetails extends StatelessWidget {
               height: 1.5,
             ),
           ),
-
-          // Amenities
           if (amenities.isNotEmpty) ...[
             const SizedBox(height: 20),
             const Text(
@@ -415,18 +414,15 @@ class _VenueDetails extends StatelessWidget {
   }
 }
 
-// ── SPORT TYPES SECTION ───────────────────────────────────────────────────────
+// ── SPORT TYPES ───────────────────────────────────────────────────────────────
 
 class _SportTypesSection extends StatelessWidget {
   final List<CourtModel> courts;
-
   const _SportTypesSection({required this.courts});
 
   @override
   Widget build(BuildContext context) {
-    // Unique sport types
     final sports = courts.map((c) => c.sportType).toSet().toList();
-
     return Padding(
       padding: const EdgeInsets.fromLTRB(
           AppConstants.paddingL, 20, AppConstants.paddingL, 0),
@@ -446,8 +442,9 @@ class _SportTypesSection extends StatelessWidget {
           Wrap(
             spacing: 8,
             runSpacing: 8,
-            children:
-                sports.map((s) => _SportChip(sport: s)).toList(growable: false),
+            children: sports
+                .map((s) => _SportChip(sport: s))
+                .toList(growable: false),
           ),
         ],
       ),
@@ -455,66 +452,30 @@ class _SportTypesSection extends StatelessWidget {
   }
 }
 
-// ── COURTS SECTION (owner management) ────────────────────────────────────────
+// ── COURTS SECTION ────────────────────────────────────────────────────────────
 
-class _CourtsSection extends StatelessWidget {
+class _CourtsSection extends ConsumerWidget {
   final List<CourtModel> courts;
   final String stadiumId;
 
-  const _CourtsSection({
-    required this.courts,
-    required this.stadiumId,
-  });
+  const _CourtsSection({required this.courts, required this.stadiumId});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(
           AppConstants.paddingL, 24, AppConstants.paddingL, 0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Text(
-                'Courts',
-                style: TextStyle(
-                  fontFamily: 'Poppins',
-                  fontSize: 16,
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.textPrimary,
-                ),
-              ),
-              // Add court button
-              GestureDetector(
-                onTap: () => context.push('/owner/add-stadium'),
-                child: Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: AppColors.badgeBg,
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: const Row(
-                    children: [
-                      Icon(Icons.add_rounded,
-                          size: 14, color: AppColors.primary),
-                      SizedBox(width: 4),
-                      Text(
-                        'Add Court',
-                        style: TextStyle(
-                          fontFamily: 'Poppins',
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.primary,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ],
+          const Text(
+            'Courts',
+            style: TextStyle(
+              fontFamily: 'Poppins',
+              fontSize: 16,
+              fontWeight: FontWeight.w700,
+              color: AppColors.textPrimary,
+            ),
           ),
           const SizedBox(height: 12),
           if (courts.isEmpty)
@@ -522,17 +483,20 @@ class _CourtsSection extends StatelessWidget {
               child: Padding(
                 padding: EdgeInsets.symmetric(vertical: 24),
                 child: Text(
-                  'No courts added yet',
+                  'No courts added yet. Tap "Add New Court" below.',
+                  textAlign: TextAlign.center,
                   style: TextStyle(
                     fontFamily: 'Poppins',
-                    fontSize: 14,
+                    fontSize: 13,
                     color: AppColors.textMuted,
                   ),
                 ),
               ),
             )
           else
-            ...courts.map((c) => _CourtTile(court: c)),
+            ...courts.map(
+              (c) => _CourtTile(court: c, stadiumId: stadiumId),
+            ),
         ],
       ),
     );
@@ -542,10 +506,15 @@ class _CourtsSection extends StatelessWidget {
 // ── CTA BAR ───────────────────────────────────────────────────────────────────
 
 class _CtaBar extends StatelessWidget {
-  final List<CourtModel> courts;
-  final VoidCallback onAddCourt;
+  final String stadiumId;
+  final String defaultOpenTime;
+  final String defaultCloseTime;
 
-  const _CtaBar({required this.courts, required this.onAddCourt});
+  const _CtaBar({
+    required this.stadiumId,
+    required this.defaultOpenTime,
+    required this.defaultCloseTime,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -561,13 +530,19 @@ class _CtaBar extends StatelessWidget {
         width: double.infinity,
         height: 54,
         child: FilledButton.icon(
-          onPressed: () {
-            // Owner: navigates to court management / add court
-            context.push('/owner/add-stadium');
-          },
-          icon: const Icon(Icons.sports_rounded, size: 18),
+          onPressed: () => showModalBottomSheet(
+            context: context,
+            isScrollControlled: true,
+            backgroundColor: Colors.transparent,
+            builder: (_) => _AddCourtSheet(
+              stadiumId: stadiumId,
+              defaultOpenTime: defaultOpenTime,
+              defaultCloseTime: defaultCloseTime,
+            ),
+          ),
+          icon: const Icon(Icons.add_rounded, size: 20),
           label: const Text(
-            'Manage: choose a sport type',
+            'Add New Court',
             style: TextStyle(
               fontFamily: 'Poppins',
               fontWeight: FontWeight.w700,
@@ -589,12 +564,104 @@ class _CtaBar extends StatelessWidget {
 
 // ── COURT TILE ────────────────────────────────────────────────────────────────
 
-class _CourtTile extends StatelessWidget {
+class _CourtTile extends ConsumerWidget {
   final CourtModel court;
-  const _CourtTile({required this.court});
+  final String stadiumId;
+
+  const _CourtTile({required this.court, required this.stadiumId});
+
+  Future<void> _confirmDelete(BuildContext context, WidgetRef ref) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        icon: const Icon(
+          Icons.warning_amber_rounded,
+          color: Colors.orange,
+          size: 44,
+        ),
+        title: const Text(
+          'Delete Court?',
+          style: TextStyle(
+            fontFamily: 'Poppins',
+            fontWeight: FontWeight.w700,
+            color: AppColors.error,
+          ),
+        ),
+        content: Text(
+          'You are about to permanently delete "${court.name}".\n\nThis action cannot be undone and will remove all associated data.',
+          textAlign: TextAlign.center,
+          style: const TextStyle(
+            fontFamily: 'Poppins',
+            fontSize: 13,
+            color: AppColors.textSecondary,
+            height: 1.5,
+          ),
+        ),
+        actionsAlignment: MainAxisAlignment.spaceEvenly,
+        actions: [
+          OutlinedButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            style: OutlinedButton.styleFrom(
+              side: const BorderSide(color: AppColors.divider),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10)),
+            ),
+            child: const Text(
+              'Cancel',
+              style: TextStyle(
+                fontFamily: 'Poppins',
+                fontWeight: FontWeight.w600,
+                color: AppColors.textSecondary,
+              ),
+            ),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            style: FilledButton.styleFrom(
+              backgroundColor: AppColors.error,
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10)),
+            ),
+            child: const Text(
+              'Delete',
+              style: TextStyle(
+                fontFamily: 'Poppins',
+                fontWeight: FontWeight.w700,
+                color: Colors.white,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true && context.mounted) {
+      final ok = await ref
+          .read(deleteCourtControllerProvider.notifier)
+          .deleteCourt(court.id, stadiumId);
+
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              ok ? '✓ "${court.name}" deleted' : 'Failed to delete court',
+              style: const TextStyle(fontFamily: 'Poppins'),
+            ),
+            backgroundColor: ok ? AppColors.primary : AppColors.error,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10)),
+          ),
+        );
+      }
+    }
+  }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
@@ -606,7 +673,7 @@ class _CourtTile extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          // Sport icon circle
+          // Sport icon
           Container(
             width: 40,
             height: 40,
@@ -619,7 +686,7 @@ class _CourtTile extends StatelessWidget {
           ),
           const SizedBox(width: 12),
 
-          // Court info
+          // Info
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -663,10 +730,309 @@ class _CourtTile extends StatelessWidget {
                   size: 15, color: AppColors.textSecondary),
             ),
           ),
+          const SizedBox(width: 6),
+
+          // Delete button
+          GestureDetector(
+            onTap: () => _confirmDelete(context, ref),
+            child: Container(
+              padding: const EdgeInsets.all(7),
+              decoration: BoxDecoration(
+                color: AppColors.error.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Icon(Icons.delete_outline_rounded,
+                  size: 15, color: AppColors.error),
+            ),
+          ),
         ],
       ),
     );
   }
+}
+
+// ── ADD COURT BOTTOM SHEET ────────────────────────────────────────────────────
+
+class _AddCourtSheet extends ConsumerStatefulWidget {
+  final String stadiumId;
+  final String defaultOpenTime;
+  final String defaultCloseTime;
+
+  const _AddCourtSheet({
+    required this.stadiumId,
+    required this.defaultOpenTime,
+    required this.defaultCloseTime,
+  });
+
+  @override
+  ConsumerState<_AddCourtSheet> createState() => _AddCourtSheetState();
+}
+
+class _AddCourtSheetState extends ConsumerState<_AddCourtSheet> {
+  final _nameController = TextEditingController();
+  final _priceController = TextEditingController();
+  String? _selectedSport;
+  bool _isSaving = false;
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _priceController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _submit() async {
+    final name = _nameController.text.trim();
+    final price = double.tryParse(_priceController.text.trim());
+
+    if (name.isEmpty) {
+      _snack('Court name is required');
+      return;
+    }
+    if (_selectedSport == null) {
+      _snack('Please select a sport type');
+      return;
+    }
+    if (price == null || price <= 0) {
+      _snack('Enter a valid price per hour');
+      return;
+    }
+
+    setState(() => _isSaving = true);
+
+    final ok = await ref
+        .read(addCourtControllerProvider.notifier)
+        .addCourt(
+          stadiumId: widget.stadiumId,
+          name: name,
+          sportType: _selectedSport!,
+          pricePerHour: price,
+          openTime: widget.defaultOpenTime,
+          closeTime: widget.defaultCloseTime,
+        );
+
+    if (mounted) {
+      setState(() => _isSaving = false);
+      if (ok) {
+        Navigator.of(context).pop();
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: const Text('✓ Court added',
+              style: TextStyle(fontFamily: 'Poppins')),
+          backgroundColor: AppColors.primary,
+          behavior: SnackBarBehavior.floating,
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        ));
+      } else {
+        _snack('Failed to add court. Please try again.');
+      }
+    }
+  }
+
+  void _snack(String msg) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text(msg, style: const TextStyle(fontFamily: 'Poppins')),
+      backgroundColor: AppColors.error,
+      behavior: SnackBarBehavior.floating,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+    ));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final bottomInset = MediaQuery.of(context).viewInsets.bottom;
+
+    return Container(
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      padding: EdgeInsets.fromLTRB(24, 20, 24, bottomInset + 24),
+      child: SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Handle
+            Center(
+              child: Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: AppColors.divider,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+            const SizedBox(height: 18),
+
+            // Title
+            const Text(
+              'Add New Court',
+              style: TextStyle(
+                fontFamily: 'Poppins',
+                fontSize: 18,
+                fontWeight: FontWeight.w800,
+                color: AppColors.textPrimary,
+              ),
+            ),
+            const SizedBox(height: 20),
+
+            // Court name
+            _label('Court Name'),
+            _field(_nameController, hint: 'e.g. Court A'),
+            const SizedBox(height: 16),
+
+            // Sport type
+            _label('Sport Type'),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: _kSportOptions.map((sport) {
+                final selected = _selectedSport == sport;
+                return GestureDetector(
+                  onTap: () => setState(() => _selectedSport = sport),
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 150),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 14, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: selected ? AppColors.primary : Colors.white,
+                      borderRadius: BorderRadius.circular(50),
+                      border: Border.all(
+                        color: selected
+                            ? AppColors.primary
+                            : AppColors.divider,
+                        width: 1.5,
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          _sportIcon(sport),
+                          size: 13,
+                          color: selected
+                              ? Colors.white
+                              : AppColors.textSecondary,
+                        ),
+                        const SizedBox(width: 5),
+                        Text(
+                          sport,
+                          style: TextStyle(
+                            fontFamily: 'Poppins',
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: selected
+                                ? Colors.white
+                                : AppColors.textPrimary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              }).toList(),
+            ),
+            const SizedBox(height: 16),
+
+            // Price
+            _label('Price per Hour (₹)'),
+            _field(
+              _priceController,
+              hint: 'e.g. 800',
+              keyboardType:
+                  const TextInputType.numberWithOptions(decimal: true),
+            ),
+            const SizedBox(height: 28),
+
+            // Submit
+            SizedBox(
+              width: double.infinity,
+              height: 52,
+              child: FilledButton(
+                onPressed: _isSaving ? null : _submit,
+                style: FilledButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12)),
+                ),
+                child: _isSaving
+                    ? const SizedBox(
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(
+                            strokeWidth: 2, color: Colors.white),
+                      )
+                    : const Text(
+                        'Add Court',
+                        style: TextStyle(
+                          fontFamily: 'Poppins',
+                          fontWeight: FontWeight.w700,
+                          fontSize: 15,
+                          color: Colors.white,
+                        ),
+                      ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _label(String text) => Padding(
+        padding: const EdgeInsets.only(bottom: 6),
+        child: Text(
+          text,
+          style: const TextStyle(
+            fontFamily: 'Poppins',
+            fontSize: 13,
+            fontWeight: FontWeight.w500,
+            color: AppColors.textSecondary,
+          ),
+        ),
+      );
+
+  Widget _field(
+    TextEditingController controller, {
+    String hint = '',
+    TextInputType keyboardType = TextInputType.text,
+  }) =>
+      TextField(
+        controller: controller,
+        keyboardType: keyboardType,
+        style: const TextStyle(
+          fontFamily: 'Poppins',
+          fontSize: 14,
+          color: AppColors.textPrimary,
+        ),
+        decoration: InputDecoration(
+          hintText: hint,
+          hintStyle: const TextStyle(
+            fontFamily: 'Poppins',
+            fontSize: 14,
+            color: AppColors.textMuted,
+          ),
+          filled: true,
+          fillColor: AppColors.background,
+          contentPadding:
+              const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(AppConstants.radiusM),
+            borderSide: const BorderSide(color: AppColors.divider),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(AppConstants.radiusM),
+            borderSide: const BorderSide(color: AppColors.divider),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(AppConstants.radiusM),
+            borderSide:
+                const BorderSide(color: AppColors.primary, width: 1.5),
+          ),
+        ),
+      );
 }
 
 // ── AMENITY CHIP ──────────────────────────────────────────────────────────────
@@ -710,7 +1076,8 @@ class _SportChip extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(50),
-        border: Border.all(color: AppColors.primary.withValues(alpha: 0.5)),
+        border: Border.all(
+            color: AppColors.primary.withValues(alpha: 0.5)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -754,7 +1121,8 @@ class _StatusChip extends StatelessWidget {
           fontFamily: 'Poppins',
           fontSize: 10,
           fontWeight: FontWeight.w600,
-          color: isActive ? Colors.green.shade700 : Colors.red.shade400,
+          color:
+              isActive ? Colors.green.shade700 : Colors.red.shade400,
         ),
       ),
     );

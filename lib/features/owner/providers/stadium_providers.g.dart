@@ -176,11 +176,113 @@ final class AddStadiumControllerProvider
 }
 
 String _$addStadiumControllerHash() =>
-    r'1dede05914852bcd216ff34b02dc3e20c44526cb';
+    r'2cec4cb32c6db9e45e31ff13f777a90c5f259588';
 
 /// AsyncNotifier that manages the Add Stadium form submission lifecycle.
 
 abstract class _$AddStadiumController extends $AsyncNotifier<void> {
+  FutureOr<void> build();
+  @$mustCallSuper
+  @override
+  void runBuild() {
+    final ref = this.ref as $Ref<AsyncValue<void>, void>;
+    final element =
+        ref.element
+            as $ClassProviderElement<
+              AnyNotifier<AsyncValue<void>, void>,
+              AsyncValue<void>,
+              Object?,
+              Object?
+            >;
+    element.handleCreate(ref, build);
+  }
+}
+
+/// AsyncNotifier that handles adding a single court to an existing stadium.
+
+@ProviderFor(AddCourtController)
+final addCourtControllerProvider = AddCourtControllerProvider._();
+
+/// AsyncNotifier that handles adding a single court to an existing stadium.
+final class AddCourtControllerProvider
+    extends $AsyncNotifierProvider<AddCourtController, void> {
+  /// AsyncNotifier that handles adding a single court to an existing stadium.
+  AddCourtControllerProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'addCourtControllerProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$addCourtControllerHash();
+
+  @$internal
+  @override
+  AddCourtController create() => AddCourtController();
+}
+
+String _$addCourtControllerHash() =>
+    r'76188f9fb5713400fe696274684c0ed7767fb90d';
+
+/// AsyncNotifier that handles adding a single court to an existing stadium.
+
+abstract class _$AddCourtController extends $AsyncNotifier<void> {
+  FutureOr<void> build();
+  @$mustCallSuper
+  @override
+  void runBuild() {
+    final ref = this.ref as $Ref<AsyncValue<void>, void>;
+    final element =
+        ref.element
+            as $ClassProviderElement<
+              AnyNotifier<AsyncValue<void>, void>,
+              AsyncValue<void>,
+              Object?,
+              Object?
+            >;
+    element.handleCreate(ref, build);
+  }
+}
+
+/// AsyncNotifier that handles deleting a court by ID.
+
+@ProviderFor(DeleteCourtController)
+final deleteCourtControllerProvider = DeleteCourtControllerProvider._();
+
+/// AsyncNotifier that handles deleting a court by ID.
+final class DeleteCourtControllerProvider
+    extends $AsyncNotifierProvider<DeleteCourtController, void> {
+  /// AsyncNotifier that handles deleting a court by ID.
+  DeleteCourtControllerProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'deleteCourtControllerProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$deleteCourtControllerHash();
+
+  @$internal
+  @override
+  DeleteCourtController create() => DeleteCourtController();
+}
+
+String _$deleteCourtControllerHash() =>
+    r'0ccec42a0947f4c79cb72fb51ba9d342c91daa99';
+
+/// AsyncNotifier that handles deleting a court by ID.
+
+abstract class _$DeleteCourtController extends $AsyncNotifier<void> {
   FutureOr<void> build();
   @$mustCallSuper
   @override
