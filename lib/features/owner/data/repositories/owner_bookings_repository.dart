@@ -11,14 +11,15 @@ class OwnerBookingsRepository {
 
   OwnerBookingsRepository(this._client);
 
-  /// Uses the `owners_select_court_bookings` RLS policy to fetch bookings
-  /// specifically scoped to courts owned by the currently authenticated user.
-  Future<List<BookingModel>> getMyBookings() async {
+  /// Explicitly requests bookings strictly mapped to the provided [stadiumId].
+  /// Uses an !inner join to natively filter the parent bookings table via the child relation.
+  Future<List<BookingModel>> getBookingsForStadium(String stadiumId) async {
     try {
       final response = await _client.from('bookings').select('''
         *,
-        courts (
+        courts!inner (
           name,
+          stadium_id,
           stadium:stadiums (
             name
           )
@@ -26,7 +27,10 @@ class OwnerBookingsRepository {
         customer:users (
           full_name
         )
-      ''').order('booking_date', ascending: false).order('start_time', ascending: false);
+      ''')
+      .eq('courts.stadium_id', stadiumId)
+      .order('booking_date', ascending: false)
+      .order('start_time', ascending: false);
 
       return (response as List<dynamic>)
           .map((json) => BookingModel.fromJson(json as Map<String, dynamic>))

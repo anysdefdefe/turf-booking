@@ -8,12 +8,12 @@ part of 'owner_bookings_providers.dart';
 
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
-/// Fetches all bookings for the stadiums owned by the user.
+/// Fetches all bookings explicitly scoped to the active stadium.
 
 @ProviderFor(ownerBookings)
 final ownerBookingsProvider = OwnerBookingsProvider._();
 
-/// Fetches all bookings for the stadiums owned by the user.
+/// Fetches all bookings explicitly scoped to the active stadium.
 
 final class OwnerBookingsProvider
     extends
@@ -25,7 +25,7 @@ final class OwnerBookingsProvider
     with
         $FutureModifier<List<BookingModel>>,
         $FutureProvider<List<BookingModel>> {
-  /// Fetches all bookings for the stadiums owned by the user.
+  /// Fetches all bookings explicitly scoped to the active stadium.
   OwnerBookingsProvider._()
     : super(
         from: null,
@@ -52,4 +52,4 @@ final class OwnerBookingsProvider
   }
 }
 
-String _$ownerBookingsHash() => r'bbebd03043f7c8b8b829b4d09a461e3163f0d39b';
+String _$ownerBookingsHash() => r'b4dc133da73c97d17a1287af9d2ae1c55881e76a';

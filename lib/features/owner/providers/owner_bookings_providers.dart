@@ -3,13 +3,17 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import 'package:turf_booking/features/owner/data/models/booking_model.dart';
 import 'package:turf_booking/features/owner/data/repositories/owner_bookings_repository.dart';
+import 'package:turf_booking/features/owner/providers/stadium_providers.dart';
 
 part 'owner_bookings_providers.g.dart';
 
-/// Fetches all bookings for the stadiums owned by the user.
+/// Fetches all bookings explicitly scoped to the active stadium.
 @riverpod
-Future<List<BookingModel>> ownerBookings(Ref ref) {
-  return ref.watch(ownerBookingsRepositoryProvider).getMyBookings();
+Future<List<BookingModel>> ownerBookings(Ref ref) async {
+  final stadium = await ref.watch(currentStadiumProvider.future);
+  if (stadium == null) return [];
+  
+  return ref.watch(ownerBookingsRepositoryProvider).getBookingsForStadium(stadium.id);
 }
 
 /// Extension to compute derived UI stats off the raw booking models cleanly.
