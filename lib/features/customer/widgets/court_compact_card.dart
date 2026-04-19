@@ -89,7 +89,7 @@ class CourtCompactCard extends StatelessWidget {
             ),
             const SizedBox(height: 4),
             Text(
-              '${booking.durationHours} slot${booking.durationHours > 1 ? 's' : ''} • ${_slotRangeLabel()}',
+              '${booking.durationHours} slot${booking.durationHours > 1 ? 's' : ''}',
               style: const TextStyle(
                 fontFamily: 'Poppins',
                 fontSize: 12.5,
@@ -187,17 +187,6 @@ class CourtCompactCard extends StatelessWidget {
       'Dec',
     ];
     return '${d.day} ${months[d.month - 1]}';
-  }
-
-  String _slotRangeLabel() {
-    final slots = booking.displaySlots;
-    if (slots.isEmpty) {
-      return 'Time unavailable';
-    }
-    if (slots.length == 1) {
-      return slots.first;
-    }
-    return '${slots.first} - ${slots.last}';
   }
 }
 
