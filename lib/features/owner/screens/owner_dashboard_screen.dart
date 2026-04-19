@@ -227,7 +227,7 @@ class OwnerDashboardScreen extends ConsumerWidget {
                 _ActionButton(
                   label: 'My Stadium',
                   icon: Icons.stadium_rounded,
-                  onTap: () => context.go('/owner/my-stadiums'),
+                  onTap: () => context.go('/owner/manage'),
                 ),
                 const SizedBox(height: 12),
                 _ActionButton(
