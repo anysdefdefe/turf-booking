@@ -521,10 +521,15 @@ class _StadiumCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Deterministic check: bypass network request if string is empty
+    final bool hasImage = stadium.imageUrl.isNotEmpty;
+
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(18),
       child: Container(
+        // THE FIX: Forces the entire stadium card to stretch horizontally
+        width: double.infinity,
         margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
         decoration: BoxDecoration(
           color: AppColors.surface,
@@ -538,21 +543,15 @@ class _StadiumCard extends StatelessWidget {
               borderRadius: const BorderRadius.vertical(
                 top: Radius.circular(18),
               ),
-              child: Image.network(
-                stadium.imageUrl,
-                height: 150,
-                width: double.infinity,
-                fit: BoxFit.cover,
-                errorBuilder: (_, _, _) => Container(
-                  height: 150,
-                  color: AppColors.divider,
-                  child: const Icon(
-                    Icons.stadium_rounded,
-                    size: 40,
-                    color: AppColors.textMuted,
-                  ),
-                ),
-              ),
+              child: hasImage
+                  ? Image.network(
+                      stadium.imageUrl,
+                      height: 150,
+                      width: double.infinity,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, _, _) => _buildPlaceholder(),
+                    )
+                  : _buildPlaceholder(),
             ),
             Padding(
               padding: const EdgeInsets.all(14),
@@ -595,6 +594,22 @@ class _StadiumCard extends StatelessWidget {
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  // Extracted to enforce layout constraints
+  Widget _buildPlaceholder() {
+    return Container(
+      height: 150,
+      width: double.infinity, // THE FIX: Forces the placeholder to expand
+      color: AppColors.divider,
+      child: const Center(
+        child: Icon(
+          Icons.stadium_rounded,
+          size: 40,
+          color: AppColors.textMuted,
         ),
       ),
     );

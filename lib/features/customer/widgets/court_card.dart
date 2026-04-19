@@ -23,6 +23,8 @@ class CourtCard extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
+        // THE FIX: Forces the entire card to stretch horizontally
+        width: double.infinity, 
         margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
         decoration: BoxDecoration(
           color: AppColors.cardBg,
@@ -52,40 +54,28 @@ class _CourtImage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Deterministic check: bypass network if empty
+    final bool hasImage = court.imageUrl.isNotEmpty;
+
     return Stack(
       children: [
         ClipRRect(
           borderRadius: const BorderRadius.vertical(
             top: Radius.circular(AppConstants.radiusL),
           ),
-          child: Image.network(
-            court.imageUrl,
-            height: AppConstants.cardImageHeight,
-            width: double.infinity,
-            fit: BoxFit.cover,
-            loadingBuilder: (ctx, child, progress) {
-              if (progress == null) return child;
-              return Container(
-                height: AppConstants.cardImageHeight,
-                color: AppColors.divider,
-                child: const Center(
-                  child: CircularProgressIndicator(
-                    color: AppColors.primary,
-                    strokeWidth: 2,
-                  ),
-                ),
-              );
-            },
-            errorBuilder: (_, _, _) => Container(
-              height: AppConstants.cardImageHeight,
-              color: AppColors.divider,
-              child: const Icon(
-                Icons.sports_tennis_rounded,
-                size: 44,
-                color: AppColors.textMuted,
-              ),
-            ),
-          ),
+          child: hasImage
+              ? Image.network(
+                  court.imageUrl,
+                  height: AppConstants.cardImageHeight,
+                  width: double.infinity,
+                  fit: BoxFit.cover,
+                  loadingBuilder: (ctx, child, progress) {
+                    if (progress == null) return child;
+                    return _buildPlaceholder();
+                  },
+                  errorBuilder: (_, _, _) => _buildPlaceholder(),
+                )
+              : _buildPlaceholder(),
         ),
         Positioned(
           top: 12,
@@ -93,6 +83,22 @@ class _CourtImage extends StatelessWidget {
           child: _DistanceChip(distanceKm: court.distanceKm),
         ),
       ],
+    );
+  }
+
+  Widget _buildPlaceholder() {
+    return Container(
+      height: AppConstants.cardImageHeight,
+      // THE FIX: Forces the placeholder to fill the width provided by the parent
+      width: double.infinity,
+      color: AppColors.divider,
+      child: const Center(
+        child: Icon(
+          Icons.sports_tennis_rounded,
+          size: 44,
+          color: AppColors.textMuted,
+        ),
+      ),
     );
   }
 }
