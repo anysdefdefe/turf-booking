@@ -633,6 +633,32 @@ class _BookingCard extends StatelessWidget {
 
   bool get _isCancelled => booking.status == 'cancelled';
 
+  String get _formattedDate {
+    final dt = DateTime.tryParse(booking.bookingDate);
+    if (dt == null) return booking.bookingDate;
+    const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    return '${months[dt.month - 1]} ${dt.day}, ${dt.year}';
+  }
+
+  String _formatTime(String raw) {
+    // Handles "HH:mm:ss" or ISO timestamp
+    final dt = DateTime.tryParse('2000-01-01 $raw');
+    if (dt == null) {
+      final parsed = DateTime.tryParse(raw);
+      if (parsed != null) {
+        final h = parsed.hour % 12 == 0 ? 12 : parsed.hour % 12;
+        final m = parsed.minute.toString().padLeft(2, '0');
+        final suffix = parsed.hour >= 12 ? 'PM' : 'AM';
+        return '$h:$m $suffix';
+      }
+      return raw;
+    }
+    final h = dt.hour % 12 == 0 ? 12 : dt.hour % 12;
+    final m = dt.minute.toString().padLeft(2, '0');
+    final suffix = dt.hour >= 12 ? 'PM' : 'AM';
+    return '$h:$m $suffix';
+  }
+
   @override
   Widget build(BuildContext context) {
     final Color statusColor = _isCancelled
@@ -641,6 +667,10 @@ class _BookingCard extends StatelessWidget {
     final Color statusBg = _isCancelled
         ? const Color(0xFFFFEBEB)
         : AppColors.badgeBg;
+
+    final bool isPaid = booking.paymentStatus.toLowerCase() == 'paid';
+    final Color paymentColor = isPaid ? const Color(0xFF2E7D32) : Colors.orange.shade800;
+    final Color paymentBg = isPaid ? const Color(0xFFE8F5E9) : const Color(0xFFFFF3E0);
 
     return Container(
       padding: const EdgeInsets.all(14),
@@ -652,6 +682,7 @@ class _BookingCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // ── HEADER: Customer + Status ──
           Row(
             children: [
               Container(
@@ -681,6 +712,21 @@ class _BookingCard extends StatelessWidget {
                         color: AppColors.textPrimary,
                       ),
                     ),
+                    if (booking.customerPhone != null && booking.customerPhone!.isNotEmpty)
+                      Row(
+                        children: [
+                          const Icon(Icons.phone_outlined, size: 12, color: AppColors.textMuted),
+                          const SizedBox(width: 4),
+                          Text(
+                            booking.customerPhone!,
+                            style: const TextStyle(
+                              fontFamily: 'Poppins',
+                              fontSize: 12,
+                              color: AppColors.textSecondary,
+                            ),
+                          ),
+                        ],
+                      ),
                     Text(
                       '${(booking.courtName ?? 'Unknown')} — ${(booking.stadiumName ?? 'Unknown')}',
                       style: const TextStyle(
@@ -713,35 +759,77 @@ class _BookingCard extends StatelessWidget {
           const SizedBox(height: 10),
           const Divider(color: AppColors.divider, height: 1),
           const SizedBox(height: 10),
+
+          // ── DATE & TIME BADGE ──
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF5F5F5),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.calendar_today_rounded, size: 14, color: AppColors.textSecondary),
+                const SizedBox(width: 6),
+                Text(
+                  _formattedDate,
+                  style: const TextStyle(
+                    fontFamily: 'Poppins',
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Text('•', style: TextStyle(color: AppColors.textMuted, fontSize: 14)),
+                const SizedBox(width: 8),
+                const Icon(Icons.access_time_rounded, size: 14, color: AppColors.textSecondary),
+                const SizedBox(width: 4),
+                Expanded(
+                  child: Text(
+                    '${_formatTime(booking.startTime)} – ${_formatTime(booking.endTime)}',
+                    style: const TextStyle(
+                      fontFamily: 'Poppins',
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 10),
+
+          // ── PAYMENT STATUS + AMOUNT ──
           Row(
             children: [
-              const Icon(
-                Icons.calendar_today_rounded,
-                size: 13,
-                color: AppColors.textMuted,
-              ),
-              const SizedBox(width: 4),
-              Text(
-                booking.bookingDate,
-                style: const TextStyle(
-                  fontFamily: 'Poppins',
-                  fontSize: 12,
-                  color: AppColors.textSecondary,
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: paymentBg,
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: paymentColor.withValues(alpha: 0.3)),
                 ),
-              ),
-              const SizedBox(width: 12),
-              const Icon(
-                Icons.access_time_rounded,
-                size: 13,
-                color: AppColors.textMuted,
-              ),
-              const SizedBox(width: 4),
-              Text(
-                '${booking.startTime} – ${booking.endTime}',
-                style: const TextStyle(
-                  fontFamily: 'Poppins',
-                  fontSize: 12,
-                  color: AppColors.textSecondary,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      isPaid ? Icons.check_circle_outline : Icons.pending_outlined,
+                      size: 13,
+                      color: paymentColor,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      booking.paymentStatus[0].toUpperCase() + booking.paymentStatus.substring(1),
+                      style: TextStyle(
+                        fontFamily: 'Poppins',
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        color: paymentColor,
+                      ),
+                    ),
+                  ],
                 ),
               ),
               const Spacer(),
@@ -749,7 +837,7 @@ class _BookingCard extends StatelessWidget {
                 '₹${booking.totalAmount.toStringAsFixed(0)}',
                 style: const TextStyle(
                   fontFamily: 'Poppins',
-                  fontSize: 14,
+                  fontSize: 16,
                   fontWeight: FontWeight.w700,
                   color: AppColors.textPrimary,
                 ),

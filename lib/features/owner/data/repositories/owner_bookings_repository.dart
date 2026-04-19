@@ -25,7 +25,8 @@ class OwnerBookingsRepository {
           )
         ),
         customer:users (
-          full_name
+          full_name,
+          phone
         )
       ''')
       .eq('courts.stadium_id', stadiumId)
