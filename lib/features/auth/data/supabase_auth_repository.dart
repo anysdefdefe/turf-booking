@@ -100,13 +100,17 @@ class SupabaseAuthRepository implements AuthRepository {
   }
 
   Future<UserModel> _waitForUserProfile(String userId) async {
-    for (int i = 0; i < 15; i++) {
+    Object? lastError;
+    for (int i = 0; i < 30; i++) {
       try {
         return await _fetchUserProfile(userId);
-      } catch (_) {
-        await Future.delayed(const Duration(milliseconds: 250));
+      } catch (e) {
+        lastError = e;
+        print('AUTH POLL [$i]: Failed to fetch profile for $userId — $e');
+        await Future.delayed(const Duration(milliseconds: 500));
       }
     }
+    print('AUTH FATAL: All 30 retries exhausted. Last error: $lastError');
     throw Exception('User profile not created in time');
   }
 }

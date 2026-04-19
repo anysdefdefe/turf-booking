@@ -13,6 +13,7 @@ class BookingModel {
 
   // Joined fields populated from Supabase selects
   final String? customerName;
+  final String? customerPhone;
   final String? courtName;
   final String? stadiumName;
 
@@ -29,14 +30,17 @@ class BookingModel {
     required this.paymentStatus,
     required this.createdAt,
     this.customerName,
+    this.customerPhone,
     this.courtName,
     this.stadiumName,
   });
 
   factory BookingModel.fromJson(Map<String, dynamic> json) {
     String? customerName;
+    String? customerPhone;
     if (json['customer'] != null && json['customer'] is Map) {
       customerName = json['customer']['full_name'] as String?;
+      customerPhone = json['customer']['phone'] as String?;
     }
 
     String? courtName;
@@ -63,6 +67,7 @@ class BookingModel {
           ? DateTime.parse(json['created_at'])
           : json['created_at'] as DateTime,
       customerName: customerName,
+      customerPhone: customerPhone,
       courtName: courtName,
       stadiumName: stadiumName,
     );
