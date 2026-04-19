@@ -10,7 +10,7 @@ class Court {
   final List<String> courtTypes;
   final bool isAvailable;
   final String description;
-  final List<String> amenities;
+  final List<String> equipments;
   final String openTime;
   final String closeTime;
   final double distanceKm;
@@ -28,7 +28,7 @@ class Court {
     required this.courtTypes,
     required this.isAvailable,
     required this.description,
-    required this.amenities,
+    required this.equipments,
     required this.openTime,
     required this.closeTime,
     required this.distanceKm,

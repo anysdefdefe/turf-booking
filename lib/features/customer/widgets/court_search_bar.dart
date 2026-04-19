@@ -49,7 +49,7 @@ class _CourtSearchBarState extends State<CourtSearchBar> {
           fontFamily: 'Poppins',
         ),
         decoration: InputDecoration(
-          hintText: 'Search courts, stadiums, sports…',
+          hintText: 'Search venues, courts, sports...',
           hintStyle: const TextStyle(
             color: AppColors.textMuted,
             fontSize: 14,

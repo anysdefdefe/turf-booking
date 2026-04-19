@@ -4,7 +4,6 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:turf_booking/features/auth/providers/auth_controller.dart';
 import 'package:go_router/go_router.dart';
 import '../../../app/theme/app_colors.dart';
-import '../data/repositories/customer_preferences_repository.dart';
 import '../widgets/customer_floating_nav_bar.dart';
 
 DateTime _parseCreatedAt(dynamic value, dynamic fallback) {
@@ -332,7 +331,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final likedIds = CustomerPreferencesRepository.instance.likedCourtIds.value;
     final profile = _profile;
 
     return Scaffold(
@@ -382,7 +380,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     const SizedBox(height: 20),
                     _isOwner
                         ? const _OwnerStatsRow()
-                        : _CustomerStatsRow(likedCount: likedIds.length),
+                        : const _CustomerStatsRow(),
                     const SizedBox(height: 20),
                     _isOwner
                         ? const _OwnerInfoCard(isApproved: _isApproved)
@@ -396,17 +394,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                       icon: Icons.receipt_long_rounded,
                       label: 'My Bookings',
                       onTap: () => context.go('/customer/my-bookings'),
-                    ),
-                    _ActionTile(
-                      icon: Icons.favorite_border_rounded,
-                      label: 'Wishlist',
-                      trailing: likedIds.isNotEmpty
-                          ? _Badge(count: likedIds.length)
-                          : null,
-                      onTap: () => context.go(
-                        '/customer/home',
-                        extra: {'feed': 'wishlist'},
-                      ),
                     ),
                     _ActionTile(
                       icon: Icons.notifications_none_rounded,
@@ -1023,9 +1010,7 @@ class _DetailDivider extends StatelessWidget {
 // ─── Stats Row ───────────────────────────────────────────────────────────────
 
 class _CustomerStatsRow extends StatelessWidget {
-  final int likedCount;
-
-  const _CustomerStatsRow({required this.likedCount});
+  const _CustomerStatsRow();
 
   @override
   Widget build(BuildContext context) {
@@ -1037,10 +1022,10 @@ class _CustomerStatsRow extends StatelessWidget {
           icon: Icons.event_note_rounded,
         ),
         const SizedBox(width: 10),
-        _StatChip(
-          value: '$likedCount',
-          label: 'Favourites',
-          icon: Icons.favorite_rounded,
+        const _StatChip(
+          value: '0',
+          label: 'Venues',
+          icon: Icons.stadium_rounded,
         ),
         const SizedBox(width: 10),
         const _StatChip(
@@ -1306,14 +1291,12 @@ class _SectionLabel extends StatelessWidget {
 class _ActionTile extends StatelessWidget {
   final IconData icon;
   final String label;
-  final Widget? trailing;
   final VoidCallback onTap;
 
   const _ActionTile({
     required this.icon,
     required this.label,
     required this.onTap,
-    this.trailing,
   });
 
   @override
@@ -1344,7 +1327,6 @@ class _ActionTile extends StatelessWidget {
                   ),
                 ),
               ),
-              if (trailing != null) ...[trailing!, const SizedBox(width: 8)],
               const Icon(
                 Icons.arrow_forward_ios_rounded,
                 size: 13,
@@ -1352,33 +1334,6 @@ class _ActionTile extends StatelessWidget {
               ),
             ],
           ),
-        ),
-      ),
-    );
-  }
-}
-
-// ─── Badge ───────────────────────────────────────────────────────────────────
-
-class _Badge extends StatelessWidget {
-  final int count;
-
-  const _Badge({required this.count});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-      decoration: BoxDecoration(
-        color: AppColors.primary.withOpacity(0.12),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Text(
-        '$count',
-        style: TextStyle(
-          fontSize: 11,
-          fontWeight: FontWeight.w600,
-          color: AppColors.primary,
         ),
       ),
     );
