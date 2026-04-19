@@ -18,18 +18,18 @@ import '../widgets/owner_bottom_nav_bar.dart';
 
 class _CourtFormEntry {
   String sportType;
-  String amenities;
+  String equipments;
   double pricePerHour;
 
   _CourtFormEntry({
     this.sportType = '',
-    this.amenities = '',
+    this.equipments = '',
     this.pricePerHour = 0,
   });
 
   /// Converts the raw form data into the repository's DTO.
   CourtInsertPayload toPayload() {
-    final amenitiesList = amenities
+    final equipmentList = equipments
         .split(',')
         .map((s) => s.trim())
         .where((s) => s.isNotEmpty)
@@ -39,7 +39,7 @@ class _CourtFormEntry {
       name: sportType.trim(),
       sportType: sportType.trim(),
       pricePerHour: pricePerHour,
-      amenities: amenitiesList,
+      equipments: equipmentList,
     );
   }
 }
@@ -59,6 +59,7 @@ class _OwnerAddStadiumScreenState extends ConsumerState<OwnerAddStadiumScreen> {
   final _contactController = TextEditingController();
   final _locationController = TextEditingController();
   final _cityController = TextEditingController();
+  final _amenitiesController = TextEditingController();
 
   TimeOfDay _openTime = const TimeOfDay(hour: 6, minute: 0);
   TimeOfDay _closeTime = const TimeOfDay(hour: 22, minute: 0);
@@ -76,7 +77,16 @@ class _OwnerAddStadiumScreenState extends ConsumerState<OwnerAddStadiumScreen> {
     _contactController.dispose();
     _locationController.dispose();
     _cityController.dispose();
+    _amenitiesController.dispose();
     super.dispose();
+  }
+
+  List<String> _parseCsv(String source) {
+    return source
+        .split(',')
+        .map((value) => value.trim())
+        .where((value) => value.isNotEmpty)
+        .toList(growable: false);
   }
 
   // ── TIME PICKER ────────────────────────────────────────────────
@@ -239,6 +249,7 @@ class _OwnerAddStadiumScreenState extends ConsumerState<OwnerAddStadiumScreen> {
         .read(addStadiumControllerProvider.notifier)
         .submitStadium(
           name: _stadiumNameController.text.trim(),
+          amenities: _parseCsv(_amenitiesController.text),
           address: _locationController.text.trim(),
           city: _cityController.text.trim(),
           latitude: _selectedLatLng?.latitude,
@@ -349,6 +360,13 @@ class _OwnerAddStadiumScreenState extends ConsumerState<OwnerAddStadiumScreen> {
               label: 'City',
               hint: 'e.g. Bengaluru',
               icon: Icons.location_city_rounded,
+            ),
+            const SizedBox(height: 12),
+            _InputField(
+              controller: _amenitiesController,
+              label: 'Amenities',
+              hint: 'e.g. Parking, Washroom, Cafeteria',
+              icon: Icons.checklist_rounded,
             ),
             const SizedBox(height: 12),
             const _FieldLabel(label: 'Location / Address'),
@@ -895,14 +913,14 @@ class _CourtCard extends StatelessWidget {
           ),
           const SizedBox(height: 10),
           TextField(
-            onChanged: (v) => court.amenities = v,
+            onChanged: (v) => court.equipments = v,
             style: const TextStyle(
               fontFamily: 'Poppins',
               color: AppColors.textPrimary,
             ),
             decoration: _inputDecoration(
-              'Amenities',
-              'e.g. Bat, Ball, Racket (comma separated)',
+              'Equipments',
+              'e.g. Ball, Net, Rackets (comma separated)',
               Icons.inventory_2_outlined,
             ),
           ),

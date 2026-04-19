@@ -68,6 +68,7 @@ class StadiumRepository {
   Future<StadiumModel> createStadiumWithCourts({
     required String name,
     String? description,
+    List<String> amenities = const [],
     required String address,
     required String city,
     double? latitude,
@@ -87,6 +88,7 @@ class StadiumRepository {
             'owner_id': userId,
             'name': name,
             'description': description,
+            'amenities': amenities,
             'address': address,
             'city': city,
             'latitude': latitude,
@@ -111,7 +113,7 @@ class StadiumRepository {
         'description': court.description,
         'price_per_hour': court.pricePerHour,
         'image_url': null,
-        'amenities': court.amenities,
+        'equipments': court.equipments,
         'open_time': openTime,  // Stadium-level timing cascaded
         'close_time': closeTime, // Stadium-level timing cascaded
         'is_active': true,
@@ -154,6 +156,7 @@ class StadiumRepository {
     required String stadiumId,
     String? name,
     String? description,
+    List<String>? amenities,
     String? address,
     String? city,
     bool? isActive,
@@ -162,6 +165,7 @@ class StadiumRepository {
       final Map<String, dynamic> payload = {};
       if (name != null) payload['name'] = name;
       if (description != null) payload['description'] = description;
+      if (amenities != null) payload['amenities'] = amenities;
       if (address != null) payload['address'] = address;
       if (city != null) payload['city'] = city;
       if (isActive != null) payload['is_active'] = isActive;
@@ -181,6 +185,7 @@ class StadiumRepository {
     String? sportType,
     String? description,
     double? pricePerHour,
+    List<String>? equipments,
     bool? isActive,
   }) async {
     try {
@@ -189,6 +194,7 @@ class StadiumRepository {
       if (sportType != null) payload['sport_type'] = sportType;
       if (description != null) payload['description'] = description;
       if (pricePerHour != null) payload['price_per_hour'] = pricePerHour;
+      if (equipments != null) payload['equipments'] = equipments;
       if (isActive != null) payload['is_active'] = isActive;
 
       if (payload.isEmpty) return;
@@ -208,14 +214,14 @@ class CourtInsertPayload {
   final String sportType;
   final String? description;
   final double pricePerHour;
-  final List<String> amenities;
+  final List<String> equipments;
 
   const CourtInsertPayload({
     required this.name,
     required this.sportType,
     this.description,
     required this.pricePerHour,
-    this.amenities = const [],
+    this.equipments = const [],
   });
 }
 

@@ -21,6 +21,7 @@ class _OwnerCourtEditScreenState
   final _nameController = TextEditingController();
   final _sportController = TextEditingController();
   final _priceController = TextEditingController();
+  final _equipmentController = TextEditingController();
   late bool _isActive;
   bool _isSaving = false;
   bool _initialized = false;
@@ -30,6 +31,7 @@ class _OwnerCourtEditScreenState
     _nameController.dispose();
     _sportController.dispose();
     _priceController.dispose();
+    _equipmentController.dispose();
     super.dispose();
   }
 
@@ -39,14 +41,24 @@ class _OwnerCourtEditScreenState
     _nameController.text = court.name;
     _sportController.text = court.sportType;
     _priceController.text = court.pricePerHour.toStringAsFixed(0);
+    _equipmentController.text = court.equipments.join(', ');
     _isActive = court.isActive;
     _initialized = true;
+  }
+
+  List<String> _parseCsv(String source) {
+    return source
+        .split(',')
+        .map((value) => value.trim())
+        .where((value) => value.isNotEmpty)
+        .toList(growable: false);
   }
 
   Future<void> _save(String stadiumId) async {
     final name = _nameController.text.trim();
     final sport = _sportController.text.trim();
     final price = double.tryParse(_priceController.text.trim());
+    final equipments = _parseCsv(_equipmentController.text);
 
     if (name.isEmpty || sport.isEmpty) {
       _showSnackbar('Name and sport are required');
@@ -65,6 +77,7 @@ class _OwnerCourtEditScreenState
             name: name,
             sportType: sport,
             pricePerHour: price,
+            equipments: equipments,
             isActive: _isActive,
           );
 
@@ -182,6 +195,12 @@ class _OwnerCourtEditScreenState
                       hint: 'e.g. 800',
                       keyboardType: TextInputType.number,
                     ),
+                    const SizedBox(height: 16),
+                    _buildLabel('Equipments'),
+                    _buildField(
+                      _equipmentController,
+                      hint: 'e.g. Ball, Net, Rackets',
+                    ),
                     const SizedBox(height: 20),
 
                     // ── Active toggle ──────────────────────────────
@@ -213,7 +232,7 @@ class _OwnerCourtEditScreenState
                             value: _isActive,
                             onChanged: (v) =>
                                 setState(() => _isActive = v),
-                            activeColor: AppColors.primary,
+                            activeThumbColor: AppColors.primary,
                           ),
                         ],
                       ),

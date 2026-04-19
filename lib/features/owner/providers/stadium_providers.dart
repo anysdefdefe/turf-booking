@@ -45,6 +45,7 @@ class AddStadiumController extends _$AddStadiumController {
   Future<bool> submitStadium({
     required String name,
     String? description,
+    List<String> amenities = const [],
     required String address,
     required String city,
     double? latitude,
@@ -59,6 +60,7 @@ class AddStadiumController extends _$AddStadiumController {
       await ref.read(stadiumRepositoryProvider).createStadiumWithCourts(
             name: name,
             description: description,
+            amenities: amenities,
             address: address,
             city: city,
             latitude: latitude,

@@ -6,7 +6,7 @@ class CourtModel {
   final String? description;
   final double pricePerHour;
   final String? imageUrl;
-  final List<String> amenities;
+  final List<String> equipments;
   final String openTime;  // Stored as HH:mm:ss in Postgres
   final String closeTime; // Stored as HH:mm:ss in Postgres
   final bool isActive;
@@ -20,7 +20,7 @@ class CourtModel {
     this.description,
     required this.pricePerHour,
     this.imageUrl,
-    this.amenities = const [],
+    this.equipments = const [],
     required this.openTime,
     required this.closeTime,
     required this.isActive,
@@ -28,10 +28,9 @@ class CourtModel {
   });
 
   factory CourtModel.fromJson(Map<String, dynamic> json) {
-    // Postgres text[] arrives as List<dynamic>
-    final rawAmenities = json['amenities'];
-    final List<String> parsedAmenities = rawAmenities is List
-        ? rawAmenities.cast<String>()
+    final rawEquipments = json['equipments'] ?? json['amenities'];
+    final List<String> parsedEquipments = rawEquipments is List
+        ? rawEquipments.map((item) => item.toString()).toList(growable: false)
         : const [];
 
     return CourtModel(
@@ -42,7 +41,7 @@ class CourtModel {
       description: json['description'] as String?,
       pricePerHour: (json['price_per_hour'] as num).toDouble(),
       imageUrl: json['image_url'] as String?,
-      amenities: parsedAmenities,
+      equipments: parsedEquipments,
       openTime: json['open_time'] as String,
       closeTime: json['close_time'] as String,
       isActive: json['is_active'] as bool? ?? true,
@@ -62,7 +61,7 @@ class CourtModel {
       'description': description,
       'price_per_hour': pricePerHour,
       'image_url': null, // No image uploads for MVP
-      'amenities': amenities,
+      'equipments': equipments,
       'open_time': openTime,
       'close_time': closeTime,
       'is_active': isActive,
