@@ -29,7 +29,7 @@ class StadiumRepository {
       if (response == null) return null;
       return StadiumModel.fromJson(response);
     } catch (e) {
-      throw AppException('Failed to fetch stadium: $e');
+      throw UnknownException('Failed to fetch stadium: $e', e);
     }
   }
 
@@ -45,7 +45,7 @@ class StadiumRepository {
 
       return response.map((json) => CourtModel.fromJson(json)).toList();
     } catch (e) {
-      throw AppException('Failed to fetch courts: $e');
+      throw UnknownException('Failed to fetch courts: $e', e);
     }
   }
 
@@ -99,7 +99,7 @@ class StadiumRepository {
 
       stadium = StadiumModel.fromJson(stadiumResponse);
     } catch (e) {
-      throw AppException('Failed to create stadium: $e');
+      throw UnknownException('Failed to create stadium: $e', e);
     }
 
     // ── Step 2: Insert Courts (batch) ─────────────────────────────
@@ -127,8 +127,8 @@ class StadiumRepository {
         // If even cleanup fails, we still throw the original error.
         // The admin can manually reconcile orphaned rows.
       }
-      throw AppException(
-        'Failed to create courts. Stadium insertion was rolled back: $e',
+      throw UnknownException(
+        'Failed to create courts. Stadium insertion was rolled back: $e', e,
       );
     }
 
@@ -145,7 +145,7 @@ class StadiumRepository {
           .update({'is_active': isActive})
           .eq('id', stadiumId);
     } catch (e) {
-      throw AppException('Failed to update stadium status: $e');
+      throw UnknownException('Failed to update stadium status: $e', e);
     }
   }
 }

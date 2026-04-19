@@ -91,7 +91,7 @@ class ModeSelectionScreen extends ConsumerWidget {
                       Color(0xFF3F3F46),
                       Color(0xFF27272A), // Zinc scale
                     ],
-                    onTap: () => context.go('/owner/dashboard'),
+                    onTap: () => context.go('/owner/gateway'),
                   ),
                 ),
               ],

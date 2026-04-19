@@ -25,6 +25,7 @@ import 'package:turf_booking/features/owner/screens/owner_add_stadium_screen.dar
 import 'package:turf_booking/features/owner/screens/owner_stadium_manage_screen.dart';
 import 'package:turf_booking/features/owner/screens/owner_stadium_edit_screen.dart';
 import 'package:turf_booking/features/owner/screens/owner_court_edit_screen.dart';
+import 'package:turf_booking/features/owner/screens/owner_gateway_screen.dart';
 
 part 'router.g.dart';
 
@@ -125,6 +126,10 @@ GoRouter router(Ref ref) {
       GoRoute(
         path: '/customer/profile',
         builder: (context, state) => const ProfileScreen(),
+      ),
+      GoRoute(
+        path: '/owner/gateway',
+        builder: (context, state) => const OwnerGatewayScreen(),
       ),
       GoRoute(
         path: '/owner/dashboard',
