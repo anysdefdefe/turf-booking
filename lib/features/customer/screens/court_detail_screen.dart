@@ -6,7 +6,6 @@ import '../data/models/booking_cart_item.dart';
 import '../data/models/court_detail_args.dart';
 import '../data/models/court_model.dart';
 import '../data/repositories/customer_cart_repository.dart';
-import '../data/repositories/customer_preferences_repository.dart';
 import '../data/repositories/court_repository.dart';
 import '../widgets/detail_section_title.dart';
 import '../widgets/info_row_chip.dart';
@@ -23,8 +22,7 @@ class _CourtDetailScreenState extends State<CourtDetailScreen> {
   final CustomerCartRepository _cartRepo = CustomerCartRepository.instance;
 
   bool _initialized = false;
-  List<Court> _stadiumCourts = [];
-  int _activeCourtIndex = 0;
+  Court? _court;
   int _dateStartOffset = 0;
 
   DateTime? _selectedDate;
@@ -37,8 +35,6 @@ class _CourtDetailScreenState extends State<CourtDetailScreen> {
 
   int get _selectedHours => _selectedSlots.length;
 
-  Court get _currentCourt => _stadiumCourts[_activeCourtIndex];
-
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
@@ -48,26 +44,21 @@ class _CourtDetailScreenState extends State<CourtDetailScreen> {
 
     final routeArgs = ModalRoute.of(context)?.settings.arguments;
     if (routeArgs is CourtDetailArgs) {
-      final siblings = routeArgs.stadiumCourts.isEmpty
-          ? _repo.getCourtsByStadium(routeArgs.selectedCourt.stadiumId)
-          : routeArgs.stadiumCourts;
-      _stadiumCourts = siblings;
-      _activeCourtIndex = _indexOfCourtId(routeArgs.selectedCourt.id, siblings);
+      _court = routeArgs.selectedCourt;
     } else if (routeArgs is Court) {
-      final siblings = _repo.getCourtsByStadium(routeArgs.stadiumId);
-      _stadiumCourts = siblings.isEmpty ? [routeArgs] : siblings;
-      _activeCourtIndex = _indexOfCourtId(routeArgs.id, _stadiumCourts);
+      _court = routeArgs;
+    }
+
+    if (_court == null) {
+      _initialized = true;
+      return;
     }
 
     _selectedDate = _stripDate(DateTime.now());
-    _setTimeSlotsForCurrentCourt();
+    _timeSlots = _repo.generateHourlySlots(_court!);
     _refreshBookedSlots();
 
     _initialized = true;
-  }
-
-  void _setTimeSlotsForCurrentCourt() {
-    _timeSlots = _repo.generateHourlySlots(_currentCourt);
   }
 
   Future<void> _refreshBookedSlots() async {
@@ -78,7 +69,7 @@ class _CourtDetailScreenState extends State<CourtDetailScreen> {
 
     setState(() => _isLoadingBookedSlots = true);
     final booked = await _repo.getBookedSlotsForDate(
-      courtId: _currentCourt.id,
+      courtId: _court!.id,
       date: selectedDate,
     );
 
@@ -91,32 +82,6 @@ class _CourtDetailScreenState extends State<CourtDetailScreen> {
       _selectedSlots.removeWhere((slot) => _bookedSlots.contains(slot));
       _isLoadingBookedSlots = false;
     });
-  }
-
-  int _indexOfCourtId(String courtId, List<Court> courts) {
-    final index = courts.indexWhere((court) => court.id == courtId);
-    return index < 0 ? 0 : index;
-  }
-
-  void _switchCourtByDelta(int delta) {
-    if (_stadiumCourts.length < 2) {
-      return;
-    }
-    final nextIndex = (_activeCourtIndex + delta).clamp(
-      0,
-      _stadiumCourts.length - 1,
-    );
-    if (nextIndex == _activeCourtIndex) {
-      return;
-    }
-
-    setState(() {
-      _activeCourtIndex = nextIndex;
-      _selectedSlots.clear();
-      _selectedDate = _stripDate(DateTime.now());
-      _setTimeSlotsForCurrentCourt();
-    });
-    _refreshBookedSlots();
   }
 
   DateTime _stripDate(DateTime d) => DateTime(d.year, d.month, d.day);
@@ -201,7 +166,7 @@ class _CourtDetailScreenState extends State<CourtDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
-    if (!_initialized || _stadiumCourts.isEmpty) {
+    if (!_initialized || _court == null) {
       return Scaffold(
         backgroundColor: AppColors.background,
         appBar: AppBar(
@@ -223,7 +188,7 @@ class _CourtDetailScreenState extends State<CourtDetailScreen> {
       );
     }
 
-    final court = _currentCourt;
+    final court = _court!;
     return Scaffold(
       backgroundColor: AppColors.background,
       body: CustomScrollView(
@@ -237,7 +202,7 @@ class _CourtDetailScreenState extends State<CourtDetailScreen> {
                 _divider(),
                 _buildAbout(court),
                 _divider(),
-                _buildAmenities(court),
+                _buildEquipments(court),
                 _divider(),
                 _buildDatePicker(),
                 _divider(),
@@ -270,44 +235,20 @@ class _CourtDetailScreenState extends State<CourtDetailScreen> {
           iconSize: 12,
         ),
       ),
-      actions: [
-        Padding(
-          padding: const EdgeInsets.all(10),
-          child: _CircleBtn(
-            icon: Icons.share_rounded,
-            onTap: () {},
-            iconSize: 12,
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.only(right: 10, top: 10, bottom: 10),
-          child: _FavBtn(courtId: court.id),
-        ),
-      ],
       flexibleSpace: FlexibleSpaceBar(
         stretchModes: const [StretchMode.zoomBackground],
         background: Stack(
           fit: StackFit.expand,
           children: [
-            GestureDetector(
-              onHorizontalDragEnd: (details) {
-                final velocity = details.primaryVelocity ?? 0;
-                if (velocity < -100) {
-                  _switchCourtByDelta(1);
-                } else if (velocity > 100) {
-                  _switchCourtByDelta(-1);
-                }
-              },
-              child: Image.network(
-                court.imageUrl,
-                fit: BoxFit.cover,
-                errorBuilder: (_, _, _) => Container(
-                  color: AppColors.divider,
-                  child: const Icon(
-                    Icons.sports_tennis_rounded,
-                    size: 72,
-                    color: AppColors.textMuted,
-                  ),
+            Image.network(
+              court.imageUrl,
+              fit: BoxFit.cover,
+              errorBuilder: (_, _, _) => Container(
+                color: AppColors.divider,
+                child: const Icon(
+                  Icons.sports_tennis_rounded,
+                  size: 72,
+                  color: AppColors.textMuted,
                 ),
               ),
             ),
@@ -323,31 +264,8 @@ class _CourtDetailScreenState extends State<CourtDetailScreen> {
             ),
             Positioned(
               bottom: 14,
-              left: 16,
-              child: Row(
-                children: [
-                  if (_stadiumCourts.length > 1)
-                    _SwitchCourtBtn(
-                      icon: Icons.chevron_left_rounded,
-                      onTap: () => _switchCourtByDelta(-1),
-                    ),
-                ],
-              ),
-            ),
-            Positioned(
-              bottom: 14,
               right: 16,
-              child: Row(
-                children: [
-                  if (_stadiumCourts.length > 1)
-                    _SwitchCourtBtn(
-                      icon: Icons.chevron_right_rounded,
-                      onTap: () => _switchCourtByDelta(1),
-                    ),
-                  if (_stadiumCourts.length > 1) const SizedBox(width: 8),
-                  _DistBadge(km: court.distanceKm),
-                ],
-              ),
+              child: _DistBadge(km: court.distanceKm),
             ),
           ],
         ),
@@ -424,37 +342,6 @@ class _CourtDetailScreenState extends State<CourtDetailScreen> {
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
-              if (_stadiumCourts.length > 1)
-                Text(
-                  'Court ${_activeCourtIndex + 1} of ${_stadiumCourts.length}',
-                  style: const TextStyle(
-                    fontFamily: 'Poppins',
-                    fontSize: 12,
-                    color: AppColors.textSecondary,
-                  ),
-                ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Row(
-            children: [
-              const Icon(
-                Icons.location_on_rounded,
-                size: 14,
-                color: AppColors.primary,
-              ),
-              const SizedBox(width: 4),
-              Expanded(
-                child: Text(
-                  '${court.place}, ${court.city}',
-                  style: const TextStyle(
-                    fontFamily: 'Poppins',
-                    fontSize: 13,
-                    color: AppColors.textSecondary,
-                  ),
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
             ],
           ),
           const SizedBox(height: 14),
@@ -498,11 +385,11 @@ class _CourtDetailScreenState extends State<CourtDetailScreen> {
     );
   }
 
-  // ── Amenities ─────────────────────────────────────────────────────────────
+  // ── Equipments ────────────────────────────────────────────────────────────
 
-  Widget _buildAmenities(Court court) {
-    IconData iconForAmenity(String amenity) {
-      final key = amenity.toLowerCase();
+  Widget _buildEquipments(Court court) {
+    IconData iconForEquipment(String equipment) {
+      final key = equipment.toLowerCase();
       if (key.contains('water')) return Icons.local_drink_outlined;
       if (key.contains('flood') || key.contains('light')) {
         return Icons.wb_sunny_outlined;
@@ -524,32 +411,42 @@ class _CourtDetailScreenState extends State<CourtDetailScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const DetailSectionTitle(title: 'Amenities'),
+          const DetailSectionTitle(title: 'Equipments'),
           const SizedBox(height: 12),
-          ...court.amenities.map(
-            (amenity) => Padding(
-              padding: const EdgeInsets.only(bottom: 10),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      amenity,
-                      style: const TextStyle(
-                        fontFamily: 'Poppins',
-                        fontSize: 14,
-                        color: AppColors.textPrimary,
+          if (court.equipments.isEmpty)
+            const Text(
+              'No equipments listed.',
+              style: TextStyle(
+                fontFamily: 'Poppins',
+                fontSize: 13,
+                color: AppColors.textSecondary,
+              ),
+            )
+          else
+            ...court.equipments.map(
+              (equipment) => Padding(
+                padding: const EdgeInsets.only(bottom: 10),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        equipment,
+                        style: const TextStyle(
+                          fontFamily: 'Poppins',
+                          fontSize: 14,
+                          color: AppColors.textPrimary,
+                        ),
                       ),
                     ),
-                  ),
-                  Icon(
-                    iconForAmenity(amenity),
-                    size: 17,
-                    color: AppColors.textSecondary,
-                  ),
-                ],
+                    Icon(
+                      iconForEquipment(equipment),
+                      size: 17,
+                      color: AppColors.textSecondary,
+                    ),
+                  ],
+                ),
               ),
             ),
-          ),
         ],
       ),
     );
@@ -1043,30 +940,6 @@ class _SlotLegend extends StatelessWidget {
 
 // ── Reusable sub-widgets ──────────────────────────────────────────────────────
 
-class _SwitchCourtBtn extends StatelessWidget {
-  final IconData icon;
-  final VoidCallback onTap;
-
-  const _SwitchCourtBtn({required this.icon, required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: 26,
-        height: 26,
-        decoration: BoxDecoration(
-          color: AppColors.surface.withValues(alpha: 0.94),
-          shape: BoxShape.circle,
-          border: Border.all(color: AppColors.divider, width: 1),
-        ),
-        child: Icon(icon, size: 16, color: AppColors.textPrimary),
-      ),
-    );
-  }
-}
-
 class _CircleBtn extends StatelessWidget {
   final IconData icon;
   final VoidCallback onTap;
@@ -1091,44 +964,6 @@ class _CircleBtn extends StatelessWidget {
       child: Icon(icon, size: iconSize, color: AppColors.textPrimary),
     ),
   );
-}
-
-class _FavBtn extends StatelessWidget {
-  final String courtId;
-
-  const _FavBtn({required this.courtId});
-
-  @override
-  Widget build(BuildContext context) {
-    final prefs = CustomerPreferencesRepository.instance;
-    return ValueListenableBuilder<Set<String>>(
-      valueListenable: prefs.likedCourtIds,
-      builder: (context, likedIds, _) {
-        final isLiked = likedIds.contains(courtId);
-        return GestureDetector(
-          onTap: () => prefs.toggleLike(courtId),
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
-            width: 34,
-            height: 34,
-            decoration: BoxDecoration(
-              color: isLiked ? Colors.red.shade50 : AppColors.surface,
-              shape: BoxShape.circle,
-              border: Border.all(
-                color: isLiked ? Colors.red.shade200 : AppColors.divider,
-                width: 1,
-              ),
-            ),
-            child: Icon(
-              isLiked ? Icons.favorite_rounded : Icons.favorite_border_rounded,
-              size: 16,
-              color: isLiked ? Colors.red : AppColors.textPrimary,
-            ),
-          ),
-        );
-      },
-    );
-  }
 }
 
 class _DistBadge extends StatelessWidget {

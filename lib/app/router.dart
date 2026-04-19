@@ -11,11 +11,13 @@ import 'package:turf_booking/features/auth/screens/email_confirmation_screen.dar
 import 'package:turf_booking/features/auth/screens/mode_selection_screen.dart';
 import 'package:turf_booking/features/customer/screens/court_detail_screen.dart';
 import 'package:turf_booking/features/customer/screens/home_screen.dart';
+import 'package:turf_booking/features/customer/screens/venue_detail_screen.dart';
 import 'package:turf_booking/features/customer/screens/my_bookings_screen.dart';
 import 'package:turf_booking/features/customer/screens/profile_screen.dart';
 import 'package:turf_booking/features/customer/screens/cart_screen.dart';
 import 'package:turf_booking/features/customer/screens/booking_confirmation_screen.dart';
 import 'package:turf_booking/features/customer/data/models/booking_args.dart';
+import 'package:turf_booking/features/customer/data/models/stadium_model.dart';
 import 'package:turf_booking/features/owner/screens/owner_dashboard_screen.dart';
 import 'package:turf_booking/features/owner/screens/pending_approval_screen.dart';
 import 'package:turf_booking/features/owner/screens/owner_application_screen.dart';
@@ -24,13 +26,10 @@ import 'package:turf_booking/features/owner/screens/owner_add_stadium_screen.dar
 
 import 'package:turf_booking/features/admin/screens/admin_main_screen.dart';
 
-import 'package:turf_booking/features/owner/data/models/stadium_model.dart';
-import 'package:turf_booking/features/owner/data/models/court_model.dart';
 import 'package:turf_booking/features/owner/screens/owner_stadium_manage_screen.dart';
 import 'package:turf_booking/features/owner/screens/owner_stadium_edit_screen.dart';
 import 'package:turf_booking/features/owner/screens/owner_court_edit_screen.dart';
 import 'package:turf_booking/features/owner/screens/owner_gateway_screen.dart';
-
 
 part 'router.g.dart';
 
@@ -112,6 +111,13 @@ GoRouter router(Ref ref) {
         builder: (context, state) => const HomeScreen(),
       ),
       GoRoute(
+        path: '/venue-detail',
+        builder: (context, state) {
+          final venue = state.extra as Stadium;
+          return VenueDetailScreen(venue: venue);
+        },
+      ),
+      GoRoute(
         path: '/court-detail',
         pageBuilder: (context, state) => MaterialPage<void>(
           key: state.pageKey,
@@ -177,10 +183,8 @@ GoRouter router(Ref ref) {
       ),
       GoRoute(
         path: '/owner/edit-court/:courtId',
-        builder: (context, state) => OwnerCourtEditScreen(
-          courtId: state.pathParameters['courtId']!,
-        ),
-
+        builder: (context, state) =>
+            OwnerCourtEditScreen(courtId: state.pathParameters['courtId']!),
       ),
     ],
   );

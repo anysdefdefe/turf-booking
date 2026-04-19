@@ -277,11 +277,17 @@ class CourtRepository {
       }
     }
 
+    final amenitiesRaw = row['ammenities'] ?? row['amenities'];
+    final amenities = amenitiesRaw is List
+        ? amenitiesRaw.map((e) => e.toString()).toList(growable: false)
+        : <String>[];
+
     return Stadium(
       id: row['id'] as String,
       ownerId: row['owner_id'] as String? ?? '',
       name: row['name'] as String? ?? '',
       description: row['description'] as String? ?? '',
+      amenities: amenities,
       address: row['address'] as String? ?? '',
       city: row['city'] as String? ?? '',
       latitude: (row['latitude'] as num?)?.toDouble() ?? 0,
@@ -307,9 +313,9 @@ class CourtRepository {
         .where((e) => e.isNotEmpty)
         .toList(growable: false);
 
-    final amenitiesRaw = row['amenities'];
-    final amenities = amenitiesRaw is List
-        ? amenitiesRaw.map((e) => e.toString()).toList(growable: false)
+    final equipmentsRaw = row['equipments'] ?? row['amenities'];
+    final equipments = equipmentsRaw is List
+        ? equipmentsRaw.map((e) => e.toString()).toList(growable: false)
         : <String>[];
 
     String imageUrl = row['image_url'] as String? ?? '';
@@ -338,7 +344,7 @@ class CourtRepository {
       courtTypes: courtTypes.isEmpty ? const ['Court'] : courtTypes,
       isAvailable: row['is_active'] as bool? ?? true,
       description: row['description'] as String? ?? '',
-      amenities: amenities,
+      equipments: equipments,
       openTime: openTime,
       closeTime: closeTime,
       distanceKm: 0,

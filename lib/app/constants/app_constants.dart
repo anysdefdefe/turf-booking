@@ -2,6 +2,7 @@ class AppConstants {
   AppConstants._();
 
   static const String routeHome = '/';
+  static const String routeVenueDetail = '/venue-detail';
   static const String routeCourtDetail = '/court-detail';
   static const String routeBookingConfirm = '/booking-confirm';
   static const String routeBookingSuccess = '/booking-success';
