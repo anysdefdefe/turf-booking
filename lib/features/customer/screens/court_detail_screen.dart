@@ -33,9 +33,7 @@ class _CourtDetailScreenState extends State<CourtDetailScreen> {
   bool _isLoadingBookedSlots = false;
   final Set<String> _selectedSlots = <String>{};
 
-  bool get _canBook =>
-      _selectedDate != null &&
-      _selectedSlots.isNotEmpty;
+  bool get _canBook => _selectedDate != null && _selectedSlots.isNotEmpty;
 
   int get _selectedHours => _selectedSlots.length;
 
@@ -614,6 +612,7 @@ class _CourtDetailScreenState extends State<CourtDetailScreen> {
                   onTap: () {
                     setState(() {
                       _selectedDate = date;
+                      _selectedSlots.clear();
                     });
                     _refreshBookedSlots();
                   },
@@ -687,20 +686,26 @@ class _CourtDetailScreenState extends State<CourtDetailScreen> {
   // ── Time Slot Picker ──────────────────────────────────────────────────────
 
   Widget _buildTimeSlotPicker() {
-    final morningSlots = _timeSlots.where((slot) {
-      final hour = _slotHour(slot);
-      return hour >= 6 && hour < 12;
-    }).toList(growable: false);
+    final morningSlots = _timeSlots
+        .where((slot) {
+          final hour = _slotHour(slot);
+          return hour >= 6 && hour < 12;
+        })
+        .toList(growable: false);
 
-    final afternoonSlots = _timeSlots.where((slot) {
-      final hour = _slotHour(slot);
-      return hour >= 12 && hour < 17;
-    }).toList(growable: false);
+    final afternoonSlots = _timeSlots
+        .where((slot) {
+          final hour = _slotHour(slot);
+          return hour >= 12 && hour < 17;
+        })
+        .toList(growable: false);
 
-    final eveningSlots = _timeSlots.where((slot) {
-      final hour = _slotHour(slot);
-      return hour >= 17;
-    }).toList(growable: false);
+    final eveningSlots = _timeSlots
+        .where((slot) {
+          final hour = _slotHour(slot);
+          return hour >= 17;
+        })
+        .toList(growable: false);
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
@@ -917,14 +922,35 @@ class _CourtDetailScreenState extends State<CourtDetailScreen> {
               onPressed: _canBook
                   ? () {
                       final selectedSlots = _orderedSelectedSlots();
+                      final selectedDate = _selectedDate!;
+                      final existsInCart = _cartRepo.hasConflictForSelection(
+                        courtId: court.id,
+                        date: selectedDate,
+                        slots: selectedSlots,
+                      );
+                      if (existsInCart) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text(
+                              'These exact slots are already in your cart.',
+                            ),
+                          ),
+                        );
+                        return;
+                      }
+
                       final cartItem = BookingCartItem(
                         id: 'CART-${DateTime.now().microsecondsSinceEpoch}',
                         court: court,
-                        date: _selectedDate!,
+                        date: selectedDate,
                         slots: selectedSlots,
                         createdAt: DateTime.now(),
                       );
                       _cartRepo.addItem(cartItem);
+
+                      setState(() {
+                        _selectedSlots.clear();
+                      });
 
                       if (!mounted) {
                         return;
@@ -935,8 +961,7 @@ class _CourtDetailScreenState extends State<CourtDetailScreen> {
                           content: const Text('Slots added to booking cart.'),
                           action: SnackBarAction(
                             label: 'View Cart',
-                            onPressed: () =>
-                                context.go(AppConstants.routeCart),
+                            onPressed: () => context.go(AppConstants.routeCart),
                           ),
                         ),
                       );
