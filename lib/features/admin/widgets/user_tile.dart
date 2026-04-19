@@ -14,7 +14,8 @@ class UserTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bool isBlocked = user['blocked'] == true;
+    final bool isBlocked = user['is_blocked'] == true;
+        final name = user['full_name'] ?? 'User';
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
@@ -35,7 +36,7 @@ class UserTile extends StatelessWidget {
           CircleAvatar(
             backgroundColor: const Color(0xFF4CAF50).withOpacity(0.15),
             child: Text(
-              (user['name'] ?? 'U')[0].toUpperCase(),
+              name[0].toUpperCase(),
               style: const TextStyle(
                 color: Color(0xFF4CAF50),
                 fontWeight: FontWeight.bold,
@@ -48,7 +49,7 @@ class UserTile extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  user['name'] ?? 'Unknown',
+                  user['full_name'] ?? 'Unknown',
                   style: const TextStyle(
                     fontWeight: FontWeight.w600,
                     fontSize: 14,

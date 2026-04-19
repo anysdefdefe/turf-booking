@@ -1,14 +1,15 @@
 import 'package:flutter/material.dart';
-import '../data/models/pending_owner_model.dart';
+import '../data/models/owner_application_model.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class ApprovalCard extends StatelessWidget {
-  final PendingOwnerModel owner;
+  final OwnerApplicationModel application;
   final VoidCallback onApprove;
   final VoidCallback onReject;
 
   const ApprovalCard({
     super.key,
-    required this.owner,
+    required this.application,
     required this.onApprove,
     required this.onReject,
   });
@@ -32,12 +33,15 @@ class ApprovalCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Header
           Row(
             children: [
               CircleAvatar(
                 backgroundColor: const Color(0xFF4CAF50).withOpacity(0.15),
                 child: Text(
-                  owner.name.isNotEmpty ? owner.name[0].toUpperCase() : 'O',
+                  application.ownerName?.isNotEmpty == true
+                      ? application.ownerName![0].toUpperCase()
+                      : 'O',
                   style: const TextStyle(
                     color: Color(0xFF4CAF50),
                     fontWeight: FontWeight.bold,
@@ -50,21 +54,23 @@ class ApprovalCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      owner.name,
+                      application.ownerName ?? 'Unknown',
                       style: const TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 15,
                       ),
                     ),
                     Text(
-                      owner.email,
-                      style: TextStyle(fontSize: 12, color: Colors.grey[500]),
+                      application.ownerEmail ?? '',
+                      style: TextStyle(
+                          fontSize: 12, color: Colors.grey[500]),
                     ),
                   ],
                 ),
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
                   color: const Color(0xFFFFF3CD),
                   borderRadius: BorderRadius.circular(8),
@@ -80,15 +86,95 @@ class ApprovalCard extends StatelessWidget {
               ),
             ],
           ),
+
           const SizedBox(height: 12),
           const Divider(),
           const SizedBox(height: 8),
-          _infoRow(Icons.stadium_outlined, 'Stadium', owner.stadiumName),
+
+          // Details
+          _infoRow(Icons.business, 'Business', application.businessName),
           const SizedBox(height: 6),
-          _infoRow(Icons.location_on_outlined, 'City', owner.city),
+          _infoRow(Icons.phone_outlined, 'Phone', application.phone),
           const SizedBox(height: 6),
-          _infoRow(Icons.phone_outlined, 'Phone', owner.phone),
+          _infoRow(Icons.message_outlined, 'Message', application.message),
+
+          // Document
+          if (application.documentUrl != null) ...[
+            const SizedBox(height: 12),
+            GestureDetector(
+            onTap: () async {
+                 if (application.documentUrl == null || 
+                application.documentUrl!.isEmpty) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('No document uploaded by owner'),
+                  backgroundColor: Colors.orange,
+                ),
+              );
+              return;
+            }
+
+            try {
+              final url = Uri.parse(application.documentUrl!);
+              if (await canLaunchUrl(url)) {
+                await launchUrl(
+                  url,
+                  mode: LaunchMode.externalApplication,
+                );
+              } else {
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Cannot open document'),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                }
+              }
+            } catch (e) {
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('Invalid document URL: $e'),
+                    backgroundColor: Colors.red,
+                  ),
+                );
+              }
+            }
+          },
+              child: Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: Colors.blue.withOpacity(0.08),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                      color: Colors.blue.withOpacity(0.3)),
+                ),
+                child: const Row(
+                  children: [
+                    Icon(Icons.picture_as_pdf,
+                        color: Colors.blue, size: 20),
+                    SizedBox(width: 8),
+                    Text(
+                      'View Document',
+                      style: TextStyle(
+                        color: Colors.blue,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 13,
+                      ),
+                    ),
+                    Spacer(),
+                    Icon(Icons.arrow_forward_ios,
+                        color: Colors.blue, size: 12),
+                  ],
+                ),
+              ),
+            ),
+          ],
+
           const SizedBox(height: 16),
+
+          // Buttons
           Row(
             children: [
               Expanded(
@@ -127,6 +213,7 @@ class ApprovalCard extends StatelessWidget {
 
   Widget _infoRow(IconData icon, String label, String value) {
     return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Icon(icon, size: 15, color: Colors.grey[500]),
         const SizedBox(width: 6),
@@ -134,9 +221,12 @@ class ApprovalCard extends StatelessWidget {
           '$label: ',
           style: TextStyle(fontSize: 12, color: Colors.grey[500]),
         ),
-        Text(
-          value,
-          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+        Expanded(
+          child: Text(
+            value,
+            style: const TextStyle(
+                fontSize: 12, fontWeight: FontWeight.w600),
+          ),
         ),
       ],
     );

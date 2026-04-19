@@ -1,43 +1,15 @@
 import 'package:flutter/material.dart';
-import '../data/repositories/admin_repository.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../providers/admin_provider.dart';
 import '../widgets/venue_tile.dart';
 
-class AdminVenuesScreen extends StatefulWidget {
+class AdminVenuesScreen extends ConsumerWidget {
   const AdminVenuesScreen({super.key});
 
   @override
-  State<AdminVenuesScreen> createState() => _AdminVenuesScreenState();
-}
+  Widget build(BuildContext context, WidgetRef ref) {
+    final venuesAsync = ref.watch(allVenuesProvider);
 
-class _AdminVenuesScreenState extends State<AdminVenuesScreen> {
- final AdminRepository _repo = AdminRepository.instance;
-  List<Map<String, dynamic>> _venues = [];
-  bool _isLoading = true;
-
-  @override
-  void initState() {
-    super.initState();
-    _load();
-  }
-
-  Future<void> _load() async {
-    final data = await _repo.getAllVenues();
-    setState(() {
-      _venues = data;
-      _isLoading = false;
-    });
-  }
-
-  Future<void> _suspend(String venueId) async {
-    await _repo.suspendVenue(venueId);
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Venue suspended'), backgroundColor: Colors.orange),
-    );
-    _load();
-  }
-
-  @override
-  Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF5F5F5),
       appBar: AppBar(
@@ -46,25 +18,52 @@ class _AdminVenuesScreenState extends State<AdminVenuesScreen> {
         automaticallyImplyLeading: false,
         title: const Text(
           'Manage Venues',
-          style: TextStyle(color: Color(0xFF1A1A1A), fontWeight: FontWeight.bold),
+          style: TextStyle(
+            color: Color(0xFF1A1A1A),
+            fontWeight: FontWeight.bold,
+          ),
         ),
       ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator(color: Color(0xFF4CAF50)))
-          : RefreshIndicator(
-              color: const Color(0xFF4CAF50),
-              onRefresh: _load,
-              child: ListView.builder(
-                padding: const EdgeInsets.all(20),
-                itemCount: _venues.length,
-                itemBuilder: (context, index) {
-                  return VenueTile(
-                    venue: _venues[index],
-                    onSuspend: () => _suspend(_venues[index]['id']),
-                  );
-                },
+      body: venuesAsync.when(
+        loading: () => const Center(
+          child: CircularProgressIndicator(color: Color(0xFF4CAF50)),
+        ),
+        error: (e, _) => Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text('Error: $e', style: const TextStyle(color: Colors.red)),
+              ElevatedButton(
+                onPressed: () => ref.refresh(allVenuesProvider),
+                child: const Text('Retry'),
               ),
-            ),
+            ],
+          ),
+        ),
+        data: (venues) => RefreshIndicator(
+          color: const Color(0xFF4CAF50),
+          onRefresh: () async => ref.refresh(allVenuesProvider),
+          child: ListView.builder(
+            padding: const EdgeInsets.all(20),
+            itemCount: venues.length,
+            itemBuilder: (context, index) {
+              return VenueTile(
+                venue: venues[index],
+                onSuspend: () async {
+                  final repo = ref.read(adminRepositoryProvider);
+                  await repo.suspendVenue(venues[index]['id']);
+                  ref.refresh(allVenuesProvider);
+                },
+                onActivate: () async {
+                  final repo = ref.read(adminRepositoryProvider);
+                  await repo.activateVenue(venues[index]['id']);
+                  ref.refresh(allVenuesProvider);
+                },
+              );
+            },
+          ),
+        ),
+      ),
     );
   }
 }

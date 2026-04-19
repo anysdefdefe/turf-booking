@@ -1,35 +1,15 @@
 import 'package:flutter/material.dart';
-import '../data/repositories/admin_repository.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../providers/admin_provider.dart';
 import '../widgets/user_tile.dart';
 
-class AdminUsersScreen extends StatefulWidget {
+class AdminUsersScreen extends ConsumerWidget {
   const AdminUsersScreen({super.key});
 
   @override
-  State<AdminUsersScreen> createState() => _AdminUsersScreenState();
-}
+  Widget build(BuildContext context, WidgetRef ref) {
+    final usersAsync = ref.watch(allUsersProvider);
 
-class _AdminUsersScreenState extends State<AdminUsersScreen> {
- final AdminRepository _repo = AdminRepository.instance;
-  List<Map<String, dynamic>> _users = [];
-  bool _isLoading = true;
-
-  @override
-  void initState() {
-    super.initState();
-    _load();
-  }
-
-  Future<void> _load() async {
-    final data = await _repo.getAllUsers();
-    setState(() {
-      _users = data;
-      _isLoading = false;
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF5F5F5),
       appBar: AppBar(
@@ -38,32 +18,52 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
         automaticallyImplyLeading: false,
         title: const Text(
           'Manage Users',
-          style: TextStyle(color: Color(0xFF1A1A1A), fontWeight: FontWeight.bold),
+          style: TextStyle(
+            color: Color(0xFF1A1A1A),
+            fontWeight: FontWeight.bold,
+          ),
         ),
       ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator(color: Color(0xFF4CAF50)))
-          : RefreshIndicator(
-              color: const Color(0xFF4CAF50),
-              onRefresh: _load,
-              child: ListView.builder(
-                padding: const EdgeInsets.all(20),
-                itemCount: _users.length,
-                itemBuilder: (context, index) {
-                  return UserTile(
-                    user: _users[index],
-                    onBlock: () async {
-                      await _repo.blockUser(_users[index]['id']);
-                      _load();
-                    },
-                    onUnblock: () async {
-                      await _repo.unblockUser(_users[index]['id']);
-                      _load();
-                    },
-                  );
-                },
+      body: usersAsync.when(
+        loading: () => const Center(
+          child: CircularProgressIndicator(color: Color(0xFF4CAF50)),
+        ),
+        error: (e, _) => Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text('Error: $e', style: const TextStyle(color: Colors.red)),
+              ElevatedButton(
+                onPressed: () => ref.refresh(allUsersProvider),
+                child: const Text('Retry'),
               ),
-            ),
+            ],
+          ),
+        ),
+        data: (users) => RefreshIndicator(
+          color: const Color(0xFF4CAF50),
+          onRefresh: () async => ref.refresh(allUsersProvider),
+          child: ListView.builder(
+            padding: const EdgeInsets.all(20),
+            itemCount: users.length,
+            itemBuilder: (context, index) {
+              return UserTile(
+                user: users[index],
+                onBlock: () async {
+                  final repo = ref.read(adminRepositoryProvider);
+                  await repo.blockUser(users[index]['id']);
+                  ref.refresh(allUsersProvider);
+                },
+                onUnblock: () async {
+                  final repo = ref.read(adminRepositoryProvider);
+                  await repo.unblockUser(users[index]['id']);
+                  ref.refresh(allUsersProvider);
+                },
+              );
+            },
+          ),
+        ),
+      ),
     );
   }
 }
