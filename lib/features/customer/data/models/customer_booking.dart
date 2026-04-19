@@ -10,6 +10,8 @@ class CustomerBooking {
   final List<String> slots;
   final String courtType;
   final DateTime? cancelledAt;
+  final int? bookedSlotCount;
+  final String? firstSlotLabel;
 
   const CustomerBooking({
     required this.id,
@@ -19,11 +21,18 @@ class CustomerBooking {
     required this.slots,
     required this.courtType,
     this.cancelledAt,
+    this.bookedSlotCount,
+    this.firstSlotLabel,
   });
 
-  int get durationHours => slots.length;
+  int get durationHours => bookedSlotCount ?? slots.length;
 
-  String get primarySlot => slots.isEmpty ? '' : slots.first;
+  String get primarySlot =>
+      slots.isNotEmpty ? slots.first : (firstSlotLabel ?? '');
+
+  List<String> get displaySlots => slots.isNotEmpty
+      ? slots
+      : (primarySlot.isEmpty ? const [] : [primarySlot]);
 
   DateTime get startDateTime => _slotToDateTime(primarySlot);
 
@@ -39,7 +48,12 @@ class CustomerBooking {
 
   double get totalAmount => court.pricePerHour * durationHours;
 
-  CustomerBooking copyWith({BookingStatus? status, DateTime? cancelledAt}) {
+  CustomerBooking copyWith({
+    BookingStatus? status,
+    DateTime? cancelledAt,
+    int? bookedSlotCountOverride,
+    String? firstSlotLabelOverride,
+  }) {
     return CustomerBooking(
       id: id,
       court: court,
@@ -48,6 +62,8 @@ class CustomerBooking {
       slots: slots,
       courtType: courtType,
       cancelledAt: cancelledAt ?? this.cancelledAt,
+      bookedSlotCount: bookedSlotCountOverride ?? bookedSlotCount,
+      firstSlotLabel: firstSlotLabelOverride ?? firstSlotLabel,
     );
   }
 

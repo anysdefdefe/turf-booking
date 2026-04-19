@@ -22,7 +22,9 @@ class PaymentService {
     required List<BookingCartItem> cartItems,
     PaymentMethod method = PaymentMethod.dummy,
   }) async {
-    if (cartItems.isEmpty) {
+    final uniqueCartItems = _dedupeCartItems(cartItems);
+
+    if (uniqueCartItems.isEmpty) {
       return const CheckoutResult(
         paymentResult: PaymentResult.failure('Cart is empty.'),
         successfulBookings: <CustomerBooking>[],
@@ -31,14 +33,14 @@ class PaymentService {
       );
     }
 
-    final totalAmount = cartItems.fold<double>(
+    final totalAmount = uniqueCartItems.fold<double>(
       0,
       (sum, item) => sum + item.totalAmount,
     );
     final paymentRequest = PaymentRequest(
       amount: totalAmount,
       currency: 'INR',
-      description: 'Court booking checkout (${cartItems.length} item(s))',
+      description: 'Court booking checkout (${uniqueCartItems.length} item(s))',
     );
 
     final gateway = _gatewayFor(method);
@@ -47,7 +49,7 @@ class PaymentService {
       return CheckoutResult(
         paymentResult: payment,
         successfulBookings: const <CustomerBooking>[],
-        failedItems: cartItems,
+        failedItems: uniqueCartItems,
       );
     }
 
@@ -55,7 +57,7 @@ class PaymentService {
     final failedItems = <BookingCartItem>[];
     final bookingErrors = <String>[];
 
-    for (final item in cartItems) {
+    for (final item in uniqueCartItems) {
       final bookingId =
           'BK-${DateTime.now().microsecondsSinceEpoch.toString().substring(6)}';
 
@@ -80,13 +82,20 @@ class PaymentService {
     }
 
     if (successfulBookings.isNotEmpty) {
-      final successfulCartIds = successfulBookings
-          .map((booking) => _findCartItemId(booking, cartItems))
-          .whereType<String>()
-          .toSet();
+      if (successfulBookings.length == uniqueCartItems.length) {
+        // Full checkout success: clear cart to avoid accidental re-book attempts.
+        cartRepository.clear();
+      } else {
+        final successfulCartIds = cartItems
+            .where(
+              (item) => _matchesAnySuccessfulBooking(item, successfulBookings),
+            )
+            .map((item) => item.id)
+            .toSet();
 
-      for (final cartId in successfulCartIds) {
-        cartRepository.removeItem(cartId);
+        for (final cartId in successfulCartIds) {
+          cartRepository.removeItem(cartId);
+        }
       }
     }
 
@@ -120,11 +129,11 @@ class PaymentService {
     return dummyGateway;
   }
 
-  String? _findCartItemId(
-    CustomerBooking booking,
-    List<BookingCartItem> cartItems,
+  bool _matchesAnySuccessfulBooking(
+    BookingCartItem item,
+    List<CustomerBooking> successfulBookings,
   ) {
-    for (final item in cartItems) {
+    for (final booking in successfulBookings) {
       final isSameCourt = item.court.id == booking.court.id;
       final isSameDate =
           item.date.year == booking.date.year &&
@@ -133,11 +142,28 @@ class PaymentService {
       final isSameSlots =
           item.slots.length == booking.slots.length &&
           item.slots.every((slot) => booking.slots.contains(slot));
-
       if (isSameCourt && isSameDate && isSameSlots) {
-        return item.id;
+        return true;
       }
     }
-    return null;
+    return false;
+  }
+
+  List<BookingCartItem> _dedupeCartItems(List<BookingCartItem> items) {
+    final seen = <String>{};
+    final unique = <BookingCartItem>[];
+
+    for (final item in items) {
+      final normalizedSlots = List<String>.from(item.slots)..sort();
+      final key =
+          '${item.court.id}|${item.date.year}-${item.date.month}-${item.date.day}|${normalizedSlots.join(',')}';
+      if (seen.contains(key)) {
+        continue;
+      }
+      seen.add(key);
+      unique.add(item);
+    }
+
+    return unique;
   }
 }

@@ -89,7 +89,7 @@ class CourtCompactCard extends StatelessWidget {
             ),
             const SizedBox(height: 4),
             Text(
-              '${booking.durationHours} slot${booking.durationHours > 1 ? 's' : ''}',
+              '${booking.durationHours} slot${booking.durationHours > 1 ? 's' : ''} • ${_slotRangeLabel()}',
               style: const TextStyle(
                 fontFamily: 'Poppins',
                 fontSize: 12.5,
@@ -100,7 +100,7 @@ class CourtCompactCard extends StatelessWidget {
             Wrap(
               spacing: 6,
               runSpacing: 6,
-              children: booking.slots
+              children: booking.displaySlots
                   .map(
                     (slot) => Container(
                       padding: const EdgeInsets.symmetric(
@@ -186,8 +186,18 @@ class CourtCompactCard extends StatelessWidget {
       'Nov',
       'Dec',
     ];
-    final firstSlot = booking.slots.isEmpty ? '-' : booking.slots.first;
-    return '${d.day} ${months[d.month - 1]} • $firstSlot';
+    return '${d.day} ${months[d.month - 1]}';
+  }
+
+  String _slotRangeLabel() {
+    final slots = booking.displaySlots;
+    if (slots.isEmpty) {
+      return 'Time unavailable';
+    }
+    if (slots.length == 1) {
+      return slots.first;
+    }
+    return '${slots.first} - ${slots.last}';
   }
 }
 

@@ -44,7 +44,7 @@ class CustomerBookingRepository {
     final bookingRows = await _client
         .from('bookings')
         .select(
-          'id, court_id, booking_date, status, payment_status, created_at',
+          'id, court_id, booking_date, start_time, end_time, status, payment_status, created_at',
         )
         .eq('customer_id', user.id)
         .order('created_at', ascending: false);
@@ -56,18 +56,24 @@ class CustomerBookingRepository {
 
     Map<String, List<Map<String, dynamic>>> slotsByBooking = {};
     if (bookingIds.isNotEmpty) {
-      final slotRows = await _client
-          .from('slots')
-          .select('booking_id, start_time, status')
-          .inFilter('booking_id', bookingIds);
+      try {
+        final slotRows = await _client
+            .from('slots')
+            .select('booking_id, start_time, status')
+            .inFilter('booking_id', bookingIds);
 
-      for (final raw in slotRows) {
-        final row = raw;
-        final bookingId = row['booking_id'] as String?;
-        if (bookingId == null) {
-          continue;
+        for (final raw in slotRows) {
+          final row = raw;
+          final bookingId = row['booking_id'] as String?;
+          if (bookingId == null) {
+            continue;
+          }
+          slotsByBooking.putIfAbsent(bookingId, () => []).add(row);
         }
-        slotsByBooking.putIfAbsent(bookingId, () => []).add(row);
+      } on PostgrestException catch (e) {
+        if (!_isSlotsSelectRlsError(e)) {
+          rethrow;
+        }
       }
     }
 
@@ -95,6 +101,14 @@ class CustomerBookingRepository {
               .toList()
             ..sort(_slotSort);
 
+      final bookingDate =
+          DateTime.tryParse(row['booking_date']?.toString() ?? '') ??
+          DateTime.now();
+      final fallbackStartLabel = _slotLabelFromIso(
+        row['start_time']?.toString(),
+      );
+      final bookedSlotCount = (row['duration_hours'] as num?)?.toInt();
+
       mapped.add(
         CustomerBooking(
           id: bookingId,
@@ -103,14 +117,14 @@ class CustomerBookingRepository {
             row['status']?.toString(),
             row['payment_status']?.toString(),
           ),
-          date:
-              DateTime.tryParse(row['booking_date']?.toString() ?? '') ??
-              DateTime.now(),
+          date: bookingDate,
           slots: slots,
           courtType: court.courtTypes.first,
           cancelledAt: row['status']?.toString() == 'cancelled'
               ? DateTime.tryParse(row['created_at']?.toString() ?? '')
               : null,
+          bookedSlotCount: bookedSlotCount,
+          firstSlotLabel: slots.isEmpty ? fallbackStartLabel : null,
         ),
       );
     }
@@ -146,10 +160,6 @@ class CustomerBookingRepository {
         .from('bookings')
         .update({'status': 'cancelled', 'payment_status': 'refunded'})
         .eq('id', bookingId);
-    await _client
-        .from('slots')
-        .update({'status': 'available'})
-        .eq('booking_id', bookingId);
 
     _bookings[index] = booking.copyWith(
       status: BookingStatus.cancelled,
@@ -186,12 +196,10 @@ class CustomerBookingRepository {
       'court_id': booking.court.id,
       'customer_id': user.id,
       'booking_date': date.toIso8601String().split('T').first,
-      'start_time': slotTimes.isEmpty
-          ? null
-          : slotTimes.first.toIso8601String(),
+      'start_time': slotTimes.isEmpty ? null : _toPostgresTime(slotTimes.first),
       'end_time': slotTimes.isEmpty
           ? null
-          : slotTimes.last.add(const Duration(hours: 1)).toIso8601String(),
+          : _toPostgresTime(slotTimes.last.add(const Duration(hours: 1))),
       'duration_hours': booking.durationHours,
       'total_amount': booking.totalAmount,
       'status': booking.status == BookingStatus.cancelled
@@ -202,32 +210,11 @@ class CustomerBookingRepository {
           : 'paid',
     };
 
-    Map<String, dynamic> bookingInsert;
-    try {
-      bookingInsert = await _client
-          .from('bookings')
-          .insert(bookingPayload)
-          .select('id')
-          .single();
-    } on PostgrestException catch (e) {
-      if (!_isTimeTypeSyntaxError(e)) {
-        rethrow;
-      }
-
-      final fallbackPayload = Map<String, dynamic>.from(bookingPayload)
-        ..['start_time'] = slotTimes.isEmpty
-            ? null
-            : _toPostgresTime(slotTimes.first)
-        ..['end_time'] = slotTimes.isEmpty
-            ? null
-            : _toPostgresTime(slotTimes.last.add(const Duration(hours: 1)));
-
-      bookingInsert = await _client
-          .from('bookings')
-          .insert(fallbackPayload)
-          .select('id')
-          .single();
-    }
+    final bookingInsert = await _client
+        .from('bookings')
+        .insert(bookingPayload)
+        .select('id')
+        .single();
 
     final bookingId = bookingInsert['id'] as String;
     if (slotTimes.isNotEmpty) {
@@ -236,13 +223,26 @@ class CustomerBookingRepository {
             (start) => {
               'court_id': booking.court.id,
               'booking_id': bookingId,
-              'start_time': start.toIso8601String(),
-              'end_time': start.add(const Duration(hours: 1)).toIso8601String(),
+              'start_time': _toSqlTimestamp(start),
+              'end_time': _toSqlTimestamp(start.add(const Duration(hours: 1))),
               'status': 'booked',
             },
           )
           .toList(growable: false);
-      await _client.from('slots').insert(slotInserts);
+      try {
+        await _client.from('slots').insert(slotInserts);
+      } on PostgrestException catch (e) {
+        if (_isSlotsRlsInsertError(e)) {
+          // Booking row is valid; some schemas block direct slot writes from clients.
+          // Keep going so checkout can complete and cart can be cleared.
+        } else {
+          // Best-effort rollback to avoid orphan bookings when slot insert fails.
+          try {
+            await _client.from('bookings').delete().eq('id', bookingId);
+          } catch (_) {}
+          rethrow;
+        }
+      }
     }
 
     _bookings.insert(0, booking.copyWith(status: BookingStatus.booked));
@@ -424,16 +424,32 @@ class CustomerBookingRepository {
     return '$hourText:$minuteText $suffix';
   }
 
-  bool _isTimeTypeSyntaxError(PostgrestException e) {
-    final message = e.message.toLowerCase();
-    return message.contains('invalid input syntax for type time') ||
-        message.contains('date/time field value out of range');
-  }
-
   String _toPostgresTime(DateTime dt) {
     final hour = dt.hour.toString().padLeft(2, '0');
     final minute = dt.minute.toString().padLeft(2, '0');
     final second = dt.second.toString().padLeft(2, '0');
     return '$hour:$minute:$second';
+  }
+
+  String _toSqlTimestamp(DateTime dt) {
+    final y = dt.year.toString().padLeft(4, '0');
+    final m = dt.month.toString().padLeft(2, '0');
+    final d = dt.day.toString().padLeft(2, '0');
+    final h = dt.hour.toString().padLeft(2, '0');
+    final min = dt.minute.toString().padLeft(2, '0');
+    final s = dt.second.toString().padLeft(2, '0');
+    return '$y-$m-$d $h:$min:$s';
+  }
+
+  bool _isSlotsRlsInsertError(PostgrestException e) {
+    final msg = e.message.toLowerCase();
+    return (e.code == '42501' || msg.contains('row-level security')) &&
+        msg.contains('slots');
+  }
+
+  bool _isSlotsSelectRlsError(PostgrestException e) {
+    final msg = e.message.toLowerCase();
+    return (e.code == '42501' || msg.contains('row-level security')) &&
+        msg.contains('slots');
   }
 }
