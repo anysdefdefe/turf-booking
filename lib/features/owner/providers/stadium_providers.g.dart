@@ -58,6 +58,95 @@ final class CurrentStadiumProvider
 
 String _$currentStadiumHash() => r'43d7e7ff4137cdc0ad3674e27db6bd40ff3687d8';
 
+/// Returns the list of courts for a given stadium.
+/// Used by the dashboard to display the court count and by manage screens.
+
+@ProviderFor(courtsForStadium)
+final courtsForStadiumProvider = CourtsForStadiumFamily._();
+
+/// Returns the list of courts for a given stadium.
+/// Used by the dashboard to display the court count and by manage screens.
+
+final class CourtsForStadiumProvider
+    extends
+        $FunctionalProvider<
+          AsyncValue<List<CourtModel>>,
+          List<CourtModel>,
+          FutureOr<List<CourtModel>>
+        >
+    with $FutureModifier<List<CourtModel>>, $FutureProvider<List<CourtModel>> {
+  /// Returns the list of courts for a given stadium.
+  /// Used by the dashboard to display the court count and by manage screens.
+  CourtsForStadiumProvider._({
+    required CourtsForStadiumFamily super.from,
+    required String super.argument,
+  }) : super(
+         retry: null,
+         name: r'courtsForStadiumProvider',
+         isAutoDispose: true,
+         dependencies: null,
+         $allTransitiveDependencies: null,
+       );
+
+  @override
+  String debugGetCreateSourceHash() => _$courtsForStadiumHash();
+
+  @override
+  String toString() {
+    return r'courtsForStadiumProvider'
+        ''
+        '($argument)';
+  }
+
+  @$internal
+  @override
+  $FutureProviderElement<List<CourtModel>> $createElement(
+    $ProviderPointer pointer,
+  ) => $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<List<CourtModel>> create(Ref ref) {
+    final argument = this.argument as String;
+    return courtsForStadium(ref, argument);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return other is CourtsForStadiumProvider && other.argument == argument;
+  }
+
+  @override
+  int get hashCode {
+    return argument.hashCode;
+  }
+}
+
+String _$courtsForStadiumHash() => r'77f9a63ac27ee52f9c22f87b69d4f13dd0842f06';
+
+/// Returns the list of courts for a given stadium.
+/// Used by the dashboard to display the court count and by manage screens.
+
+final class CourtsForStadiumFamily extends $Family
+    with $FunctionalFamilyOverride<FutureOr<List<CourtModel>>, String> {
+  CourtsForStadiumFamily._()
+    : super(
+        retry: null,
+        name: r'courtsForStadiumProvider',
+        dependencies: null,
+        $allTransitiveDependencies: null,
+        isAutoDispose: true,
+      );
+
+  /// Returns the list of courts for a given stadium.
+  /// Used by the dashboard to display the court count and by manage screens.
+
+  CourtsForStadiumProvider call(String stadiumId) =>
+      CourtsForStadiumProvider._(argument: stadiumId, from: this);
+
+  @override
+  String toString() => r'courtsForStadiumProvider';
+}
+
 /// AsyncNotifier that manages the Add Stadium form submission lifecycle.
 
 @ProviderFor(AddStadiumController)

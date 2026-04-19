@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import 'package:turf_booking/features/owner/data/models/stadium_model.dart';
+import 'package:turf_booking/features/owner/data/models/court_model.dart';
 import 'package:turf_booking/features/owner/data/repositories/stadium_repository.dart';
 
 part 'stadium_providers.g.dart';
@@ -12,6 +13,13 @@ part 'stadium_providers.g.dart';
 @riverpod
 Future<StadiumModel?> currentStadium(Ref ref) {
   return ref.watch(stadiumRepositoryProvider).getMyStadium();
+}
+
+/// Returns the list of courts for a given stadium.
+/// Used by the dashboard to display the court count and by manage screens.
+@riverpod
+Future<List<CourtModel>> courtsForStadium(Ref ref, String stadiumId) {
+  return ref.watch(stadiumRepositoryProvider).getCourtsForStadium(stadiumId);
 }
 
 /// Converts a [TimeOfDay] to Postgres-compatible HH:mm:ss string.
