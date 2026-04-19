@@ -116,7 +116,8 @@ GoRouter router(Ref ref) {
       ),
       GoRoute(
         path: '/customer/my-bookings',
-        builder: (context, state) => const MyBookingsScreen(),
+        builder: (context, state) =>
+            MyBookingsScreen(toastMessage: state.uri.queryParameters['toast']),
       ),
       GoRoute(
         path: '/customer/cart',

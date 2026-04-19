@@ -236,8 +236,6 @@ class CourtRepository {
       place: stadium.address,
       city: stadium.city,
         imageUrl: imageUrl.isEmpty ? stadium.imageUrl : imageUrl,
-      rating: 0,
-      reviewCount: 0,
         pricePerHour:
           (row['price_per_hour'] as num?)?.toDouble() ??
           (row['hourly_rate'] as num?)?.toDouble() ??
