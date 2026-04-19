@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:turf_booking/app/theme/app_colors.dart';
 import 'package:turf_booking/app/constants/app_constants.dart';
 import 'package:turf_booking/features/owner/data/models/court_model.dart';
+import 'package:turf_booking/features/owner/data/repositories/stadium_repository.dart';
 import 'package:turf_booking/features/owner/providers/stadium_providers.dart';
 import '../widgets/owner_bottom_nav_bar.dart';
 
@@ -639,9 +640,15 @@ class _CourtTile extends ConsumerWidget {
     );
 
     if (confirmed == true && context.mounted) {
-      final ok = await ref
-          .read(deleteCourtControllerProvider.notifier)
-          .deleteCourt(court.id, stadiumId);
+      bool ok = false;
+      try {
+        await ref.read(stadiumRepositoryProvider).deleteCourt(court.id);
+        // Invalidate BEFORE widget might be gone
+        ref.invalidate(courtsForStadiumProvider(stadiumId));
+        ok = true;
+      } catch (_) {
+        ok = false;
+      }
 
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -800,32 +807,32 @@ class _AddCourtSheetState extends ConsumerState<_AddCourtSheet> {
 
     setState(() => _isSaving = true);
 
-    final ok = await ref
-        .read(addCourtControllerProvider.notifier)
-        .addCourt(
-          stadiumId: widget.stadiumId,
-          name: name,
-          sportType: _selectedSport!,
-          pricePerHour: price,
-          openTime: widget.defaultOpenTime,
-          closeTime: widget.defaultCloseTime,
-        );
-
-    if (mounted) {
-      setState(() => _isSaving = false);
-      if (ok) {
+    try {
+      await ref.read(stadiumRepositoryProvider).addCourt(
+            stadiumId: widget.stadiumId,
+            name: name,
+            sportType: _selectedSport!,
+            pricePerHour: price,
+            openTime: widget.defaultOpenTime,
+            closeTime: widget.defaultCloseTime,
+          );
+      // Invalidate while ref is still valid (widget still mounted)
+      ref.invalidate(courtsForStadiumProvider(widget.stadiumId));
+      if (mounted) {
         Navigator.of(context).pop();
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
           content: const Text('✓ Court added',
               style: TextStyle(fontFamily: 'Poppins')),
           backgroundColor: AppColors.primary,
           behavior: SnackBarBehavior.floating,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10)),
         ));
-      } else {
-        _snack('Failed to add court. Please try again.');
       }
+    } catch (e) {
+      if (mounted) _snack('Failed to add court: $e');
+    } finally {
+      if (mounted) setState(() => _isSaving = false);
     }
   }
 
