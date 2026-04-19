@@ -4,115 +4,20 @@ import 'package:flutter/material.dart';
 import 'package:turf_booking/app/theme/app_colors.dart';
 import 'package:turf_booking/app/constants/app_constants.dart';
 import '../widgets/owner_bottom_nav_bar.dart';
-
-// ── MODEL ─────────────────────────────────────────────────────────────────────
-
-class BookingEntry {
-  final String id;
-  final String customerName;
-  final String courtName;
-  final String stadiumName;
-  final String date;
-  final String startTime;
-  final String endTime;
-  final String status; // 'confirmed' | 'cancelled'
-  final double amount;
-
-  const BookingEntry({
-    required this.id,
-    required this.customerName,
-    required this.courtName,
-    required this.stadiumName,
-    required this.date,
-    required this.startTime,
-    required this.endTime,
-    required this.status,
-    required this.amount,
-  });
-}
-
-// ── MOCK DATA ─────────────────────────────────────────────────────────────────
-// All bookings are auto-confirmed on slot selection. No pending state exists.
-
-const List<BookingEntry> _mockBookings = [
-  BookingEntry(
-    id: '1',
-    customerName: 'Arjun Mehta',
-    courtName: 'Court A',
-    stadiumName: 'Green Arena',
-    date: 'Today',
-    startTime: '6:00 AM',
-    endTime: '7:00 AM',
-    status: 'confirmed',
-    amount: 500,
-  ),
-  BookingEntry(
-    id: '2',
-    customerName: 'Priya Sharma',
-    courtName: 'Court B',
-    stadiumName: 'Turf Zone',
-    date: 'Today',
-    startTime: '7:00 AM',
-    endTime: '8:00 AM',
-    status: 'confirmed',
-    amount: 600,
-  ),
-  BookingEntry(
-    id: '3',
-    customerName: 'Rahul Nair',
-    courtName: 'Court A',
-    stadiumName: 'Green Arena',
-    date: 'Today',
-    startTime: '8:00 AM',
-    endTime: '9:00 AM',
-    status: 'confirmed',
-    amount: 500,
-  ),
-  BookingEntry(
-    id: '4',
-    customerName: 'Sneha Kapoor',
-    courtName: 'Court C',
-    stadiumName: 'PlayField Hub',
-    date: 'Tomorrow',
-    startTime: '10:00 AM',
-    endTime: '11:00 AM',
-    status: 'confirmed',
-    amount: 450,
-  ),
-  BookingEntry(
-    id: '5',
-    customerName: 'Vikram Iyer',
-    courtName: 'Court A',
-    stadiumName: 'Turf Zone',
-    date: 'Tomorrow',
-    startTime: '4:00 PM',
-    endTime: '5:00 PM',
-    status: 'cancelled',
-    amount: 600,
-  ),
-  BookingEntry(
-    id: '6',
-    customerName: 'Meena Rao',
-    courtName: 'Court B',
-    stadiumName: 'Green Arena',
-    date: 'Yesterday',
-    startTime: '6:00 AM',
-    endTime: '7:00 AM',
-    status: 'confirmed',
-    amount: 500,
-  ),
-];
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:turf_booking/features/owner/data/models/booking_model.dart';
+import 'package:turf_booking/features/owner/providers/owner_bookings_providers.dart';
 
 // ── SCREEN ────────────────────────────────────────────────────────────────────
 
-class OwnerBookingsScreen extends StatefulWidget {
+class OwnerBookingsScreen extends ConsumerStatefulWidget {
   const OwnerBookingsScreen({super.key});
 
   @override
-  State<OwnerBookingsScreen> createState() => _OwnerBookingsScreenState();
+  ConsumerState<OwnerBookingsScreen> createState() => _OwnerBookingsScreenState();
 }
 
-class _OwnerBookingsScreenState extends State<OwnerBookingsScreen>
+class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
 
@@ -137,14 +42,14 @@ class _OwnerBookingsScreenState extends State<OwnerBookingsScreen>
 
   // ── DERIVED DATA ────────────────────────────────────────────────────────────
 
-  List<BookingEntry> get _filteredBookings {
-    List<BookingEntry> result = List.of(_mockBookings);
+  List<BookingModel> _getFilteredBookings(List<BookingModel> source) {
+    List<BookingModel> result = List.of(source);
 
     if (_tabController.index == 1) {
       result = result.where((b) => b.status == 'cancelled').toList();
     }
     if (_dateFilter != null) {
-      result = result.where((b) => b.date == _dateFilter).toList();
+      result = result.where((b) => b.bookingDate == _dateFilter).toList();
     }
     if (_courtFilter != null) {
       result = result.where((b) => b.courtName == _courtFilter).toList();
@@ -154,10 +59,10 @@ class _OwnerBookingsScreenState extends State<OwnerBookingsScreen>
       result = result
           .where(
             (b) =>
-                b.customerName.toLowerCase().contains(q) ||
-                b.courtName.toLowerCase().contains(q) ||
-                b.stadiumName.toLowerCase().contains(q) ||
-                b.date.toLowerCase().contains(q),
+                (b.customerName ?? '').toLowerCase().contains(q) ||
+                (b.courtName ?? '').toLowerCase().contains(q) ||
+                (b.stadiumName ?? '').toLowerCase().contains(q) ||
+                b.bookingDate.toLowerCase().contains(q),
           )
           .toList();
     }
@@ -166,27 +71,12 @@ class _OwnerBookingsScreenState extends State<OwnerBookingsScreen>
 
   bool get _hasActiveFilters => _dateFilter != null || _courtFilter != null;
 
-  double get _todayRevenue => _mockBookings
-      .where((b) => b.date == 'Today' && b.status == 'confirmed')
-      .fold(0.0, (sum, b) => sum + b.amount);
+  
 
-  int get _todayBookings =>
-      _mockBookings.where((b) => b.date == 'Today').length;
+  
 
   /// Groups every booking by courtName → { count, revenue, stadiumName }.
-  Map<String, Map<String, dynamic>> get _courtStats {
-    final Map<String, Map<String, dynamic>> stats = {};
-    for (final b in _mockBookings) {
-      stats.putIfAbsent(
-        b.courtName,
-        () => {'count': 0, 'revenue': 0.0, 'stadiumName': b.stadiumName},
-      );
-      stats[b.courtName]!['count'] = (stats[b.courtName]!['count'] as int) + 1;
-      stats[b.courtName]!['revenue'] =
-          (stats[b.courtName]!['revenue'] as double) + b.amount;
-    }
-    return stats;
-  }
+  
 
   // ── ACTIONS ─────────────────────────────────────────────────────────────────
 
@@ -214,6 +104,7 @@ class _OwnerBookingsScreenState extends State<OwnerBookingsScreen>
 
   @override
   Widget build(BuildContext context) {
+    final bookingsAsync = ref.watch(ownerBookingsProvider);
     return Scaffold(
       backgroundColor: AppColors.background,
       bottomNavigationBar: const OwnerBottomNavBar(selectedIndex: 2),
@@ -263,32 +154,41 @@ class _OwnerBookingsScreenState extends State<OwnerBookingsScreen>
           tabs: _tabs.map((t) => Tab(text: t)).toList(),
         ),
       ),
-      body: Column(
-        children: [
-          _buildSummaryStrip(),
-          _buildSearchRow(),
-          if (_hasActiveFilters) _buildActiveChips(),
-          _CourtBreakdown(courtStats: _courtStats),
-          const SizedBox(height: 4),
-          Expanded(
-            child: _filteredBookings.isEmpty
-                ? _buildEmpty()
-                : ListView.separated(
-                    padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
-                    itemCount: _filteredBookings.length,
-                    separatorBuilder: (_, __) => const SizedBox(height: 10),
-                    itemBuilder: (_, i) =>
-                        _BookingCard(booking: _filteredBookings[i]),
-                  ),
-          ),
-        ],
+      body: bookingsAsync.when(
+        loading: () => const Center(child: CircularProgressIndicator(color: AppColors.primary)),
+        error: (err, _) => Center(child: Text('Error: $err', style: const TextStyle(color: AppColors.error))),
+        data: (bookings) {
+          final stats = bookings.courtStats;
+          final filtered = _getFilteredBookings(bookings);
+          
+          return Column(
+            children: [
+              _buildSummaryStrip(bookings.todayRevenue, bookings.todayBookings),
+              _buildSearchRow(),
+              if (_hasActiveFilters) _buildActiveChips(),
+              if (stats.isNotEmpty) _CourtBreakdown(courtStats: stats),
+              const SizedBox(height: 4),
+              Expanded(
+                child: filtered.isEmpty
+                    ? _buildEmpty()
+                    : ListView.separated(
+                        padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
+                        itemCount: filtered.length,
+                        separatorBuilder: (_, __) => const SizedBox(height: 10),
+                        itemBuilder: (_, i) =>
+                            _BookingCard(booking: filtered[i]),
+                      ),
+              ),
+            ],
+          );
+        },
       ),
     );
   }
 
   // ── SUB-BUILDERS ─────────────────────────────────────────────────────────────
 
-  Widget _buildSummaryStrip() {
+  Widget _buildSummaryStrip(double rev, int count) {
     return Container(
       margin: const EdgeInsets.fromLTRB(16, 16, 16, 0),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -301,7 +201,7 @@ class _OwnerBookingsScreenState extends State<OwnerBookingsScreen>
         children: [
           _SummaryItem(
             label: "Today's Revenue",
-            value: '₹${_todayRevenue.toStringAsFixed(0)}',
+            value: '₹${rev.toStringAsFixed(0)}',
             icon: Icons.currency_rupee_rounded,
           ),
           Container(
@@ -312,7 +212,7 @@ class _OwnerBookingsScreenState extends State<OwnerBookingsScreen>
           ),
           _SummaryItem(
             label: "Today's Bookings",
-            value: '$_todayBookings',
+            value: '$count',
             icon: Icons.event_available_rounded,
           ),
         ],
@@ -727,7 +627,7 @@ class _ActiveFilterChip extends StatelessWidget {
 // ── BOOKING CARD ──────────────────────────────────────────────────────────────
 
 class _BookingCard extends StatelessWidget {
-  final BookingEntry booking;
+  final BookingModel booking;
 
   const _BookingCard({required this.booking});
 
@@ -773,7 +673,7 @@ class _BookingCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      booking.customerName,
+                      (booking.customerName ?? 'Unknown'),
                       style: const TextStyle(
                         fontFamily: 'Poppins',
                         fontSize: 14,
@@ -782,7 +682,7 @@ class _BookingCard extends StatelessWidget {
                       ),
                     ),
                     Text(
-                      '${booking.courtName} — ${booking.stadiumName}',
+                      '${(booking.courtName ?? 'Unknown')} — ${(booking.stadiumName ?? 'Unknown')}',
                       style: const TextStyle(
                         fontFamily: 'Poppins',
                         fontSize: 12,
@@ -822,7 +722,7 @@ class _BookingCard extends StatelessWidget {
               ),
               const SizedBox(width: 4),
               Text(
-                booking.date,
+                booking.bookingDate,
                 style: const TextStyle(
                   fontFamily: 'Poppins',
                   fontSize: 12,
@@ -846,7 +746,7 @@ class _BookingCard extends StatelessWidget {
               ),
               const Spacer(),
               Text(
-                '₹${booking.amount.toStringAsFixed(0)}',
+                '₹${booking.totalAmount.toStringAsFixed(0)}',
                 style: const TextStyle(
                   fontFamily: 'Poppins',
                   fontSize: 14,

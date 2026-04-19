@@ -6,6 +6,7 @@ import 'package:turf_booking/app/constants/app_constants.dart';
 import 'package:turf_booking/app/theme/app_colors.dart';
 import 'package:turf_booking/features/auth/providers/auth_providers.dart';
 import 'package:turf_booking/features/owner/providers/stadium_providers.dart';
+import 'package:turf_booking/features/owner/providers/owner_bookings_providers.dart';
 import '../widgets/owner_bottom_nav_bar.dart';
 
 class OwnerDashboardScreen extends ConsumerWidget {
@@ -15,6 +16,7 @@ class OwnerDashboardScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final stadiumAsync = ref.watch(currentStadiumProvider);
     final user = ref.watch(authStateProvider).value;
+    final bookingsAsync = ref.watch(ownerBookingsProvider);
 
     return stadiumAsync.when(
       loading: () => const Scaffold(
@@ -71,6 +73,18 @@ class OwnerDashboardScreen extends ConsumerWidget {
           loading: () => '--',
           error: (_, __) => '--',
           data: (courts) => courts.length.toString(),
+        );
+
+        final bookingsCount = bookingsAsync.when(
+          loading: () => '--',
+          error: (_, __) => '--',
+          data: (bookings) => bookings.todayBookings.toString(),
+        );
+
+        final revenueAmount = bookingsAsync.when(
+          loading: () => '--',
+          error: (_, __) => '--',
+          data: (bookings) => '₹${bookings.todayRevenue.toStringAsFixed(0)}',
         );
 
         final firstName =
@@ -161,7 +175,7 @@ class OwnerDashboardScreen extends ConsumerWidget {
                     padding: const EdgeInsets.all(20),
                     decoration: BoxDecoration(
                       gradient: const LinearGradient(
-                        colors: [Color(0xFF00C27C), Color(0xFF00995F)],
+                        colors: [AppColors.textPrimary, Color(0xFF27272A)],
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                       ),
@@ -311,21 +325,21 @@ class OwnerDashboardScreen extends ConsumerWidget {
                         ),
                       ),
                       const SizedBox(width: 12),
-                      const Expanded(
+                      Expanded(
                         child: _StatCard(
                           label: 'Bookings',
-                          value: '0',
+                          value: bookingsCount,
                           icon: Icons.calendar_today_rounded,
-                          color: Color(0xFF0EA5E9),
+                          color: const Color(0xFF0EA5E9),
                         ),
                       ),
                       const SizedBox(width: 12),
-                      const Expanded(
+                      Expanded(
                         child: _StatCard(
                           label: 'Revenue',
-                          value: '₹0',
+                          value: revenueAmount,
                           icon: Icons.currency_rupee_rounded,
-                          color: Color(0xFF22C55E),
+                          color: const Color(0xFF22C55E),
                         ),
                       ),
                     ],
@@ -345,31 +359,108 @@ class OwnerDashboardScreen extends ConsumerWidget {
                   ),
                   const SizedBox(height: 14),
 
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(24),
-                    decoration: BoxDecoration(
-                      color: AppColors.surface,
-                      borderRadius:
-                          BorderRadius.circular(AppConstants.radiusM),
-                      border: Border.all(color: AppColors.divider),
+                  bookingsAsync.when(
+                    loading: () => const Center(
+                      child: Padding(
+                        padding: EdgeInsets.all(24.0),
+                        child: CircularProgressIndicator(color: AppColors.primary),
+                      ),
                     ),
-                    child: const Column(
-                      children: [
-                        Icon(Icons.event_available_rounded,
-                            color: AppColors.textMuted, size: 32),
-                        SizedBox(height: 8),
-                        Text(
-                          'No bookings yet',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontFamily: 'Poppins',
-                            fontSize: 13,
-                            color: AppColors.textSecondary,
+                    error: (err, _) => Center(
+                      child: Text('Error: $err',
+                          style: const TextStyle(color: AppColors.error)),
+                    ),
+                    data: (bookings) {
+                      final todayStr = DateTime.now().toIso8601String().substring(0, 10);
+                      final todayBookingsList = bookings
+                          .where((b) => b.bookingDate == todayStr && b.status != 'cancelled')
+                          .toList();
+
+                      if (todayBookingsList.isEmpty) {
+                        return Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(24),
+                          decoration: BoxDecoration(
+                            color: AppColors.surface,
+                            borderRadius: BorderRadius.circular(AppConstants.radiusM),
+                            border: Border.all(color: AppColors.divider),
                           ),
-                        ),
-                      ],
-                    ),
+                          child: const Column(
+                            children: [
+                              Icon(Icons.event_available_rounded,
+                                  color: AppColors.textMuted, size: 32),
+                              SizedBox(height: 8),
+                              Text(
+                                'No bookings yet',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  fontFamily: 'Poppins',
+                                  fontSize: 13,
+                                  color: AppColors.textSecondary,
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      }
+
+                      return ListView.separated(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        itemCount: todayBookingsList.length.clamp(0, 3), // Show max 3 previews
+                        separatorBuilder: (_, __) => const SizedBox(height: 10),
+                        itemBuilder: (context, index) {
+                          final b = todayBookingsList[index];
+                          return Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: AppColors.surface,
+                              borderRadius: BorderRadius.circular(AppConstants.radiusM),
+                              border: Border.all(color: AppColors.divider),
+                            ),
+                            child: Row(
+                              children: [
+                                Container(
+                                  width: 38,
+                                  height: 38,
+                                  decoration: BoxDecoration(
+                                    color: AppColors.badgeBg,
+                                    borderRadius: BorderRadius.circular(AppConstants.radiusS),
+                                  ),
+                                  child: const Icon(Icons.person_outline_rounded, 
+                                      color: AppColors.primary, size: 20),
+                                ),
+                                const SizedBox(width: 10),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        b.customerName ?? 'Unknown',
+                                        style: const TextStyle(
+                                          fontFamily: 'Poppins',
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w600,
+                                          color: AppColors.textPrimary,
+                                        ),
+                                      ),
+                                      Text(
+                                        '${b.courtName} • ${b.startTime.substring(0, 5)}',
+                                        style: const TextStyle(
+                                          fontFamily: 'Poppins',
+                                          fontSize: 12,
+                                          color: AppColors.textSecondary,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                      );
+                    },
                   ),
 
                   const SizedBox(height: 28),
