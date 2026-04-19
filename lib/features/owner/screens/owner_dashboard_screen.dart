@@ -99,8 +99,15 @@ class OwnerDashboardScreen extends ConsumerWidget {
             ),
             actions: [
               IconButton(
+                icon: const Icon(Icons.swap_horiz_rounded,
+                    color: AppColors.textSecondary),
+                tooltip: 'Switch Mode',
+                onPressed: () => context.go('/mode-selection'),
+              ),
+              IconButton(
                 icon:
                     const Icon(Icons.logout, color: AppColors.textSecondary),
+                tooltip: 'Logout',
                 onPressed: () async {
                   await Supabase.instance.client.auth.signOut();
                 },
