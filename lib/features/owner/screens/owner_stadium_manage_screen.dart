@@ -572,6 +572,9 @@ class _CourtTile extends ConsumerWidget {
   const _CourtTile({required this.court, required this.stadiumId});
 
   Future<void> _confirmDelete(BuildContext context, WidgetRef ref) async {
+    // Capture messenger BEFORE any async gaps.
+    final messenger = ScaffoldMessenger.of(context);
+
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -639,33 +642,34 @@ class _CourtTile extends ConsumerWidget {
       ),
     );
 
-    if (confirmed == true && context.mounted) {
-      bool ok = false;
-      try {
-        await ref.read(stadiumRepositoryProvider).deleteCourt(court.id);
-        // Invalidate BEFORE widget might be gone
-        ref.invalidate(courtsForStadiumProvider(stadiumId));
-        ok = true;
-      } catch (_) {
-        ok = false;
-      }
+    if (confirmed != true) return;
 
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              ok ? '✓ "${court.name}" deleted' : 'Failed to delete court',
-              style: const TextStyle(fontFamily: 'Poppins'),
-            ),
-            backgroundColor: ok ? AppColors.primary : AppColors.error,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10)),
-          ),
-        );
-      }
+    try {
+      await ref.read(stadiumRepositoryProvider).deleteCourt(court.id);
+      ref.invalidate(courtsForStadiumProvider(stadiumId));
+      messenger.showSnackBar(SnackBar(
+        content: Text(
+          'court deleted',
+          style: const TextStyle(fontFamily: 'Poppins'),
+        ),
+        backgroundColor: AppColors.primary,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      ));
+    } catch (e) {
+      messenger.showSnackBar(SnackBar(
+        content: Text(
+          'Failed: $e',
+          style: const TextStyle(fontFamily: 'Poppins'),
+        ),
+        backgroundColor: AppColors.error,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      ));
     }
   }
+
+
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
