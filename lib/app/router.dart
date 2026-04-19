@@ -161,15 +161,16 @@ GoRouter router(Ref ref) {
         builder: (context, state) => const OwnerAddStadiumScreen(),
       ),
       GoRoute(
-
         path: '/admin',
         builder: (context, state) => const AdminMainScreen(),
+      ),
 
-        path: '/owner/stadium/:stadiumId/manage',
-        builder: (context, state) {
-          final stadium = state.extra as StadiumModel;
-          return OwnerStadiumManageScreen(stadium: stadium);
-        },
+      GoRoute(
+      path: '/owner/stadium/:stadiumId/manage',
+      builder: (context, state) {
+        final stadium = state.extra as StadiumModel;
+        return OwnerStadiumManageScreen(stadium: stadium);
+       },
       ),
       GoRoute(
         path: '/owner/stadium/:stadiumId/edit',
