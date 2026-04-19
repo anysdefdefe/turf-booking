@@ -148,6 +148,56 @@ class StadiumRepository {
       throw UnknownException('Failed to update stadium status: $e', e);
     }
   }
+
+  /// Updates mutable fields on a stadium. Only non-null values are sent.
+  Future<void> updateStadium({
+    required String stadiumId,
+    String? name,
+    String? description,
+    String? address,
+    String? city,
+    bool? isActive,
+  }) async {
+    try {
+      final Map<String, dynamic> payload = {};
+      if (name != null) payload['name'] = name;
+      if (description != null) payload['description'] = description;
+      if (address != null) payload['address'] = address;
+      if (city != null) payload['city'] = city;
+      if (isActive != null) payload['is_active'] = isActive;
+
+      if (payload.isEmpty) return;
+
+      await _client.from('stadiums').update(payload).eq('id', stadiumId);
+    } catch (e) {
+      throw UnknownException('Failed to update stadium: $e', e);
+    }
+  }
+
+  /// Updates mutable fields on a court. Only non-null values are sent.
+  Future<void> updateCourt({
+    required String courtId,
+    String? name,
+    String? sportType,
+    String? description,
+    double? pricePerHour,
+    bool? isActive,
+  }) async {
+    try {
+      final Map<String, dynamic> payload = {};
+      if (name != null) payload['name'] = name;
+      if (sportType != null) payload['sport_type'] = sportType;
+      if (description != null) payload['description'] = description;
+      if (pricePerHour != null) payload['price_per_hour'] = pricePerHour;
+      if (isActive != null) payload['is_active'] = isActive;
+
+      if (payload.isEmpty) return;
+
+      await _client.from('courts').update(payload).eq('id', courtId);
+    } catch (e) {
+      throw UnknownException('Failed to update court: $e', e);
+    }
+  }
 }
 
 /// A lightweight DTO for court data collected from the UI form.
