@@ -587,7 +587,7 @@ class _CourtTile extends ConsumerWidget {
           size: 44,
         ),
         title: const Text(
-          'Delete Court?',
+          'Remove Court?',
           style: TextStyle(
             fontFamily: 'Poppins',
             fontWeight: FontWeight.w700,
@@ -595,7 +595,7 @@ class _CourtTile extends ConsumerWidget {
           ),
         ),
         content: Text(
-          'You are about to permanently delete "${court.name}".\n\nThis action cannot be undone and will remove all associated data.',
+          '"${court.name}" will be deactivated and hidden from customers.\n\nAll existing bookings will remain safe.',
           textAlign: TextAlign.center,
           style: const TextStyle(
             fontFamily: 'Poppins',
@@ -630,7 +630,7 @@ class _CourtTile extends ConsumerWidget {
                   borderRadius: BorderRadius.circular(10)),
             ),
             child: const Text(
-              'Delete',
+              'Deactivate',
               style: TextStyle(
                 fontFamily: 'Poppins',
                 fontWeight: FontWeight.w700,
@@ -645,11 +645,18 @@ class _CourtTile extends ConsumerWidget {
     if (confirmed != true) return;
 
     try {
-      await ref.read(stadiumRepositoryProvider).deleteCourt(court.id);
+      // Soft-delete: set is_active = false.
+      // Hard-delete requires an RLS DELETE policy on the courts table in Supabase.
+      // Soft-delete is safer — existing customer bookings remain intact and
+      // the court disappears from the customer-facing view immediately.
+      await ref.read(stadiumRepositoryProvider).updateCourt(
+            courtId: court.id,
+            isActive: false,
+          );
       ref.invalidate(courtsForStadiumProvider(stadiumId));
       messenger.showSnackBar(SnackBar(
         content: Text(
-          'court deleted',
+          '"${court.name}" deactivated — hidden from customers',
           style: const TextStyle(fontFamily: 'Poppins'),
         ),
         backgroundColor: AppColors.primary,
