@@ -137,6 +137,51 @@ class StadiumRepository {
     return stadium;
   }
 
+  // ── CREATE (single court) ─────────────────────────────────────────
+
+  /// Inserts a single court into an existing stadium.
+  Future<CourtModel> addCourt({
+    required String stadiumId,
+    required String name,
+    required String sportType,
+    String? description,
+    required double pricePerHour,
+    List<String> equipments = const [],
+    required String openTime,
+    required String closeTime,
+  }) async {
+    try {
+      final response = await _client
+          .from('courts')
+          .insert({
+            'stadium_id': stadiumId,
+            'name': name,
+            'sport_type': sportType,
+            'description': description,
+            'price_per_hour': pricePerHour,
+            'image_url': null,
+            'equipments': equipments,
+            'open_time': openTime,
+            'close_time': closeTime,
+            'is_active': true,
+          })
+          .select()
+          .single();
+      return CourtModel.fromJson(response);
+    } catch (e) {
+      throw UnknownException('Failed to add court: $e', e);
+    }
+  }
+
+  /// Hard-deletes a court by ID.
+  Future<void> deleteCourt(String courtId) async {
+    try {
+      await _client.from('courts').delete().eq('id', courtId);
+    } catch (e) {
+      throw UnknownException('Failed to delete court: $e', e);
+    }
+  }
+
   // ── UPDATE ───────────────────────────────────────────────────────
 
   /// Toggles the `is_active` flag on a stadium.

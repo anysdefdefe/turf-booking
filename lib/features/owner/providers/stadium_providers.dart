@@ -77,3 +77,51 @@ class AddStadiumController extends _$AddStadiumController {
     return !state.hasError;
   }
 }
+
+/// AsyncNotifier that handles adding a single court to an existing stadium.
+@riverpod
+class AddCourtController extends _$AddCourtController {
+  @override
+  FutureOr<void> build() {}
+
+  Future<bool> addCourt({
+    required String stadiumId,
+    required String name,
+    required String sportType,
+    required double pricePerHour,
+    List<String> equipments = const [],
+    required String openTime,
+    required String closeTime,
+  }) async {
+    state = const AsyncLoading();
+    state = await AsyncValue.guard(() async {
+      await ref.read(stadiumRepositoryProvider).addCourt(
+            stadiumId: stadiumId,
+            name: name,
+            sportType: sportType,
+            pricePerHour: pricePerHour,
+            equipments: equipments,
+            openTime: openTime,
+            closeTime: closeTime,
+          );
+      ref.invalidate(courtsForStadiumProvider(stadiumId));
+    });
+    return !state.hasError;
+  }
+}
+
+/// AsyncNotifier that handles deleting a court by ID.
+@riverpod
+class DeleteCourtController extends _$DeleteCourtController {
+  @override
+  FutureOr<void> build() {}
+
+  Future<bool> deleteCourt(String courtId, String stadiumId) async {
+    state = const AsyncLoading();
+    state = await AsyncValue.guard(() async {
+      await ref.read(stadiumRepositoryProvider).deleteCourt(courtId);
+      ref.invalidate(courtsForStadiumProvider(stadiumId));
+    });
+    return !state.hasError;
+  }
+}

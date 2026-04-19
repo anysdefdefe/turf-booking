@@ -1,11 +1,48 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:turf_booking/app/theme/app_colors.dart';
 import 'package:turf_booking/app/constants/app_constants.dart';
 import 'package:turf_booking/features/owner/data/models/court_model.dart';
+import 'package:turf_booking/features/owner/data/repositories/stadium_repository.dart';
 import 'package:turf_booking/features/owner/providers/stadium_providers.dart';
 import '../widgets/owner_bottom_nav_bar.dart';
+
+// ── Sport icon helper ─────────────────────────────────────────────────────────
+
+IconData _sportIcon(String sportType) {
+  switch (sportType.toLowerCase()) {
+    case 'football':
+    case 'soccer':
+      return Icons.sports_soccer_rounded;
+    case 'badminton':
+      return Icons.sports_tennis_rounded;
+    case 'cricket':
+      return Icons.sports_cricket_rounded;
+    case 'basketball':
+      return Icons.sports_basketball_rounded;
+    case 'volleyball':
+      return Icons.sports_volleyball_rounded;
+    case 'padel':
+    case 'tennis':
+      return Icons.sports_tennis_rounded;
+    default:
+      return Icons.sports_rounded;
+  }
+}
+
+const _kSportOptions = [
+  'Football',
+  'Badminton',
+  'Cricket',
+  'Basketball',
+  'Volleyball',
+  'Tennis',
+  'Padel',
+];
+
+// ── Root screen ───────────────────────────────────────────────────────────────
 
 class OwnerStadiumManageScreen extends ConsumerWidget {
   const OwnerStadiumManageScreen({super.key});
@@ -16,10 +53,8 @@ class OwnerStadiumManageScreen extends ConsumerWidget {
 
     return stadiumAsync.when(
       loading: () => const Scaffold(
-        backgroundColor: AppColors.background,
-        body: Center(
-          child: CircularProgressIndicator(color: AppColors.primary),
-        ),
+        backgroundColor: Colors.white,
+        body: Center(child: CircularProgressIndicator(color: AppColors.primary)),
       ),
       error: (error, _) => Scaffold(
         backgroundColor: AppColors.background,
@@ -64,238 +99,313 @@ class OwnerStadiumManageScreen extends ConsumerWidget {
           return const Scaffold(backgroundColor: AppColors.background);
         }
 
-        final courtsAsync =
-            ref.watch(courtsForStadiumProvider(stadium.id));
+        final courtsAsync = ref.watch(courtsForStadiumProvider(stadium.id));
 
-        return Scaffold(
-          backgroundColor: AppColors.background,
-          bottomNavigationBar: const OwnerBottomNavBar(selectedIndex: 1),
-          appBar: AppBar(
-            backgroundColor: AppColors.surface,
-            elevation: 0,
-            title: Text(
-              stadium.name,
-              style: const TextStyle(
-                fontFamily: 'Poppins',
-                fontWeight: FontWeight.w700,
-                fontSize: 18,
-                color: AppColors.textPrimary,
-              ),
-            ),
-            actions: [
-              Padding(
-                padding: const EdgeInsets.only(right: 12),
-                child: TextButton.icon(
-                  onPressed: () => context.push('/owner/edit-stadium'),
-                  icon: const Icon(Icons.edit_outlined,
-                      size: 16, color: AppColors.primary),
-                  label: const Text(
-                    'Edit',
-                    style: TextStyle(
-                      color: AppColors.primary,
-                      fontFamily: 'Poppins',
-                      fontWeight: FontWeight.w600,
-                      fontSize: 13,
-                    ),
-                  ),
-                ),
-              ),
-            ],
+        return courtsAsync.when(
+          loading: () => const Scaffold(
+            backgroundColor: Colors.white,
+            body: Center(
+                child: CircularProgressIndicator(color: AppColors.primary)),
           ),
-          body: CustomScrollView(
-            slivers: [
-              // ── Stadium Info Card ─────────────────────────────────
-              SliverToBoxAdapter(
-                child: _StadiumInfoCard(
-                  name: stadium.name,
-                  address: stadium.address,
-                  city: stadium.city,
-                  amenities: stadium.amenities,
-                  isActive: stadium.isActive,
-                ),
-              ),
+          error: (err, _) => Scaffold(
+            backgroundColor: AppColors.background,
+            body: Center(child: Text('Failed to load courts: $err')),
+          ),
+          data: (courts) {
+            final minPrice = courts.isEmpty
+                ? null
+                : courts
+                    .map((c) => c.pricePerHour)
+                    .reduce((a, b) => a < b ? a : b);
 
-              // ── Section Header ────────────────────────────────────
-              const SliverToBoxAdapter(
-                child: Padding(
-                  padding: EdgeInsets.fromLTRB(
-                    AppConstants.paddingL, 24, AppConstants.paddingL, 8),
-                  child: Text(
-                    'Courts',
-                    style: TextStyle(
-                      fontFamily: 'Poppins',
-                      fontSize: 16,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.textPrimary,
-                    ),
-                  ),
-                ),
-              ),
+            final defaultOpen = courts.isNotEmpty
+                ? courts.first.openTime
+                : '06:00:00';
+            final defaultClose = courts.isNotEmpty
+                ? courts.first.closeTime
+                : '22:00:00';
 
-              // ── Courts List ───────────────────────────────────────
-              courtsAsync.when(
-                loading: () => const SliverToBoxAdapter(
-                  child: Padding(
-                    padding: EdgeInsets.all(32),
-                    child: Center(
-                      child: CircularProgressIndicator(
-                          color: AppColors.primary),
-                    ),
-                  ),
-                ),
-                error: (err, _) => SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.all(32),
-                    child: Center(
-                      child: Text(
-                        'Failed to load courts: $err',
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(
-                          fontFamily: 'Poppins',
-                          fontSize: 13,
-                          color: AppColors.textSecondary,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-                data: (courts) {
-                  if (courts.isEmpty) {
-                    return const SliverToBoxAdapter(
-                      child: Padding(
-                        padding: EdgeInsets.all(32),
-                        child: Center(
-                          child: Text(
-                            'No courts added yet',
-                            style: TextStyle(
-                              fontFamily: 'Poppins',
-                              fontSize: 14,
-                              color: AppColors.textMuted,
+            return AnnotatedRegion<SystemUiOverlayStyle>(
+              value: SystemUiOverlayStyle.light,
+              child: Scaffold(
+                backgroundColor: Colors.white,
+                bottomNavigationBar:
+                    const OwnerBottomNavBar(selectedIndex: 1),
+                body: Column(
+                  children: [
+                    Expanded(
+                      child: CustomScrollView(
+                        slivers: [
+                          // Hero image
+                          SliverToBoxAdapter(
+                            child: _HeroImage(
+                              imageUrl: stadium.imageUrl,
+                              onEdit: () =>
+                                  context.push('/owner/edit-stadium'),
                             ),
                           ),
-                        ),
-                      ),
-                    );
-                  }
-
-                  return SliverPadding(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: AppConstants.paddingL),
-                    sliver: SliverList(
-                      delegate: SliverChildBuilderDelegate(
-                        (context, index) => _CourtTile(court: courts[index]),
-                        childCount: courts.length,
+                          // Venue details
+                          SliverToBoxAdapter(
+                            child: _VenueDetails(
+                              name: stadium.name,
+                              address: stadium.address,
+                              city: stadium.city,
+                              description: stadium.description,
+                              amenities: stadium.amenities,
+                              minPrice: minPrice,
+                            ),
+                          ),
+                          // Sport Types
+                          if (courts.isNotEmpty)
+                            SliverToBoxAdapter(
+                              child: _SportTypesSection(courts: courts),
+                            ),
+                          // Courts management
+                          SliverToBoxAdapter(
+                            child: _CourtsSection(
+                              courts: courts,
+                              stadiumId: stadium.id,
+                            ),
+                          ),
+                          const SliverToBoxAdapter(
+                              child: SizedBox(height: 24)),
+                        ],
                       ),
                     ),
-                  );
-                },
+                    // CTA bar
+                    _CtaBar(
+                      stadiumId: stadium.id,
+                      defaultOpenTime: defaultOpen,
+                      defaultCloseTime: defaultClose,
+                    ),
+                  ],
+                ),
               ),
-
-              const SliverToBoxAdapter(child: SizedBox(height: 32)),
-            ],
-          ),
+            );
+          },
         );
       },
     );
   }
 }
 
-// ── STADIUM INFO CARD ─────────────────────────────────────────────────────────
+// ── HERO IMAGE ────────────────────────────────────────────────────────────────
 
-class _StadiumInfoCard extends StatelessWidget {
-  final String name;
-  final String address;
-  final String city;
-  final List<String> amenities;
-  final bool isActive;
+class _HeroImage extends StatelessWidget {
+  final String? imageUrl;
+  final VoidCallback onEdit;
 
-  const _StadiumInfoCard({
-    required this.name,
-    required this.address,
-    required this.city,
-    required this.amenities,
-    required this.isActive,
+  const _HeroImage({required this.imageUrl, required this.onEdit});
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      children: [
+        SizedBox(
+          height: 240,
+          width: double.infinity,
+          child: imageUrl != null && imageUrl!.isNotEmpty
+              ? Image.network(
+                  imageUrl!,
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stack) => _PlaceholderHero(),
+                )
+              : _PlaceholderHero(),
+        ),
+        // Gradient
+        Positioned(
+          bottom: 0,
+          left: 0,
+          right: 0,
+          child: Container(
+            height: 80,
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.bottomCenter,
+                end: Alignment.topCenter,
+                colors: [Colors.black54, Colors.transparent],
+              ),
+            ),
+          ),
+        ),
+        // Back button
+        Positioned(
+          top: MediaQuery.of(context).padding.top + 10,
+          left: 14,
+          child: GestureDetector(
+            onTap: () {
+              if (context.canPop()) context.pop();
+            },
+            child: _CircleButton(
+              icon: Icons.chevron_left_rounded,
+              iconColor: Colors.black87,
+            ),
+          ),
+        ),
+        // Edit button
+        Positioned(
+          top: MediaQuery.of(context).padding.top + 10,
+          right: 14,
+          child: GestureDetector(
+            onTap: onEdit,
+            child: _CircleButton(
+              icon: Icons.edit_outlined,
+              iconColor: AppColors.primary,
+              iconSize: 18,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _CircleButton extends StatelessWidget {
+  final IconData icon;
+  final Color iconColor;
+  final double iconSize;
+
+  const _CircleButton({
+    required this.icon,
+    required this.iconColor,
+    this.iconSize = 22,
   });
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.all(AppConstants.paddingL),
-      padding: const EdgeInsets.all(16),
+      width: 38,
+      height: 38,
       decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(AppConstants.radiusL),
-        border: Border.all(color: AppColors.divider),
+        color: Colors.white,
+        shape: BoxShape.circle,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.12),
+            blurRadius: 8,
+          ),
+        ],
       ),
+      child: Icon(icon, color: iconColor, size: iconSize),
+    );
+  }
+}
+
+class _PlaceholderHero extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      color: const Color(0xFFD0EED8),
+      child: const Center(
+        child: Icon(Icons.stadium_rounded, size: 64, color: AppColors.primary),
+      ),
+    );
+  }
+}
+
+// ── VENUE DETAILS ─────────────────────────────────────────────────────────────
+
+class _VenueDetails extends StatelessWidget {
+  final String name;
+  final String address;
+  final String city;
+  final String? description;
+  final List<String> amenities;
+  final double? minPrice;
+
+  const _VenueDetails({
+    required this.name,
+    required this.address,
+    required this.city,
+    required this.description,
+    required this.amenities,
+    required this.minPrice,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+          AppConstants.paddingL, 18, AppConstants.paddingL, 0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          Text(
+            name,
+            style: const TextStyle(
+              fontFamily: 'Poppins',
+              fontSize: 24,
+              fontWeight: FontWeight.w800,
+              color: AppColors.textPrimary,
+              height: 1.2,
+            ),
+          ),
+          const SizedBox(height: 6),
+          if (minPrice != null)
+            Text(
+              '₹ ${minPrice!.toStringAsFixed(0)} onwards',
+              style: const TextStyle(
+                fontFamily: 'Poppins',
+                fontSize: 14,
+                fontWeight: FontWeight.w700,
+                color: AppColors.textPrimary,
+              ),
+            ),
+          const SizedBox(height: 6),
           Row(
             children: [
-              Container(
-                width: 48,
-                height: 48,
-                decoration: BoxDecoration(
-                  color: AppColors.badgeBg,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: const Icon(Icons.stadium_rounded,
-                    color: AppColors.primary, size: 24),
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      name,
-                      style: const TextStyle(
-                        fontFamily: 'Poppins',
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.textPrimary,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      '$address, $city',
-                      style: const TextStyle(
-                        fontFamily: 'Poppins',
-                        fontSize: 12,
-                        color: AppColors.textSecondary,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(
-                  color: isActive
-                      ? Colors.green.withValues(alpha: 0.12)
-                      : Colors.red.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Text(
-                  isActive ? 'Active' : 'Inactive',
-                  style: TextStyle(
-                    fontFamily: 'Poppins',
-                    fontSize: 11,
-                    fontWeight: FontWeight.w600,
-                    color: isActive ? Colors.green : Colors.redAccent,
-                  ),
+              const Icon(Icons.location_on_outlined,
+                  size: 15, color: AppColors.textSecondary),
+              const SizedBox(width: 4),
+              Text(
+                '$address, $city',
+                style: const TextStyle(
+                  fontFamily: 'Poppins',
+                  fontSize: 13,
+                  color: AppColors.textSecondary,
                 ),
               ),
             ],
           ),
+          const SizedBox(height: 20),
+          const Text(
+            'About Venue',
+            style: TextStyle(
+              fontFamily: 'Poppins',
+              fontSize: 16,
+              fontWeight: FontWeight.w700,
+              color: AppColors.textPrimary,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            (description != null && description!.trim().isNotEmpty)
+                ? description!
+                : 'No description provided for this venue yet.',
+            style: const TextStyle(
+              fontFamily: 'Poppins',
+              fontSize: 13,
+              color: AppColors.textSecondary,
+              height: 1.5,
+            ),
+          ),
           if (amenities.isNotEmpty) ...[
-            const SizedBox(height: 14),
+            const SizedBox(height: 20),
+            const Text(
+              'Amenities',
+              style: TextStyle(
+                fontFamily: 'Poppins',
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+                color: AppColors.textPrimary,
+              ),
+            ),
+            const SizedBox(height: 10),
             Wrap(
               spacing: 8,
               runSpacing: 8,
               children: amenities
-                  .map((amenity) => _InfoChip(label: amenity))
+                  .map((a) => _AmenityChip(label: a))
                   .toList(growable: false),
             ),
           ],
@@ -305,39 +415,296 @@ class _StadiumInfoCard extends StatelessWidget {
   }
 }
 
-// ── COURT TILE ────────────────────────────────────────────────────────────────
+// ── SPORT TYPES ───────────────────────────────────────────────────────────────
 
-class _CourtTile extends StatelessWidget {
-  final CourtModel court;
-  const _CourtTile({required this.court});
+class _SportTypesSection extends StatelessWidget {
+  final List<CourtModel> courts;
+  const _SportTypesSection({required this.courts});
+
+  @override
+  Widget build(BuildContext context) {
+    final sports = courts.map((c) => c.sportType).toSet().toList();
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+          AppConstants.paddingL, 20, AppConstants.paddingL, 0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Sport Types',
+            style: TextStyle(
+              fontFamily: 'Poppins',
+              fontSize: 16,
+              fontWeight: FontWeight.w700,
+              color: AppColors.textPrimary,
+            ),
+          ),
+          const SizedBox(height: 10),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: sports
+                .map((s) => _SportChip(sport: s))
+                .toList(growable: false),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── COURTS SECTION ────────────────────────────────────────────────────────────
+
+class _CourtsSection extends ConsumerWidget {
+  final List<CourtModel> courts;
+  final String stadiumId;
+
+  const _CourtsSection({required this.courts, required this.stadiumId});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+          AppConstants.paddingL, 24, AppConstants.paddingL, 0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Courts',
+            style: TextStyle(
+              fontFamily: 'Poppins',
+              fontSize: 16,
+              fontWeight: FontWeight.w700,
+              color: AppColors.textPrimary,
+            ),
+          ),
+          const SizedBox(height: 12),
+          if (courts.isEmpty)
+            const Center(
+              child: Padding(
+                padding: EdgeInsets.symmetric(vertical: 24),
+                child: Text(
+                  'No courts added yet. Tap "Add New Court" below.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontFamily: 'Poppins',
+                    fontSize: 13,
+                    color: AppColors.textMuted,
+                  ),
+                ),
+              ),
+            )
+          else
+            ...courts.map(
+              (c) => _CourtTile(court: c, stadiumId: stadiumId),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── CTA BAR ───────────────────────────────────────────────────────────────────
+
+class _CtaBar extends StatelessWidget {
+  final String stadiumId;
+  final String defaultOpenTime;
+  final String defaultCloseTime;
+
+  const _CtaBar({
+    required this.stadiumId,
+    required this.defaultOpenTime,
+    required this.defaultCloseTime,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Container(
+      color: Colors.white,
+      padding: EdgeInsets.only(
+        left: AppConstants.paddingL,
+        right: AppConstants.paddingL,
+        bottom: MediaQuery.of(context).padding.bottom + 8,
+        top: 10,
+      ),
+      child: SizedBox(
+        width: double.infinity,
+        height: 54,
+        child: FilledButton.icon(
+          onPressed: () => showModalBottomSheet(
+            context: context,
+            isScrollControlled: true,
+            backgroundColor: Colors.transparent,
+            builder: (_) => _AddCourtSheet(
+              stadiumId: stadiumId,
+              defaultOpenTime: defaultOpenTime,
+              defaultCloseTime: defaultCloseTime,
+            ),
+          ),
+          icon: const Icon(Icons.add_rounded, size: 20),
+          label: const Text(
+            'Add New Court',
+            style: TextStyle(
+              fontFamily: 'Poppins',
+              fontWeight: FontWeight.w700,
+              fontSize: 15,
+            ),
+          ),
+          style: FilledButton.styleFrom(
+            backgroundColor: const Color(0xFF1A1A1A),
+            foregroundColor: Colors.white,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ── COURT TILE ────────────────────────────────────────────────────────────────
+
+class _CourtTile extends ConsumerWidget {
+  final CourtModel court;
+  final String stadiumId;
+
+  const _CourtTile({required this.court, required this.stadiumId});
+
+  Future<void> _confirmDelete(BuildContext context, WidgetRef ref) async {
+    // Capture messenger BEFORE any async gaps.
+    final messenger = ScaffoldMessenger.of(context);
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        icon: const Icon(
+          Icons.warning_amber_rounded,
+          color: Colors.orange,
+          size: 44,
+        ),
+        title: const Text(
+          'Remove Court?',
+          style: TextStyle(
+            fontFamily: 'Poppins',
+            fontWeight: FontWeight.w700,
+            color: AppColors.error,
+          ),
+        ),
+        content: Text(
+          '"${court.name}" will be deactivated and hidden from customers.\n\nAll existing bookings will remain safe.',
+          textAlign: TextAlign.center,
+          style: const TextStyle(
+            fontFamily: 'Poppins',
+            fontSize: 13,
+            color: AppColors.textSecondary,
+            height: 1.5,
+          ),
+        ),
+        actionsAlignment: MainAxisAlignment.spaceEvenly,
+        actions: [
+          OutlinedButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            style: OutlinedButton.styleFrom(
+              side: const BorderSide(color: AppColors.divider),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10)),
+            ),
+            child: const Text(
+              'Cancel',
+              style: TextStyle(
+                fontFamily: 'Poppins',
+                fontWeight: FontWeight.w600,
+                color: AppColors.textSecondary,
+              ),
+            ),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            style: FilledButton.styleFrom(
+              backgroundColor: AppColors.error,
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10)),
+            ),
+            child: const Text(
+              'Deactivate',
+              style: TextStyle(
+                fontFamily: 'Poppins',
+                fontWeight: FontWeight.w700,
+                color: Colors.white,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true) return;
+
+    try {
+      // Soft-delete: set is_active = false.
+      // Hard-delete requires an RLS DELETE policy on the courts table in Supabase.
+      // Soft-delete is safer — existing customer bookings remain intact and
+      // the court disappears from the customer-facing view immediately.
+      await ref.read(stadiumRepositoryProvider).updateCourt(
+            courtId: court.id,
+            isActive: false,
+          );
+      ref.invalidate(courtsForStadiumProvider(stadiumId));
+      messenger.showSnackBar(SnackBar(
+        content: Text(
+          '"${court.name}" deactivated — hidden from customers',
+          style: const TextStyle(fontFamily: 'Poppins'),
+        ),
+        backgroundColor: AppColors.primary,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      ));
+    } catch (e) {
+      messenger.showSnackBar(SnackBar(
+        content: Text(
+          'Failed: $e',
+          style: const TextStyle(fontFamily: 'Poppins'),
+        ),
+        backgroundColor: AppColors.error,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      ));
+    }
+  }
+
+
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return Container(
       margin: const EdgeInsets.only(bottom: 10),
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: AppColors.background,
         borderRadius: BorderRadius.circular(AppConstants.radiusM),
         border: Border.all(color: AppColors.divider),
       ),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           // Sport icon
           Container(
-            width: 42,
-            height: 42,
-            decoration: BoxDecoration(
+            width: 40,
+            height: 40,
+            decoration: const BoxDecoration(
               color: AppColors.badgeBg,
-              borderRadius: BorderRadius.circular(10),
+              shape: BoxShape.circle,
             ),
-            child: const Icon(Icons.sports,
-                color: AppColors.primary, size: 22),
+            child: Icon(_sportIcon(court.sportType),
+                color: AppColors.primary, size: 20),
           ),
           const SizedBox(width: 12),
 
-          // Court info
+          // Info
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -353,62 +720,47 @@ class _CourtTile extends StatelessWidget {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  '${court.sportType} · ₹${court.pricePerHour.toStringAsFixed(0)}/hr',
+                  '${court.sportType} · ₹${court.pricePerHour.toStringAsFixed(0)}/hr  ·  ${court.openTime.substring(0, 5)}–${court.closeTime.substring(0, 5)}',
                   style: const TextStyle(
                     fontFamily: 'Poppins',
-                    fontSize: 12,
+                    fontSize: 11,
                     color: AppColors.textSecondary,
                   ),
                 ),
-                if (court.equipments.isNotEmpty) ...[
-                  const SizedBox(height: 8),
-                  Wrap(
-                    spacing: 6,
-                    runSpacing: 6,
-                    children: court.equipments
-                        .map((equipment) => _InfoChip(label: equipment))
-                        .toList(growable: false),
-                  ),
-                ],
               ],
             ),
           ),
 
-          // Active chip
-          Container(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-            decoration: BoxDecoration(
-              color: court.isActive
-                  ? Colors.green.withValues(alpha: 0.12)
-                  : Colors.red.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Text(
-              court.isActive ? 'Active' : 'Inactive',
-              style: TextStyle(
-                fontFamily: 'Poppins',
-                fontSize: 11,
-                fontWeight: FontWeight.w600,
-                color: court.isActive ? Colors.green : Colors.redAccent,
-              ),
-            ),
-          ),
-
-          const SizedBox(width: 10),
+          // Status chip
+          _StatusChip(isActive: court.isActive),
+          const SizedBox(width: 8),
 
           // Edit button
           GestureDetector(
-            onTap: () =>
-                context.push('/owner/edit-court/${court.id}'),
+            onTap: () => context.push('/owner/edit-court/${court.id}'),
             child: Container(
-              padding: const EdgeInsets.all(8),
+              padding: const EdgeInsets.all(7),
               decoration: BoxDecoration(
                 color: AppColors.divider,
                 borderRadius: BorderRadius.circular(8),
               ),
               child: const Icon(Icons.edit_outlined,
-                  size: 16, color: AppColors.textSecondary),
+                  size: 15, color: AppColors.textSecondary),
+            ),
+          ),
+          const SizedBox(width: 6),
+
+          // Delete button
+          GestureDetector(
+            onTap: () => _confirmDelete(context, ref),
+            child: Container(
+              padding: const EdgeInsets.all(7),
+              decoration: BoxDecoration(
+                color: AppColors.error.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Icon(Icons.delete_outline_rounded,
+                  size: 15, color: AppColors.error),
             ),
           ),
         ],
@@ -417,26 +769,378 @@ class _CourtTile extends StatelessWidget {
   }
 }
 
-class _InfoChip extends StatelessWidget {
-  final String label;
+// ── ADD COURT BOTTOM SHEET ────────────────────────────────────────────────────
 
-  const _InfoChip({required this.label});
+class _AddCourtSheet extends ConsumerStatefulWidget {
+  final String stadiumId;
+  final String defaultOpenTime;
+  final String defaultCloseTime;
+
+  const _AddCourtSheet({
+    required this.stadiumId,
+    required this.defaultOpenTime,
+    required this.defaultCloseTime,
+  });
+
+  @override
+  ConsumerState<_AddCourtSheet> createState() => _AddCourtSheetState();
+}
+
+class _AddCourtSheetState extends ConsumerState<_AddCourtSheet> {
+  final _nameController = TextEditingController();
+  final _priceController = TextEditingController();
+  String? _selectedSport;
+  bool _isSaving = false;
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _priceController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _submit() async {
+    final name = _nameController.text.trim();
+    final price = double.tryParse(_priceController.text.trim());
+
+    if (name.isEmpty) {
+      _snack('Court name is required');
+      return;
+    }
+    if (_selectedSport == null) {
+      _snack('Please select a sport type');
+      return;
+    }
+    if (price == null || price <= 0) {
+      _snack('Enter a valid price per hour');
+      return;
+    }
+
+    setState(() => _isSaving = true);
+
+    try {
+      await ref.read(stadiumRepositoryProvider).addCourt(
+            stadiumId: widget.stadiumId,
+            name: name,
+            sportType: _selectedSport!,
+            pricePerHour: price,
+            openTime: widget.defaultOpenTime,
+            closeTime: widget.defaultCloseTime,
+          );
+      // Invalidate while ref is still valid (widget still mounted)
+      ref.invalidate(courtsForStadiumProvider(widget.stadiumId));
+      if (mounted) {
+        Navigator.of(context).pop();
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: const Text('✓ Court added',
+              style: TextStyle(fontFamily: 'Poppins')),
+          backgroundColor: AppColors.primary,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10)),
+        ));
+      }
+    } catch (e) {
+      if (mounted) _snack('Failed to add court: $e');
+    } finally {
+      if (mounted) setState(() => _isSaving = false);
+    }
+  }
+
+  void _snack(String msg) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text(msg, style: const TextStyle(fontFamily: 'Poppins')),
+      backgroundColor: AppColors.error,
+      behavior: SnackBarBehavior.floating,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+    ));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final bottomInset = MediaQuery.of(context).viewInsets.bottom;
+
+    return Container(
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      padding: EdgeInsets.fromLTRB(24, 20, 24, bottomInset + 24),
+      child: SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Handle
+            Center(
+              child: Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: AppColors.divider,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+            const SizedBox(height: 18),
+
+            // Title
+            const Text(
+              'Add New Court',
+              style: TextStyle(
+                fontFamily: 'Poppins',
+                fontSize: 18,
+                fontWeight: FontWeight.w800,
+                color: AppColors.textPrimary,
+              ),
+            ),
+            const SizedBox(height: 20),
+
+            // Court name
+            _label('Court Name'),
+            _field(_nameController, hint: 'e.g. Court A'),
+            const SizedBox(height: 16),
+
+            // Sport type
+            _label('Sport Type'),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: _kSportOptions.map((sport) {
+                final selected = _selectedSport == sport;
+                return GestureDetector(
+                  onTap: () => setState(() => _selectedSport = sport),
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 150),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 14, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: selected ? AppColors.primary : Colors.white,
+                      borderRadius: BorderRadius.circular(50),
+                      border: Border.all(
+                        color: selected
+                            ? AppColors.primary
+                            : AppColors.divider,
+                        width: 1.5,
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          _sportIcon(sport),
+                          size: 13,
+                          color: selected
+                              ? Colors.white
+                              : AppColors.textSecondary,
+                        ),
+                        const SizedBox(width: 5),
+                        Text(
+                          sport,
+                          style: TextStyle(
+                            fontFamily: 'Poppins',
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: selected
+                                ? Colors.white
+                                : AppColors.textPrimary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              }).toList(),
+            ),
+            const SizedBox(height: 16),
+
+            // Price
+            _label('Price per Hour (₹)'),
+            _field(
+              _priceController,
+              hint: 'e.g. 800',
+              keyboardType:
+                  const TextInputType.numberWithOptions(decimal: true),
+            ),
+            const SizedBox(height: 28),
+
+            // Submit
+            SizedBox(
+              width: double.infinity,
+              height: 52,
+              child: FilledButton(
+                onPressed: _isSaving ? null : _submit,
+                style: FilledButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12)),
+                ),
+                child: _isSaving
+                    ? const SizedBox(
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(
+                            strokeWidth: 2, color: Colors.white),
+                      )
+                    : const Text(
+                        'Add Court',
+                        style: TextStyle(
+                          fontFamily: 'Poppins',
+                          fontWeight: FontWeight.w700,
+                          fontSize: 15,
+                          color: Colors.white,
+                        ),
+                      ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _label(String text) => Padding(
+        padding: const EdgeInsets.only(bottom: 6),
+        child: Text(
+          text,
+          style: const TextStyle(
+            fontFamily: 'Poppins',
+            fontSize: 13,
+            fontWeight: FontWeight.w500,
+            color: AppColors.textSecondary,
+          ),
+        ),
+      );
+
+  Widget _field(
+    TextEditingController controller, {
+    String hint = '',
+    TextInputType keyboardType = TextInputType.text,
+  }) =>
+      TextField(
+        controller: controller,
+        keyboardType: keyboardType,
+        style: const TextStyle(
+          fontFamily: 'Poppins',
+          fontSize: 14,
+          color: AppColors.textPrimary,
+        ),
+        decoration: InputDecoration(
+          hintText: hint,
+          hintStyle: const TextStyle(
+            fontFamily: 'Poppins',
+            fontSize: 14,
+            color: AppColors.textMuted,
+          ),
+          filled: true,
+          fillColor: AppColors.background,
+          contentPadding:
+              const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(AppConstants.radiusM),
+            borderSide: const BorderSide(color: AppColors.divider),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(AppConstants.radiusM),
+            borderSide: const BorderSide(color: AppColors.divider),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(AppConstants.radiusM),
+            borderSide:
+                const BorderSide(color: AppColors.primary, width: 1.5),
+          ),
+        ),
+      );
+}
+
+// ── AMENITY CHIP ──────────────────────────────────────────────────────────────
+
+class _AmenityChip extends StatelessWidget {
+  final String label;
+  const _AmenityChip({required this.label});
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
       decoration: BoxDecoration(
-        color: AppColors.background,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppColors.divider),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(50),
+        border: Border.all(color: AppColors.divider, width: 1.2),
       ),
       child: Text(
         label,
         style: const TextStyle(
           fontFamily: 'Poppins',
-          fontSize: 11,
-          color: AppColors.textSecondary,
+          fontSize: 12,
+          fontWeight: FontWeight.w500,
+          color: AppColors.textPrimary,
+        ),
+      ),
+    );
+  }
+}
+
+// ── SPORT CHIP ────────────────────────────────────────────────────────────────
+
+class _SportChip extends StatelessWidget {
+  final String sport;
+  const _SportChip({required this.sport});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(50),
+        border: Border.all(
+            color: AppColors.primary.withValues(alpha: 0.5)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(_sportIcon(sport), size: 14, color: AppColors.primary),
+          const SizedBox(width: 6),
+          Text(
+            sport,
+            style: const TextStyle(
+              fontFamily: 'Poppins',
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+              color: AppColors.textPrimary,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── STATUS CHIP ───────────────────────────────────────────────────────────────
+
+class _StatusChip extends StatelessWidget {
+  final bool isActive;
+  const _StatusChip({required this.isActive});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: isActive
+            ? Colors.green.withValues(alpha: 0.12)
+            : Colors.red.withValues(alpha: 0.10),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Text(
+        isActive ? 'Active' : 'Inactive',
+        style: TextStyle(
+          fontFamily: 'Poppins',
+          fontSize: 10,
+          fontWeight: FontWeight.w600,
+          color:
+              isActive ? Colors.green.shade700 : Colors.red.shade400,
         ),
       ),
     );
