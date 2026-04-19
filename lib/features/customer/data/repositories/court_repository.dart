@@ -104,26 +104,25 @@ class CourtRepository {
     }
 
     // Fallback source to keep UI in sync even if slot rows were not created.
-    for (final raw in bookingRows) {
-      final row = raw;
-      final status = (row['status']?.toString() ?? '').toLowerCase();
-      if (status == 'cancelled') {
-        continue;
-      }
+    // Only use this fallback if no slot rows were found (to avoid filling in-between slots).
+    if (booked.isEmpty) {
+      for (final raw in bookingRows) {
+        final row = raw;
+        final status = (row['status']?.toString() ?? '').toLowerCase();
+        if (status == 'cancelled') {
+          continue;
+        }
 
-      final start = _bookingTimeToDateTime(
-        dayStart,
-        row['start_time']?.toString(),
-      );
-      final end = _bookingTimeToDateTime(dayStart, row['end_time']?.toString());
-      if (start == null || end == null || !end.isAfter(start)) {
-        continue;
-      }
+        final start = _bookingTimeToDateTime(
+          dayStart,
+          row['start_time']?.toString(),
+        );
+        if (start == null) {
+          continue;
+        }
 
-      var cursor = start;
-      while (cursor.isBefore(end)) {
-        booked.add(_formatTo12Hour(cursor));
-        cursor = cursor.add(const Duration(hours: 1));
+        // Only mark the first slot as booked in fallback (don't fill in-between)
+        booked.add(_formatTo12Hour(start));
       }
     }
 
