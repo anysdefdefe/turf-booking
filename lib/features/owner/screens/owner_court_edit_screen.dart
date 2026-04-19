@@ -22,6 +22,8 @@ class _OwnerCourtEditScreenState
   final _sportController = TextEditingController();
   final _priceController = TextEditingController();
   final _equipmentController = TextEditingController();
+  final _openTimeController = TextEditingController();
+  final _closeTimeController = TextEditingController();
   late bool _isActive;
   bool _isSaving = false;
   bool _initialized = false;
@@ -32,16 +34,19 @@ class _OwnerCourtEditScreenState
     _sportController.dispose();
     _priceController.dispose();
     _equipmentController.dispose();
+    _openTimeController.dispose();
+    _closeTimeController.dispose();
     super.dispose();
   }
 
-  /// Pre-fill the form with current court data — exactly once.
   void _initFields(CourtModel court) {
     if (_initialized) return;
     _nameController.text = court.name;
     _sportController.text = court.sportType;
     _priceController.text = court.pricePerHour.toStringAsFixed(0);
     _equipmentController.text = court.equipments.join(', ');
+    _openTimeController.text = court.openTime;
+    _closeTimeController.text = court.closeTime;
     _isActive = court.isActive;
     _initialized = true;
   }
@@ -54,11 +59,26 @@ class _OwnerCourtEditScreenState
         .toList(growable: false);
   }
 
+  Future<void> _selectTime(TextEditingController controller) async {
+    final text = controller.text.trim();
+    TimeOfDay initialTime = TimeOfDay.now();
+    if (text.isNotEmpty && text.contains(':')) {
+      final parts = text.split(':');
+      initialTime = TimeOfDay(hour: int.parse(parts[0]), minute: int.parse(parts[1]));
+    }
+    final time = await showTimePicker(context: context, initialTime: initialTime);
+    if (time != null && mounted) {
+      controller.text = '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}:00';
+    }
+  }
+
   Future<void> _save(String stadiumId) async {
     final name = _nameController.text.trim();
     final sport = _sportController.text.trim();
     final price = double.tryParse(_priceController.text.trim());
     final equipments = _parseCsv(_equipmentController.text);
+    final openTime = _openTimeController.text.trim();
+    final closeTime = _closeTimeController.text.trim();
 
     if (name.isEmpty || sport.isEmpty) {
       _showSnackbar('Name and sport are required');
@@ -78,10 +98,11 @@ class _OwnerCourtEditScreenState
             sportType: sport,
             pricePerHour: price,
             equipments: equipments,
+            openTime: openTime,
+            closeTime: closeTime,
             isActive: _isActive,
           );
 
-      // Invalidate so the manage screen refreshes the court list.
       ref.invalidate(courtsForStadiumProvider(stadiumId));
 
       if (mounted) {
@@ -105,6 +126,15 @@ class _OwnerCourtEditScreenState
           borderRadius: BorderRadius.circular(AppConstants.radiusM),
         ),
       ),
+    );
+  }
+
+  void _showMaintenanceSheet(BuildContext context, String courtId, String stadiumId) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => _MaintenanceBlockSheet(courtId: courtId, stadiumId: stadiumId),
     );
   }
 
@@ -203,6 +233,41 @@ class _OwnerCourtEditScreenState
                     ),
                     const SizedBox(height: 20),
 
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              _buildLabel('Open Time'),
+                              GestureDetector(
+                                onTap: () => _selectTime(_openTimeController),
+                                child: AbsorbPointer(
+                                  child: _buildField(_openTimeController, hint: '06:00:00'),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              _buildLabel('Close Time'),
+                              GestureDetector(
+                                onTap: () => _selectTime(_closeTimeController),
+                                child: AbsorbPointer(
+                                  child: _buildField(_closeTimeController, hint: '22:00:00'),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 20),
+
                     // ── Active toggle ──────────────────────────────
                     Container(
                       padding: const EdgeInsets.symmetric(
@@ -276,6 +341,52 @@ class _OwnerCourtEditScreenState
                               ),
                       ),
                     ),
+
+                    const SizedBox(height: 32),
+                    const Divider(),
+                    const SizedBox(height: 24),
+                    const Text(
+                      'Maintenance & Blocking',
+                      style: TextStyle(
+                        fontFamily: 'Poppins',
+                        fontWeight: FontWeight.w700,
+                        fontSize: 16,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    const Text(
+                      'Block off specific hours so customers cannot book them. This will act as a phantom booking and will not affect your revenue.',
+                      style: TextStyle(
+                        fontFamily: 'Poppins',
+                        fontSize: 13,
+                        color: AppColors.textSecondary,
+                        height: 1.5,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    SizedBox(
+                      width: double.infinity,
+                      child: OutlinedButton.icon(
+                        onPressed: () => _showMaintenanceSheet(context, widget.courtId, stadium.id),
+                        icon: const Icon(Icons.build_circle_outlined, size: 18),
+                        label: const Text('Add Maintenance Block'),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: AppColors.error,
+                          side: const BorderSide(color: AppColors.error),
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(AppConstants.radiusM),
+                          ),
+                          textStyle: const TextStyle(
+                            fontFamily: 'Poppins',
+                            fontWeight: FontWeight.w600,
+                            fontSize: 15,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 32),
                   ],
                 ),
               ),
@@ -338,4 +449,186 @@ class _OwnerCourtEditScreenState
           ),
         ),
       );
+}
+
+class _MaintenanceBlockSheet extends ConsumerStatefulWidget {
+  final String courtId;
+  final String stadiumId;
+
+  const _MaintenanceBlockSheet({required this.courtId, required this.stadiumId});
+
+  @override
+  ConsumerState<_MaintenanceBlockSheet> createState() => _MaintenanceBlockSheetState();
+}
+
+class _MaintenanceBlockSheetState extends ConsumerState<_MaintenanceBlockSheet> {
+  DateTime? _selectedDate;
+  TimeOfDay? _startTime;
+  TimeOfDay? _endTime;
+  bool _isSaving = false;
+
+  Future<void> _pickDate() async {
+    final date = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime.now(),
+      lastDate: DateTime.now().add(const Duration(days: 365)),
+    );
+    if (date != null && mounted) {
+      setState(() => _selectedDate = date);
+    }
+  }
+
+  Future<void> _pickTime(bool isStart) async {
+    final time = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay.now(),
+    );
+    if (time != null && mounted) {
+      setState(() {
+        if (isStart) _startTime = time;
+        else _endTime = time;
+      });
+    }
+  }
+
+  Future<void> _submit() async {
+    if (_selectedDate == null || _startTime == null || _endTime == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please select Date, Start Time and End Time', style: TextStyle(fontFamily: 'Poppins'))),
+      );
+      return;
+    }
+
+    setState(() => _isSaving = true);
+    try {
+      await ref.read(stadiumRepositoryProvider).createMaintenanceSlot(
+        courtId: widget.courtId,
+        date: _selectedDate!,
+        startTime: _startTime!,
+        endTime: _endTime!,
+      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('Maintenance block added successfully', style: TextStyle(fontFamily: 'Poppins')),
+            backgroundColor: AppColors.primary,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          ),
+        );
+        Navigator.pop(context);
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: $e', style: const TextStyle(fontFamily: 'Poppins')),
+            backgroundColor: AppColors.error,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isSaving = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      padding: EdgeInsets.only(
+        left: 24,
+        right: 24,
+        top: 24,
+        bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          const Text(
+            'New Maintenance Block',
+            style: TextStyle(
+              fontFamily: 'Poppins',
+              fontSize: 18,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(height: 24),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: _pickDate,
+                  icon: const Icon(Icons.calendar_today_outlined, size: 18),
+                  label: Text(
+                    _selectedDate == null
+                        ? 'Select Date'
+                        : '${_selectedDate!.day.toString().padLeft(2, '0')}/${_selectedDate!.month.toString().padLeft(2, '0')}/${_selectedDate!.year}',
+                  ),
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: () => _pickTime(true),
+                  icon: const Icon(Icons.access_time, size: 18),
+                  label: Text(
+                    _startTime == null
+                        ? 'Start Time'
+                        : _startTime!.format(context),
+                  ),
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: () => _pickTime(false),
+                  icon: const Icon(Icons.access_time_filled, size: 18),
+                  label: Text(
+                    _endTime == null ? 'End Time' : _endTime!.format(context),
+                  ),
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 32),
+          FilledButton(
+            onPressed: _isSaving ? null : _submit,
+            style: FilledButton.styleFrom(
+              backgroundColor: AppColors.error,
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+            child: _isSaving
+                ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                : const Text(
+                    'Confirm Maintenace Block',
+                    style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w700),
+                  ),
+          ),
+        ],
+      ),
+    );
+  }
 }

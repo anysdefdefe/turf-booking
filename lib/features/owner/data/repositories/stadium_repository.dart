@@ -1,5 +1,6 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:flutter/material.dart';
 
 import 'package:turf_booking/features/owner/data/models/stadium_model.dart';
 import 'package:turf_booking/features/owner/data/models/court_model.dart';
@@ -231,6 +232,8 @@ class StadiumRepository {
     String? description,
     double? pricePerHour,
     List<String>? equipments,
+    String? openTime,
+    String? closeTime,
     bool? isActive,
   }) async {
     try {
@@ -240,6 +243,8 @@ class StadiumRepository {
       if (description != null) payload['description'] = description;
       if (pricePerHour != null) payload['price_per_hour'] = pricePerHour;
       if (equipments != null) payload['equipments'] = equipments;
+      if (openTime != null) payload['open_time'] = openTime;
+      if (closeTime != null) payload['close_time'] = closeTime;
       if (isActive != null) payload['is_active'] = isActive;
 
       if (payload.isEmpty) return;
@@ -247,6 +252,30 @@ class StadiumRepository {
       await _client.from('courts').update(payload).eq('id', courtId);
     } catch (e) {
       throw UnknownException('Failed to update court: $e', e);
+    }
+  }
+
+  /// Creates a maintenance 'phantom' booking by inserting into `slots`.
+  /// The `booking_id` is left null and `status` is 'maintenance'.
+  Future<void> createMaintenanceSlot({
+    required String courtId,
+    required DateTime date,
+    required TimeOfDay startTime,
+    required TimeOfDay endTime,
+  }) async {
+    try {
+      final stStr = '${date.year.toString().padLeft(4, '0')}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')} ${startTime.hour.toString().padLeft(2, '0')}:${startTime.minute.toString().padLeft(2, '0')}:00';
+      final etStr = '${date.year.toString().padLeft(4, '0')}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')} ${endTime.hour.toString().padLeft(2, '0')}:${endTime.minute.toString().padLeft(2, '0')}:00';
+
+      await _client.from('slots').insert({
+        'court_id': courtId,
+        'start_time': stStr,
+        'end_time': etStr,
+        'status': 'maintenance',
+        'booking_id': null,
+      });
+    } catch (e) {
+      throw UnknownException('Failed to create maintenance slot: $e', e);
     }
   }
 }
