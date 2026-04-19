@@ -82,20 +82,20 @@ Future<List<Map<String, dynamic>>> getAllUsers() async {
 }
 
   @override
-  Future<void> blockUser(String userId) async {
-    await _supabase
-        .from('users')
-        .update({'is_blocked': true})
-        .eq('id', userId);
-  }
+Future<void> blockUser(String userId) async {
+  await _supabase
+      .from('users')
+      .update({'is_blocked': true})
+      .eq('id', userId);
+}
 
   @override
   Future<void> unblockUser(String userId) async {
-    await _supabase
-        .from('users')
-        .update({'is_blocked': false})
-        .eq('id', userId);
-  }
+  await _supabase
+      .from('users')
+      .update({'is_blocked': false})
+      .eq('id', userId);
+}
 
   // ─── VENUES ──────────────────────────────────────────────
 

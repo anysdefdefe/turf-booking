@@ -43,27 +43,139 @@ class AdminVenuesScreen extends ConsumerWidget {
         data: (venues) => RefreshIndicator(
           color: const Color(0xFF4CAF50),
           onRefresh: () async => ref.refresh(allVenuesProvider),
-          child: ListView.builder(
-            padding: const EdgeInsets.all(20),
-            itemCount: venues.length,
-            itemBuilder: (context, index) {
-              return VenueTile(
-                venue: venues[index],
-                onSuspend: () async {
-                  final repo = ref.read(adminRepositoryProvider);
-                  await repo.suspendVenue(venues[index]['id']);
-                  ref.refresh(allVenuesProvider);
-                },
-                onActivate: () async {
-                  final repo = ref.read(adminRepositoryProvider);
-                  await repo.activateVenue(venues[index]['id']);
-                  ref.refresh(allVenuesProvider);
-                },
-              );
-            },
-          ),
+          child: venues.isEmpty
+              ? const Center(
+                  child: Text(
+                    'No venues found',
+                    style: TextStyle(color: Colors.grey),
+                  ),
+                )
+              : ListView.builder(
+                  padding: const EdgeInsets.all(20),
+                  itemCount: venues.length,
+                  itemBuilder: (context, index) {
+                    final venue = venues[index];
+                    return VenueTile(
+                      venue: venue,
+                      onSuspend: () => _handleSuspend(context, ref, venue),
+                      onActivate: () => _handleActivate(context, ref, venue),
+                    );
+                  },
+                ),
         ),
       ),
     );
+  }
+
+  Future<void> _handleSuspend(
+    BuildContext context,
+    WidgetRef ref,
+    Map<String, dynamic> venue,
+  ) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Suspend Venue'),
+        content: Text(
+          'Are you sure you want to suspend "${venue['name']}"?\n\nOwner will not receive new bookings.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+            ),
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Suspend'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm != true) return;
+
+    try {
+      final repo = ref.read(adminRepositoryProvider);
+      await repo.suspendVenue(venue['id']);
+      ref.refresh(allVenuesProvider);
+
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('"${venue['name']}" suspended ❌'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _handleActivate(
+    BuildContext context,
+    WidgetRef ref,
+    Map<String, dynamic> venue,
+  ) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Activate Venue'),
+        content: Text(
+          'Are you sure you want to activate "${venue['name']}"?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF4CAF50),
+              foregroundColor: Colors.white,
+            ),
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Activate'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm != true) return;
+
+    try {
+      final repo = ref.read(adminRepositoryProvider);
+      await repo.activateVenue(venue['id']);
+      ref.refresh(allVenuesProvider);
+
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('"${venue['name']}" activated ✅'),
+            backgroundColor: const Color(0xFF4CAF50),
+          ),
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 }
