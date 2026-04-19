@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:turf_booking/app/theme/app_colors.dart';
 import 'package:turf_booking/app/constants/app_constants.dart';
-import 'package:turf_booking/features/owner/data/models/stadium_model.dart';
 import 'package:turf_booking/features/owner/data/models/court_model.dart';
 import 'package:turf_booking/features/owner/providers/stadium_providers.dart';
 import '../widgets/owner_bottom_nav_bar.dart';
@@ -111,6 +110,7 @@ class OwnerStadiumManageScreen extends ConsumerWidget {
                   name: stadium.name,
                   address: stadium.address,
                   city: stadium.city,
+                  amenities: stadium.amenities,
                   isActive: stadium.isActive,
                 ),
               ),
@@ -206,12 +206,14 @@ class _StadiumInfoCard extends StatelessWidget {
   final String name;
   final String address;
   final String city;
+  final List<String> amenities;
   final bool isActive;
 
   const _StadiumInfoCard({
     required this.name,
     required this.address,
     required this.city,
+    required this.amenities,
     required this.isActive,
   });
 
@@ -287,6 +289,16 @@ class _StadiumInfoCard extends StatelessWidget {
               ),
             ],
           ),
+          if (amenities.isNotEmpty) ...[
+            const SizedBox(height: 14),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: amenities
+                  .map((amenity) => _InfoChip(label: amenity))
+                  .toList(growable: false),
+            ),
+          ],
         ],
       ),
     );
@@ -310,6 +322,7 @@ class _CourtTile extends StatelessWidget {
         border: Border.all(color: AppColors.divider),
       ),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Sport icon
           Container(
@@ -347,6 +360,16 @@ class _CourtTile extends StatelessWidget {
                     color: AppColors.textSecondary,
                   ),
                 ),
+                if (court.equipments.isNotEmpty) ...[
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 6,
+                    runSpacing: 6,
+                    children: court.equipments
+                        .map((equipment) => _InfoChip(label: equipment))
+                        .toList(growable: false),
+                  ),
+                ],
               ],
             ),
           ),
@@ -389,6 +412,32 @@ class _CourtTile extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _InfoChip extends StatelessWidget {
+  final String label;
+
+  const _InfoChip({required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: AppColors.background,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: AppColors.divider),
+      ),
+      child: Text(
+        label,
+        style: const TextStyle(
+          fontFamily: 'Poppins',
+          fontSize: 11,
+          color: AppColors.textSecondary,
+        ),
       ),
     );
   }

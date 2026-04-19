@@ -3,6 +3,7 @@ class StadiumModel {
   final String ownerId;
   final String name;
   final String? description;
+  final List<String> amenities;
   final String address;
   final String city;
   final double? latitude;
@@ -16,6 +17,7 @@ class StadiumModel {
     required this.ownerId,
     required this.name,
     this.description,
+    this.amenities = const [],
     required this.address,
     required this.city,
     this.latitude,
@@ -26,11 +28,17 @@ class StadiumModel {
   });
 
   factory StadiumModel.fromJson(Map<String, dynamic> json) {
+    final rawAmenities = json['amenities'] ?? json['ammenities'];
+    final parsedAmenities = rawAmenities is List
+        ? rawAmenities.map((item) => item.toString()).toList(growable: false)
+        : const <String>[];
+
     return StadiumModel(
       id: json['id'] as String,
       ownerId: json['owner_id'] as String,
       name: json['name'] as String,
       description: json['description'] as String?,
+      amenities: parsedAmenities,
       address: json['address'] as String,
       city: json['city'] as String,
       latitude: (json['latitude'] as num?)?.toDouble(),
@@ -48,6 +56,7 @@ class StadiumModel {
       'owner_id': ownerId,
       'name': name,
       'description': description,
+      'amenities': amenities,
       'address': address,
       'city': city,
       'latitude': latitude,

@@ -19,6 +19,7 @@ class _OwnerStadiumEditScreenState
   final _nameController = TextEditingController();
   final _addressController = TextEditingController();
   final _cityController = TextEditingController();
+  final _amenitiesController = TextEditingController();
   late bool _isActive;
   bool _isSaving = false;
   bool _initialized = false;
@@ -28,6 +29,7 @@ class _OwnerStadiumEditScreenState
     _nameController.dispose();
     _addressController.dispose();
     _cityController.dispose();
+    _amenitiesController.dispose();
     super.dispose();
   }
 
@@ -36,20 +38,31 @@ class _OwnerStadiumEditScreenState
     required String name,
     required String address,
     required String city,
+    required List<String> amenities,
     required bool isActive,
   }) {
     if (_initialized) return;
     _nameController.text = name;
     _addressController.text = address;
     _cityController.text = city;
+    _amenitiesController.text = amenities.join(', ');
     _isActive = isActive;
     _initialized = true;
+  }
+
+  List<String> _parseCsv(String source) {
+    return source
+        .split(',')
+        .map((value) => value.trim())
+        .where((value) => value.isNotEmpty)
+        .toList(growable: false);
   }
 
   Future<void> _save(String stadiumId) async {
     final name = _nameController.text.trim();
     final address = _addressController.text.trim();
     final city = _cityController.text.trim();
+    final amenities = _parseCsv(_amenitiesController.text);
 
     if (name.isEmpty || address.isEmpty || city.isEmpty) {
       _showSnackbar('All fields are required');
@@ -62,6 +75,7 @@ class _OwnerStadiumEditScreenState
       await ref.read(stadiumRepositoryProvider).updateStadium(
             stadiumId: stadiumId,
             name: name,
+            amenities: amenities,
             address: address,
             city: city,
             isActive: _isActive,
@@ -121,6 +135,7 @@ class _OwnerStadiumEditScreenState
           name: stadium.name,
           address: stadium.address,
           city: stadium.city,
+          amenities: stadium.amenities,
           isActive: stadium.isActive,
         );
 
@@ -153,6 +168,12 @@ class _OwnerStadiumEditScreenState
                 _buildLabel('City'),
                 _buildField(_cityController, hint: 'e.g. Bengaluru'),
                 const SizedBox(height: 20),
+                _buildLabel('Amenities'),
+                _buildField(
+                  _amenitiesController,
+                  hint: 'e.g. Parking, Washroom, Cafeteria',
+                ),
+                const SizedBox(height: 20),
 
                 // ── Active toggle ─────────────────────────────────
                 Container(
@@ -182,7 +203,7 @@ class _OwnerStadiumEditScreenState
                       Switch.adaptive(
                         value: _isActive,
                         onChanged: (v) => setState(() => _isActive = v),
-                        activeColor: AppColors.primary,
+                        activeThumbColor: AppColors.primary,
                       ),
                     ],
                   ),
