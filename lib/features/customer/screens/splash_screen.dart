@@ -1,9 +1,11 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../app/constants/app_constants.dart';
 import '../../../app/theme/app_colors.dart';
+import '../data/repositories/onboarding_repository.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -16,14 +18,19 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   void initState() {
     super.initState();
-    _goToHome();
+    _bootstrap();
   }
 
-  Future<void> _goToHome() async {
+  Future<void> _bootstrap() async {
     await Future<void>.delayed(const Duration(milliseconds: 1200));
+    final completed = await OnboardingRepository.isCompleted();
     if (!mounted) return;
 
-    Navigator.of(context).pushReplacementNamed(AppConstants.routeHome);
+    if (completed) {
+      context.go('/mode-selection');
+      return;
+    }
+    context.go(AppConstants.routeOnboarding);
   }
 
   @override

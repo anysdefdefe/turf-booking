@@ -11,6 +11,8 @@ import 'package:turf_booking/features/auth/screens/email_confirmation_screen.dar
 import 'package:turf_booking/features/auth/screens/mode_selection_screen.dart';
 import 'package:turf_booking/features/customer/screens/court_detail_screen.dart';
 import 'package:turf_booking/features/customer/screens/home_screen.dart';
+import 'package:turf_booking/features/customer/screens/splash_screen.dart';
+import 'package:turf_booking/features/customer/screens/onboarding_screen.dart';
 import 'package:turf_booking/features/customer/screens/venue_detail_screen.dart';
 import 'package:turf_booking/features/customer/screens/my_bookings_screen.dart';
 import 'package:turf_booking/features/customer/screens/profile_screen.dart';
@@ -30,6 +32,7 @@ import 'package:turf_booking/features/owner/screens/owner_stadium_manage_screen.
 import 'package:turf_booking/features/owner/screens/owner_stadium_edit_screen.dart';
 import 'package:turf_booking/features/owner/screens/owner_court_edit_screen.dart';
 import 'package:turf_booking/features/owner/screens/owner_gateway_screen.dart';
+import 'package:turf_booking/app/constants/app_constants.dart';
 
 part 'router.g.dart';
 
@@ -39,7 +42,7 @@ GoRouter router(Ref ref) {
   final authState = ref.watch(authStateProvider);
 
   return GoRouter(
-    initialLocation: '/mode-selection',
+    initialLocation: AppConstants.routeSplash,
     redirect: (context, state) {
       // 1. Check if the stream is still loading
       if (authState.isLoading) return null;
@@ -49,10 +52,17 @@ GoRouter router(Ref ref) {
       final isGoingToRegister = state.matchedLocation == '/register';
       final isGoingToEmailConfirmation =
           state.matchedLocation == '/email-confirmation';
+      final isGoingToSplash = state.matchedLocation == AppConstants.routeSplash;
+      final isGoingToOnboarding =
+          state.matchedLocation == AppConstants.routeOnboarding;
 
       // Unauthenticated users are allowed on Login, Register, and Email Confirmation
       final isAuthScreen =
-          isGoingToLogin || isGoingToRegister || isGoingToEmailConfirmation;
+          isGoingToLogin ||
+          isGoingToRegister ||
+          isGoingToEmailConfirmation ||
+          isGoingToSplash ||
+          isGoingToOnboarding;
 
       // 2. Unauthenticated users can ONLY go to auth screens
       if (user == null) {
@@ -90,6 +100,14 @@ GoRouter router(Ref ref) {
       return null; // All checks passed, let them proceed
     },
     routes: [
+      GoRoute(
+        path: AppConstants.routeSplash,
+        builder: (context, state) => const SplashScreen(),
+      ),
+      GoRoute(
+        path: AppConstants.routeOnboarding,
+        builder: (context, state) => const OnboardingScreen(),
+      ),
       GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
       GoRoute(
         path: '/register',
