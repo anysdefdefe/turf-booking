@@ -852,17 +852,17 @@ class _BookingCard extends StatelessWidget {
 
 // ── FILTER SHEET ──────────────────────────────────────────────────────────────
 
-class _FilterSheet extends StatefulWidget {
+class _FilterSheet extends ConsumerStatefulWidget {
   final String? selectedDate;
   final String? selectedCourt;
 
   const _FilterSheet({this.selectedDate, this.selectedCourt});
 
   @override
-  State<_FilterSheet> createState() => _FilterSheetState();
+  ConsumerState<_FilterSheet> createState() => _FilterSheetState();
 }
 
-class _FilterSheetState extends State<_FilterSheet> {
+class _FilterSheetState extends ConsumerState<_FilterSheet> {
   String? _date;
   String? _court;
 
@@ -980,15 +980,27 @@ class _FilterSheetState extends State<_FilterSheet> {
             Wrap(
               spacing: 8,
               runSpacing: 8,
-              children: ['Court A', 'Court B', 'Court C']
-                  .map(
-                    (l) => _chip(
-                      l,
-                      _court == l,
-                      () => setState(() => _court = _court == l ? null : l),
-                    ),
-                  )
-                  .toList(),
+              children: (() {
+                // Derive real court names from actual bookings
+                final bookingsAsync = ref.watch(ownerBookingsProvider);
+                final courtNames = bookingsAsync.whenOrNull(
+                  data: (bookings) => bookings
+                      .map((b) => b.courtName)
+                      .whereType<String>()
+                      .toSet()
+                      .toList()
+                    ..sort(),
+                ) ?? [];
+                return courtNames
+                    .map(
+                      (l) => _chip(
+                        l,
+                        _court == l,
+                        () => setState(() => _court = _court == l ? null : l),
+                      ),
+                    )
+                    .toList();
+              })(),
             ),
             const SizedBox(height: 20),
             SizedBox(
