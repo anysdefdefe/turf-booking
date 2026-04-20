@@ -14,25 +14,25 @@ class OnboardingScreen extends StatefulWidget {
 class _OnboardingScreenState extends State<OnboardingScreen> {
   static const _pages = [
     _OnboardingPageData(
-      title: 'Find Your Perfect Venue',
+      title: 'Find Your\nPerfect Venue',
       subtitle:
-          'Explore top venues by location, sport type, and pricing in just a few taps.',
-      icon: Icons.stadium_rounded,
-      accent: Color(0xFF0D9488),
+          'Explore top sports venues by location, sport type, and pricing in just a few taps.',
+      imageUrl:
+          'https://images.unsplash.com/photo-1544698310-74e20ce64522?auto=format&fit=crop&q=80&w=800',
     ),
     _OnboardingPageData(
-      title: 'Choose Courts & Slots',
+      title: 'Choose Courts\n& Slots',
       subtitle:
-          'Pick your sport, select the exact court, and book only the slots you need.',
-      icon: Icons.schedule_rounded,
-      accent: Color(0xFF2563EB),
+          'Pick your preferred sport, select the exact court, and book only the hours you need.',
+      imageUrl:
+          'https://images.unsplash.com/photo-1508344928928-7165b67de128?auto=format&fit=crop&q=80&w=800',
     ),
     _OnboardingPageData(
-      title: 'Book Fast, Play More',
+      title: 'Book Fast,\nPlay More',
       subtitle:
-          'Smooth checkout, clear booking details, and an experience built for players.',
-      icon: Icons.rocket_launch_rounded,
-      accent: Color(0xFFEA580C),
+          'Experience a smooth checkout, get clear booking details, and hit the field faster.',
+      imageUrl:
+          'https://images.unsplash.com/photo-1518605368461-1e12a9e33df0?auto=format&fit=crop&q=80&w=800',
     ),
   ];
 
@@ -43,14 +43,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   bool get _isLast => _pageIndex == _pages.length - 1;
 
   Future<void> _finish() async {
-    if (_finishing) {
-      return;
-    }
+    if (_finishing) return;
     setState(() => _finishing = true);
     await OnboardingRepository.markCompleted();
-    if (!mounted) {
-      return;
-    }
+    if (!mounted) return;
     context.go('/mode-selection');
   }
 
@@ -61,8 +57,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     }
 
     await _controller.nextPage(
-      duration: const Duration(milliseconds: 280),
-      curve: Curves.easeOutCubic,
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.fastOutSlowIn,
     );
   }
 
@@ -70,184 +66,193 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: SafeArea(
-        child: Column(
-          children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
+      body: Stack(
+        children: [
+          // Content
+          Column(
+            children: [
+              // Image slider and text occupying top 75%
+              Expanded(
+                flex: 12,
+                child: PageView.builder(
+                  controller: _controller,
+                  itemCount: _pages.length,
+                  onPageChanged: (index) => setState(() => _pageIndex = index),
+                  itemBuilder: (context, index) {
+                    final page = _pages[index];
+                    return Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        Image.network(
+                          page.imageUrl,
+                          fit: BoxFit.cover,
+                          alignment: Alignment.topCenter,
+                        ),
+                        // Gradient fade to background color
+                        Positioned.fill(
+                          child: DecoratedBox(
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                begin: Alignment.topCenter,
+                                end: Alignment.bottomCenter,
+                                colors: [
+                                  Colors.transparent,
+                                  AppColors.background.withValues(alpha: 0.0),
+                                  AppColors.background.withValues(alpha: 0.85),
+                                  AppColors.background,
+                                ],
+                                stops: const [0.0, 0.55, 0.85, 1.0],
+                              ),
+                            ),
+                          ),
+                        ),
+                        // Text overlays sliding with the page
+                        Align(
+                          alignment: Alignment.bottomLeft,
+                          child: Padding(
+                            padding: const EdgeInsets.fromLTRB(28.0, 0, 28.0, 0),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  page.title,
+                                  style: const TextStyle(
+                                    fontFamily: 'Poppins',
+                                    fontSize: 34,
+                                    fontWeight: FontWeight.w800,
+                                    color: AppColors.textPrimary,
+                                    height: 1.15,
+                                    letterSpacing: -1.0,
+                                  ),
+                                ),
+                                const SizedBox(height: 12),
+                                Text(
+                                  page.subtitle,
+                                  style: const TextStyle(
+                                    fontFamily: 'Poppins',
+                                    fontSize: 16,
+                                    color: AppColors.textSecondary,
+                                    height: 1.5,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                    );
+                  },
+                ),
+              ),
+
+              // Bottom controls (Dots + Button) taking remaining space
+              Expanded(
+                flex: 3,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 28.0),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Row(
+                        children: [
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: List.generate(_pages.length, (index) {
+                              final selected = index == _pageIndex;
+                              return AnimatedContainer(
+                                duration: const Duration(milliseconds: 300),
+                                curve: Curves.easeOutCubic,
+                                margin: const EdgeInsets.only(right: 6),
+                                width: selected ? 28 : 8,
+                                height: 8,
+                                decoration: BoxDecoration(
+                                  color: selected
+                                      ? AppColors.primary
+                                      : AppColors.textMuted.withValues(alpha: 0.3),
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                              );
+                            }),
+                          ),
+                          const Spacer(),
+                          FloatingActionButton.extended(
+                            onPressed: _finishing ? null : _next,
+                            elevation: 0,
+                            backgroundColor: AppColors.textPrimary,
+                            foregroundColor: AppColors.surface,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            label: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  _isLast ? 'Get Started' : 'Next',
+                                  style: const TextStyle(
+                                    fontFamily: 'Poppins',
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                                if (!_isLast) ...[
+                                  const SizedBox(width: 6),
+                                  const Icon(Icons.arrow_forward_rounded, size: 20),
+                                ],
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+          // Top controls (Courtly logo + Skip) Overlaid
+          SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 12.0),
               child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text(
-                    'Courtly',
-                    style: TextStyle(
-                      fontFamily: 'Poppins',
-                      fontSize: 20,
-                      fontWeight: FontWeight.w800,
-                      color: AppColors.textPrimary,
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.85),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: const Text(
+                      'Courtly',
+                      style: TextStyle(
+                        fontFamily: 'Poppins',
+                        fontSize: 16,
+                        fontWeight: FontWeight.w800,
+                        color: AppColors.textPrimary,
+                        letterSpacing: -0.5,
+                      ),
                     ),
                   ),
-                  const Spacer(),
                   TextButton(
                     onPressed: _finishing ? null : _finish,
+                    style: TextButton.styleFrom(
+                      foregroundColor: AppColors.textPrimary,
+                      backgroundColor: Colors.white.withValues(alpha: 0.85),
+                      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
+                      shape: const StadiumBorder(),
+                    ),
                     child: const Text(
                       'Skip',
                       style: TextStyle(
                         fontFamily: 'Poppins',
                         fontWeight: FontWeight.w600,
+                        fontSize: 14,
                       ),
                     ),
                   ),
                 ],
               ),
-            ),
-            Expanded(
-              child: PageView.builder(
-                controller: _controller,
-                itemCount: _pages.length,
-                onPageChanged: (index) => setState(() => _pageIndex = index),
-                itemBuilder: (_, index) {
-                  final page = _pages[index];
-                  return _OnboardingPage(page: page);
-                },
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 6, 20, 20),
-              child: Column(
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: List.generate(_pages.length, (index) {
-                      final selected = index == _pageIndex;
-                      return AnimatedContainer(
-                        duration: const Duration(milliseconds: 220),
-                        margin: const EdgeInsets.symmetric(horizontal: 4),
-                        width: selected ? 22 : 8,
-                        height: 8,
-                        decoration: BoxDecoration(
-                          color: selected
-                              ? AppColors.textPrimary
-                              : AppColors.divider,
-                          borderRadius: BorderRadius.circular(99),
-                        ),
-                      );
-                    }),
-                  ),
-                  const SizedBox(height: 16),
-                  SizedBox(
-                    width: double.infinity,
-                    child: FilledButton(
-                      onPressed: _finishing ? null : _next,
-                      style: FilledButton.styleFrom(
-                        backgroundColor: AppColors.textPrimary,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 15),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                      child: Text(
-                        _isLast ? 'Get Started' : 'Next',
-                        style: const TextStyle(
-                          fontFamily: 'Poppins',
-                          fontSize: 15,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _OnboardingPage extends StatelessWidget {
-  final _OnboardingPageData page;
-
-  const _OnboardingPage({required this.page});
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 8, 20, 8),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Expanded(
-            child: Container(
-              width: double.infinity,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(24),
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    page.accent.withValues(alpha: 0.15),
-                    AppColors.surface,
-                  ],
-                ),
-                border: Border.all(color: AppColors.divider),
-              ),
-              child: Stack(
-                children: [
-                  Positioned(
-                    right: -35,
-                    top: -35,
-                    child: Container(
-                      width: 140,
-                      height: 140,
-                      decoration: BoxDecoration(
-                        color: page.accent.withValues(alpha: 0.22),
-                        shape: BoxShape.circle,
-                      ),
-                    ),
-                  ),
-                  Center(
-                    child: Container(
-                      width: 112,
-                      height: 112,
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(28),
-                        boxShadow: const [
-                          BoxShadow(
-                            color: Color(0x11000000),
-                            blurRadius: 18,
-                            offset: Offset(0, 8),
-                          ),
-                        ],
-                      ),
-                      child: Icon(page.icon, size: 54, color: page.accent),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          const SizedBox(height: 24),
-          Text(
-            page.title,
-            style: const TextStyle(
-              fontFamily: 'Poppins',
-              fontSize: 24,
-              fontWeight: FontWeight.w800,
-              color: AppColors.textPrimary,
-              height: 1.2,
-            ),
-          ),
-          const SizedBox(height: 12),
-          Text(
-            page.subtitle,
-            style: const TextStyle(
-              fontFamily: 'Poppins',
-              fontSize: 14,
-              color: AppColors.textSecondary,
-              height: 1.6,
             ),
           ),
         ],
@@ -259,13 +264,11 @@ class _OnboardingPage extends StatelessWidget {
 class _OnboardingPageData {
   final String title;
   final String subtitle;
-  final IconData icon;
-  final Color accent;
+  final String imageUrl;
 
   const _OnboardingPageData({
     required this.title,
     required this.subtitle,
-    required this.icon,
-    required this.accent,
+    required this.imageUrl,
   });
 }
