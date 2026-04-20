@@ -1,20 +1,22 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../app/constants/app_constants.dart';
 import '../../../app/theme/app_colors.dart';
+import '../../auth/providers/auth_providers.dart';
 import '../data/repositories/onboarding_repository.dart';
 
-class SplashScreen extends StatefulWidget {
+class SplashScreen extends ConsumerStatefulWidget {
   const SplashScreen({super.key});
 
   @override
-  State<SplashScreen> createState() => _SplashScreenState();
+  ConsumerState<SplashScreen> createState() => _SplashScreenState();
 }
 
-class _SplashScreenState extends State<SplashScreen> {
+class _SplashScreenState extends ConsumerState<SplashScreen> {
   @override
   void initState() {
     super.initState();
@@ -22,15 +24,17 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 
   Future<void> _bootstrap() async {
-    await Future<void>.delayed(const Duration(milliseconds: 1200));
     final completed = await OnboardingRepository.isCompleted();
+    await Future<void>.delayed(const Duration(milliseconds: 1200));
     if (!mounted) return;
 
-    if (completed) {
+    final user = ref.read(authStateProvider).value;
+    
+    if (user != null || completed) {
       context.go('/mode-selection');
-      return;
+    } else {
+      context.go(AppConstants.routeOnboarding);
     }
-    context.go(AppConstants.routeOnboarding);
   }
 
   @override
