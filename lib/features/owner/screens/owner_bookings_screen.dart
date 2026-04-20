@@ -48,9 +48,33 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen>
     if (_tabController.index == 1) {
       result = result.where((b) => b.status == 'cancelled').toList();
     }
+
     if (_dateFilter != null) {
-      result = result.where((b) => b.bookingDate == _dateFilter).toList();
+      final now = DateTime.now();
+      final today = DateTime(now.year, now.month, now.day);
+
+      switch (_dateFilter) {
+        case 'Today':
+          final s = today.toIso8601String().substring(0, 10);
+          result = result.where((b) => b.bookingDate == s).toList();
+        case 'Tomorrow':
+          final s = today.add(const Duration(days: 1)).toIso8601String().substring(0, 10);
+          result = result.where((b) => b.bookingDate == s).toList();
+        case 'Yesterday':
+          final s = today.subtract(const Duration(days: 1)).toIso8601String().substring(0, 10);
+          result = result.where((b) => b.bookingDate == s).toList();
+        case 'This Week':
+          // Monday-based week
+          final weekStart = today.subtract(Duration(days: today.weekday - 1));
+          final weekEnd = weekStart.add(const Duration(days: 6));
+          result = result.where((b) {
+            final dt = DateTime.tryParse(b.bookingDate);
+            if (dt == null) return false;
+            return !dt.isBefore(weekStart) && !dt.isAfter(weekEnd);
+          }).toList();
+      }
     }
+
     if (_courtFilter != null) {
       result = result.where((b) => b.courtName == _courtFilter).toList();
     }
@@ -68,6 +92,7 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen>
     }
     return result;
   }
+
 
   bool get _hasActiveFilters => _dateFilter != null || _courtFilter != null;
 
