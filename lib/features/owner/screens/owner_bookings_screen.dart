@@ -665,23 +665,23 @@ class _BookingCard extends StatelessWidget {
     return '${months[dt.month - 1]} ${dt.day}, ${dt.year}';
   }
 
-  String _formatTime(String raw) {
-    // Handles "HH:mm:ss" or ISO timestamp
-    final dt = DateTime.tryParse('2000-01-01 $raw');
-    if (dt == null) {
-      final parsed = DateTime.tryParse(raw);
-      if (parsed != null) {
-        final h = parsed.hour % 12 == 0 ? 12 : parsed.hour % 12;
-        final m = parsed.minute.toString().padLeft(2, '0');
-        final suffix = parsed.hour >= 12 ? 'PM' : 'AM';
-        return '$h:$m $suffix';
-      }
-      return raw;
-    }
+  /// Format a [DateTime] to a readable 12-hour time string (e.g. "9:00 AM").
+  String _formatDateTime(DateTime dt) {
     final h = dt.hour % 12 == 0 ? 12 : dt.hour % 12;
     final m = dt.minute.toString().padLeft(2, '0');
     final suffix = dt.hour >= 12 ? 'PM' : 'AM';
     return '$h:$m $suffix';
+  }
+
+  /// Fallback: format a raw "HH:mm:ss" or ISO time string.
+  String _formatTimeStr(String raw) {
+    final dt = DateTime.tryParse('2000-01-01 $raw');
+    if (dt == null) {
+      final parsed = DateTime.tryParse(raw);
+      if (parsed != null) return _formatDateTime(parsed);
+      return raw;
+    }
+    return _formatDateTime(dt);
   }
 
   @override
@@ -792,35 +792,81 @@ class _BookingCard extends StatelessWidget {
               color: const Color(0xFFF5F5F5),
               borderRadius: BorderRadius.circular(8),
             ),
-            child: Row(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Icon(Icons.calendar_today_rounded, size: 14, color: AppColors.textSecondary),
-                const SizedBox(width: 6),
-                Text(
-                  _formattedDate,
-                  style: const TextStyle(
-                    fontFamily: 'Poppins',
-                    fontSize: 13,
-                    fontWeight: FontWeight.w500,
-                    color: AppColors.textPrimary,
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Text('•', style: TextStyle(color: AppColors.textMuted, fontSize: 14)),
-                const SizedBox(width: 8),
-                const Icon(Icons.access_time_rounded, size: 14, color: AppColors.textSecondary),
-                const SizedBox(width: 4),
-                Expanded(
-                  child: Text(
-                    '${_formatTime(booking.startTime)} – ${_formatTime(booking.endTime)}',
-                    style: const TextStyle(
-                      fontFamily: 'Poppins',
-                      fontSize: 13,
-                      fontWeight: FontWeight.w500,
-                      color: AppColors.textPrimary,
+                // Date row
+                Row(
+                  children: [
+                    const Icon(Icons.calendar_today_rounded, size: 14, color: AppColors.textSecondary),
+                    const SizedBox(width: 6),
+                    Text(
+                      _formattedDate,
+                      style: const TextStyle(
+                        fontFamily: 'Poppins',
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                        color: AppColors.textPrimary,
+                      ),
                     ),
-                  ),
+                  ],
                 ),
+                const SizedBox(height: 6),
+                // Slot chips row – show each individual booked slot.
+                // Falls back to the booking-level range if no slots are attached.
+                if (booking.slots.isEmpty)
+                  Row(
+                    children: [
+                      const Icon(Icons.access_time_rounded, size: 14, color: AppColors.textSecondary),
+                      const SizedBox(width: 4),
+                      Text(
+                        '${_formatTimeStr(booking.startTime)} – ${_formatTimeStr(booking.endTime)}',
+                        style: const TextStyle(
+                          fontFamily: 'Poppins',
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500,
+                          color: AppColors.textPrimary,
+                        ),
+                      ),
+                    ],
+                  )
+                else
+                  Wrap(
+                    spacing: 6,
+                    runSpacing: 4,
+                    children: booking.slots.map((slot) {
+                      return Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                        decoration: BoxDecoration(
+                          color: AppColors.badgeBg,
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(
+                            color: AppColors.primary.withValues(alpha: 0.3),
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(
+                              Icons.access_time_rounded,
+                              size: 12,
+                              color: AppColors.primary,
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              '${_formatDateTime(slot.startTime)} – ${_formatDateTime(slot.endTime)}',
+                              style: const TextStyle(
+                                fontFamily: 'Poppins',
+                                fontSize: 12,
+                                fontWeight: FontWeight.w500,
+                                color: AppColors.primary,
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    }).toList(),
+                  ),
               ],
             ),
           ),
