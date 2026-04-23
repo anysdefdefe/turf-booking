@@ -17,6 +17,8 @@ class SplashScreen extends ConsumerStatefulWidget {
 }
 
 class _SplashScreenState extends ConsumerState<SplashScreen> {
+  static bool _hasShownInitialDelay = false;
+
   @override
   void initState() {
     super.initState();
@@ -25,11 +27,15 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
 
   Future<void> _bootstrap() async {
     final completed = await OnboardingRepository.isCompleted();
-    await Future<void>.delayed(const Duration(milliseconds: 1200));
+    final user = await ref.read(authStateProvider.future);
+
+    if (!_hasShownInitialDelay) {
+      _hasShownInitialDelay = true;
+      await Future<void>.delayed(const Duration(milliseconds: 1200));
+    }
+
     if (!mounted) return;
 
-    final user = ref.read(authStateProvider).value;
-    
     if (user != null || completed) {
       context.go('/mode-selection');
     } else {
