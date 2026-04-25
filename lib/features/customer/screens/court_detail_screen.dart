@@ -11,7 +11,9 @@ import '../widgets/detail_section_title.dart';
 import '../widgets/info_row_chip.dart';
 
 class CourtDetailScreen extends StatefulWidget {
-  const CourtDetailScreen({super.key});
+  final Object? initialArgs;
+
+  const CourtDetailScreen({super.key, this.initialArgs});
 
   @override
   State<CourtDetailScreen> createState() => _CourtDetailScreenState();
@@ -42,7 +44,8 @@ class _CourtDetailScreenState extends State<CourtDetailScreen> {
       return;
     }
 
-    final routeArgs = ModalRoute.of(context)?.settings.arguments;
+    final routeArgs =
+        widget.initialArgs ?? ModalRoute.of(context)?.settings.arguments;
     if (routeArgs is CourtDetailArgs) {
       _court = routeArgs.selectedCourt;
     } else if (routeArgs is Court) {

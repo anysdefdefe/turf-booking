@@ -19,6 +19,8 @@ import 'package:turf_booking/features/customer/screens/profile_screen.dart';
 import 'package:turf_booking/features/customer/screens/cart_screen.dart';
 import 'package:turf_booking/features/customer/screens/booking_confirmation_screen.dart';
 import 'package:turf_booking/features/customer/data/models/booking_args.dart';
+import 'package:turf_booking/features/customer/data/models/court_detail_args.dart';
+import 'package:turf_booking/features/customer/data/models/court_model.dart';
 import 'package:turf_booking/features/customer/data/models/stadium_model.dart';
 import 'package:turf_booking/features/owner/screens/owner_dashboard_screen.dart';
 import 'package:turf_booking/features/owner/screens/pending_approval_screen.dart';
@@ -44,15 +46,19 @@ GoRouter router(Ref ref) {
   return GoRouter(
     initialLocation: AppConstants.routeSplash,
     redirect: (context, state) {
+      final isGoingToSplash = state.matchedLocation == AppConstants.routeSplash;
+
       // 1. Check if the stream is still loading
-      if (authState.isLoading) return null;
+      if (authState.isLoading) {
+        return isGoingToSplash ? null : AppConstants.routeSplash;
+      }
 
       final user = authState.value;
-      final isGoingToLogin = state.matchedLocation == '/login';
-      final isGoingToRegister = state.matchedLocation == '/register';
+      final isGoingToLogin = state.matchedLocation == AppConstants.routeLogin;
+      final isGoingToRegister =
+          state.matchedLocation == AppConstants.routeRegister;
       final isGoingToEmailConfirmation =
-          state.matchedLocation == '/email-confirmation';
-      final isGoingToSplash = state.matchedLocation == AppConstants.routeSplash;
+          state.matchedLocation == AppConstants.routeEmailConfirmation;
       final isGoingToOnboarding =
           state.matchedLocation == AppConstants.routeOnboarding;
 
@@ -66,144 +72,186 @@ GoRouter router(Ref ref) {
 
       // 2. Unauthenticated users can ONLY go to auth screens
       if (user == null) {
-        return isAuthScreen ? null : '/login';
+        return isAuthScreen ? null : AppConstants.routeLogin;
       }
 
       // 3. If logged in, block them from seeing the login/register screens
       if (isGoingToLogin || isGoingToRegister) {
-        return '/mode-selection';
+        return AppConstants.routeModeSelection;
       }
 
       // 4. Role-based Route Protection for Owners
-      final isGoingToOwnerArea = state.matchedLocation.startsWith('/owner');
+      final isGoingToOwnerArea = state.matchedLocation.startsWith(
+        AppConstants.routeOwnerPrefix,
+      );
       if (isGoingToOwnerArea) {
         // If they are not an owner yet, they can ONLY access the application or pending screen
         if (!user.isOwner) {
-          if (state.matchedLocation != '/owner/application' &&
-              state.matchedLocation != '/owner/pending-approval') {
-            return '/owner/application';
+          if (state.matchedLocation != AppConstants.routeOwnerApplication &&
+              state.matchedLocation != AppConstants.routeOwnerPendingApproval) {
+            return AppConstants.routeOwnerApplication;
           }
         }
         // If they ARE an owner but not approved, lock them to pending
         else if (!user.isApproved &&
-            state.matchedLocation != '/owner/pending-approval') {
-          return '/owner/pending-approval';
+            state.matchedLocation != AppConstants.routeOwnerPendingApproval) {
+          return AppConstants.routeOwnerPendingApproval;
         }
       }
 
       // 5. Role-based Route Protection for Admins
-      final isGoingToAdminArea = state.matchedLocation.startsWith('/admin');
+      final isGoingToAdminArea = state.matchedLocation.startsWith(
+        AppConstants.routeAdmin,
+      );
       if (isGoingToAdminArea && !user.isAdmin) {
-        return '/mode-selection';
+        return AppConstants.routeModeSelection;
       }
 
       return null; // All checks passed, let them proceed
     },
     routes: [
       GoRoute(
+        name: 'splash',
         path: AppConstants.routeSplash,
         builder: (context, state) => const SplashScreen(),
       ),
       GoRoute(
+        name: 'onboarding',
         path: AppConstants.routeOnboarding,
         builder: (context, state) => const OnboardingScreen(),
       ),
-      GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
       GoRoute(
-        path: '/register',
+        name: 'login',
+        path: AppConstants.routeLogin,
+        builder: (context, state) => const LoginScreen(),
+      ),
+      GoRoute(
+        name: 'register',
+        path: AppConstants.routeRegister,
         builder: (context, state) => const RegisterScreen(),
       ),
       GoRoute(
-        path: '/email-confirmation',
+        name: 'emailConfirmation',
+        path: AppConstants.routeEmailConfirmation,
         builder: (context, state) {
           final email = state.extra as String? ?? '';
           return EmailConfirmationScreen(email: email);
         },
       ),
       GoRoute(
-        path: '/mode-selection',
+        name: 'modeSelection',
+        path: AppConstants.routeModeSelection,
         builder: (context, state) => const ModeSelectionScreen(),
       ),
       GoRoute(
-        path: '/customer/home',
+        name: 'customerHome',
+        path: AppConstants.routeCustomerHome,
         builder: (context, state) => const HomeScreen(),
       ),
       GoRoute(
-        path: '/venue-detail',
+        name: 'venueDetail',
+        path: AppConstants.routeVenueDetail,
         builder: (context, state) {
-          final venue = state.extra as Stadium;
+          final venue = state.extra;
+          if (venue is! Stadium) {
+            return _invalidRouteDataScreen('Venue details are unavailable.');
+          }
           return VenueDetailScreen(venue: venue);
         },
       ),
       GoRoute(
-        path: '/court-detail',
-        pageBuilder: (context, state) => MaterialPage<void>(
-          key: state.pageKey,
-          arguments: state.extra,
-          child: const CourtDetailScreen(),
-        ),
+        name: 'courtDetail',
+        path: AppConstants.routeCourtDetail,
+        builder: (context, state) {
+          final extra = state.extra;
+          if (extra is! Court && extra is! CourtDetailArgs) {
+            return _invalidRouteDataScreen('Court details are unavailable.');
+          }
+          return CourtDetailScreen(initialArgs: extra);
+        },
       ),
       GoRoute(
-        path: '/booking-confirm',
+        name: 'bookingConfirm',
+        path: AppConstants.routeBookingConfirm,
         builder: (context, state) {
-          final args = state.extra as BookingArgs;
+          final args = state.extra;
+          if (args is! BookingArgs) {
+            return _invalidRouteDataScreen('Booking details are unavailable.');
+          }
           return BookingConfirmationScreen(args: args);
         },
       ),
       GoRoute(
-        path: '/customer/my-bookings',
+        name: 'customerMyBookings',
+        path: AppConstants.routeMyBookings,
         builder: (context, state) =>
             MyBookingsScreen(toastMessage: state.uri.queryParameters['toast']),
       ),
       GoRoute(
-        path: '/customer/cart',
+        name: 'customerCart',
+        path: AppConstants.routeCart,
         builder: (context, state) => const CartScreen(),
       ),
       GoRoute(
-        path: '/customer/profile',
+        name: 'customerProfile',
+        path: AppConstants.routeCustomerProfile,
         builder: (context, state) => const ProfileScreen(),
       ),
       GoRoute(
-        path: '/owner/gateway',
+        name: 'ownerGateway',
+        path: AppConstants.routeOwnerGateway,
         builder: (context, state) => const OwnerGatewayScreen(),
       ),
       GoRoute(
-        path: '/owner/dashboard',
+        name: 'ownerDashboard',
+        path: AppConstants.routeOwnerDashboard,
         builder: (context, state) => const OwnerDashboardScreen(),
       ),
       GoRoute(
-        path: '/owner/application',
+        name: 'ownerApplication',
+        path: AppConstants.routeOwnerApplication,
         builder: (context, state) => const OwnerApplicationScreen(),
       ),
       GoRoute(
-        path: '/owner/pending-approval',
+        name: 'ownerPendingApproval',
+        path: AppConstants.routeOwnerPendingApproval,
         builder: (context, state) => const PendingApprovalScreen(),
       ),
       GoRoute(
-        path: '/owner/bookings',
+        name: 'ownerBookings',
+        path: AppConstants.routeOwnerBookings,
         builder: (context, state) => const OwnerBookingsScreen(),
       ),
       GoRoute(
-        path: '/owner/add-stadium',
+        name: 'ownerAddStadium',
+        path: AppConstants.routeOwnerAddStadium,
         builder: (context, state) => const OwnerAddStadiumScreen(),
       ),
       GoRoute(
-        path: '/admin',
+        name: 'adminMain',
+        path: AppConstants.routeAdmin,
         builder: (context, state) => const AdminMainScreen(),
       ),
       GoRoute(
-        path: '/owner/manage',
+        name: 'ownerManage',
+        path: AppConstants.routeOwnerManage,
         builder: (context, state) => const OwnerStadiumManageScreen(),
       ),
       GoRoute(
-        path: '/owner/edit-stadium',
+        name: 'ownerEditStadium',
+        path: AppConstants.routeOwnerEditStadium,
         builder: (context, state) => const OwnerStadiumEditScreen(),
       ),
       GoRoute(
-        path: '/owner/edit-court/:courtId',
+        name: 'ownerEditCourt',
+        path: AppConstants.routeOwnerEditCourt,
         builder: (context, state) =>
             OwnerCourtEditScreen(courtId: state.pathParameters['courtId']!),
       ),
     ],
   );
+}
+
+Widget _invalidRouteDataScreen(String message) {
+  return Scaffold(body: Center(child: Text(message)));
 }
