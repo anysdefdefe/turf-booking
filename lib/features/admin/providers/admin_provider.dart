@@ -30,3 +30,8 @@ final dashboardStatsProvider = FutureProvider<Map<String, dynamic>>((ref) async 
   final repo = ref.read(adminRepositoryProvider);
   return repo.getDashboardStats();
 });
+
+final allBookingsProvider = FutureProvider<List<Map<String, dynamic>>>((ref) async {
+  final repo = ref.read(adminRepositoryProvider);
+  return repo.getAllBookings();
+});
