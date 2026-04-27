@@ -124,6 +124,17 @@ Future<void> blockUser(String userId) async {
         .update({'is_active': true})
         .eq('id', venueId);
   }
+  // ---------------------------- BOOKINGS------------------------------------
+ @override
+ 
+Future<List<Map<String, dynamic>>> getAllBookings() async {
+  final response = await _supabase
+      .from('bookings')
+      .select('*, users!customer_id(full_name, email)')
+      .order('created_at', ascending: false);
+
+  return List<Map<String, dynamic>>.from(response);
+}
 
   // ─── DASHBOARD ───────────────────────────────────────────
 

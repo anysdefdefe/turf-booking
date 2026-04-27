@@ -4,6 +4,7 @@ import 'admin_approvals_screen.dart';
 import 'admin_venues_screen.dart';
 import 'admin_users_screen.dart';
 import 'admin_settings_screen.dart';
+import 'admin_bookings_screen.dart'; // ← ADD THIS
 
 class AdminMainScreen extends StatefulWidget {
   const AdminMainScreen({super.key});
@@ -15,19 +16,12 @@ class AdminMainScreen extends StatefulWidget {
 class _AdminMainScreenState extends State<AdminMainScreen> {
   int _currentIndex = 0;
 
-  void _goToTab(int index) {
-    setState(() => _currentIndex = index);
-  }
-
   @override
   Widget build(BuildContext context) {
     final screens = [
-      AdminDashboardScreen(
-        onGoToApprovals: () => _goToTab(1),
-        onGoToVenues: () => _goToTab(2),
-        onGoToUsers: () => _goToTab(3),
-      ),
+      const AdminDashboardScreen(),
       const AdminApprovalsScreen(),
+      const AdminBookingsScreen(), 
       const AdminVenuesScreen(),
       const AdminUsersScreen(),
       const AdminSettingsScreen(),
@@ -44,11 +38,30 @@ class _AdminMainScreenState extends State<AdminMainScreen> {
         backgroundColor: Colors.white,
         elevation: 10,
         items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.dashboard), label: 'Dashboard'),
-          BottomNavigationBarItem(icon: Icon(Icons.pending_actions), label: 'Approvals'),
-          BottomNavigationBarItem(icon: Icon(Icons.stadium), label: 'Venues'),
-          BottomNavigationBarItem(icon: Icon(Icons.people), label: 'Users'),
-          BottomNavigationBarItem(icon: Icon(Icons.settings), label: 'Settings'),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.dashboard),
+            label: 'Dashboard',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.pending_actions),
+            label: 'Approvals',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.book_online), 
+            label: 'Bookings',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.stadium),
+            label: 'Venues',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.people),
+            label: 'Users',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.settings),
+            label: 'Settings',
+          ),
         ],
       ),
     );

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../auth/providers/auth_controller.dart';
 
 class AdminSettingsScreen extends ConsumerWidget {
@@ -7,6 +8,11 @@ class AdminSettingsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // Get real logged in user
+    final currentUser = Supabase.instance.client.auth.currentUser;
+    final email = currentUser?.email ?? 'admin@courtly.com';
+    final name = currentUser?.userMetadata?['full_name'] ?? 'Admin';
+
     return Scaffold(
       backgroundColor: const Color(0xFFF5F5F5),
       appBar: AppBar(
@@ -40,35 +46,83 @@ class AdminSettingsScreen extends ConsumerWidget {
               ),
               child: Row(
                 children: [
-                  const CircleAvatar(
+                  CircleAvatar(
                     radius: 28,
-                    backgroundColor: Color(0xFF4CAF50),
-                    child: Icon(
-                      Icons.admin_panel_settings,
-                      color: Colors.white,
-                      size: 28,
+                    backgroundColor:
+                        const Color(0xFF4CAF50).withOpacity(0.15),
+                    child: Text(
+                      name[0].toUpperCase(),
+                      style: const TextStyle(
+                        color: Color(0xFF4CAF50),
+                        fontWeight: FontWeight.bold,
+                        fontSize: 22,
+                      ),
                     ),
                   ),
                   const SizedBox(width: 16),
-                  const Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Admin',
-                        style: TextStyle(
-                          fontSize: 17,
-                          fontWeight: FontWeight.bold,
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          name,
+                          style: const TextStyle(
+                            fontSize: 17,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
-                      ),
-                      Text(
-                        'admin@courtly.com',
-                        style: TextStyle(
-                          fontSize: 13,
-                          color: Colors.grey,
+                        const SizedBox(height: 2),
+                        Text(
+                          email,
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: Colors.grey[500],
+                          ),
                         ),
-                      ),
-                    ],
+                        const SizedBox(height: 6),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 8, vertical: 3),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF4CAF50)
+                                .withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: const Text(
+                            'Administrator',
+                            style: TextStyle(
+                              color: Color(0xFF4CAF50),
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 16),
+
+            // App Info Card
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(14),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 8,
+                  ),
+                ],
+              ),
+              child: Column(
+                children: [
+                  _infoRow(Icons.app_settings_alt, 'App Name', 'Courtly'),
+                  
                 ],
               ),
             ),
@@ -80,7 +134,6 @@ class AdminSettingsScreen extends ConsumerWidget {
               width: double.infinity,
               child: ElevatedButton.icon(
                 onPressed: () async {
-                  // Show confirmation dialog
                   final confirm = await showDialog<bool>(
                     context: context,
                     builder: (context) => AlertDialog(
@@ -90,7 +143,8 @@ class AdminSettingsScreen extends ConsumerWidget {
                       ),
                       actions: [
                         TextButton(
-                          onPressed: () => Navigator.pop(context, false),
+                          onPressed: () =>
+                              Navigator.pop(context, false),
                           child: const Text('Cancel'),
                         ),
                         ElevatedButton(
@@ -98,7 +152,8 @@ class AdminSettingsScreen extends ConsumerWidget {
                             backgroundColor: Colors.red,
                             foregroundColor: Colors.white,
                           ),
-                          onPressed: () => Navigator.pop(context, true),
+                          onPressed: () =>
+                              Navigator.pop(context, true),
                           child: const Text('Logout'),
                         ),
                       ],
@@ -126,6 +181,27 @@ class AdminSettingsScreen extends ConsumerWidget {
           ],
         ),
       ),
+    );
+  }
+
+  Widget _infoRow(IconData icon, String label, String value) {
+    return Row(
+      children: [
+        Icon(icon, size: 18, color: Colors.grey[400]),
+        const SizedBox(width: 12),
+        Text(
+          label,
+          style: TextStyle(fontSize: 13, color: Colors.grey[500]),
+        ),
+        const Spacer(),
+        Text(
+          value,
+          style: const TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ],
     );
   }
 }
