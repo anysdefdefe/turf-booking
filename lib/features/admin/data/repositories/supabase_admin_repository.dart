@@ -121,7 +121,7 @@ class SupabaseAdminRepository implements AdminRepository {
   Future<List<Map<String, dynamic>>> getAllBookings() async {
     final response = await _supabase
         .from('bookings')
-        .select('*, users!customer_id(full_name, email)')
+        .select('*, users!customer_id(full_name, email), slots(*)')
         .order('created_at', ascending: false);
 
     return List<Map<String, dynamic>>.from(response);
