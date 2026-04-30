@@ -96,6 +96,25 @@ class _BookingCard extends StatelessWidget {
     }
   }
 
+  /// Format a [DateTime] to a readable 12-hour time string (e.g. "9:00 AM").
+  String _formatDateTime(DateTime dt) {
+    final h = dt.hour % 12 == 0 ? 12 : dt.hour % 12;
+    final m = dt.minute.toString().padLeft(2, '0');
+    final suffix = dt.hour >= 12 ? 'PM' : 'AM';
+    return '$h:$m $suffix';
+  }
+
+  /// Fallback: format a raw "HH:mm:ss" or ISO time string.
+  String _formatTimeStr(String raw) {
+    final dt = DateTime.tryParse('2000-01-01 $raw');
+    if (dt == null) {
+      final parsed = DateTime.tryParse(raw);
+      if (parsed != null) return _formatDateTime(parsed);
+      return raw;
+    }
+    return _formatDateTime(dt);
+  }
+
   @override
   Widget build(BuildContext context) {
     final status = booking['status'] ?? 'unknown';
@@ -190,14 +209,92 @@ class _BookingCard extends StatelessWidget {
 
         const SizedBox(height: 10),
           // Details
-          _infoRow(Icons.calendar_today_outlined,
-              'Date', booking['booking_date'] ?? '-'),
+          _infoRow(Icons.calendar_today_outlined, 'Date', booking['booking_date'] ?? '-'),
           const SizedBox(height: 6),
-          _infoRow(Icons.access_time_outlined,
-              'Time', '${booking['start_time']} - ${booking['end_time']}'),
-          const SizedBox(height: 6),
-          _infoRow(Icons.timelapse_outlined,
-              'Duration', '${booking['duration_hours']} hrs'),
+          // Show slots as chips similar to owner view. If slots are present, list them,
+          // otherwise show a single time chip using start/end time.
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF5F5F5),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Icon(Icons.access_time_outlined, size: 14, color: Colors.grey[500]),
+                    const SizedBox(width: 6),
+                    Text(
+                      'Time',
+                      style: TextStyle(fontSize: 13, color: Colors.grey[700], fontWeight: FontWeight.w500),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 6),
+                Builder(builder: (_) {
+                  final slots = booking['slots'];
+                  if (slots is List && slots.isNotEmpty) {
+                    return Wrap(
+                      spacing: 6,
+                      runSpacing: 4,
+                      children: slots.map<Widget>((s) {
+                        final st = s['start_time']?.toString() ?? booking['start_time']?.toString() ?? '';
+                        final et = s['end_time']?.toString() ?? booking['end_time']?.toString() ?? '';
+                        return Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFF0FFF4),
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(color: const Color(0xFF4CAF50).withOpacity(0.2)),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(Icons.access_time_outlined, size: 12, color: Color(0xFF4CAF50)),
+                              const SizedBox(width: 6),
+                              Text(
+                                '${_formatTimeStr(st)} – ${_formatTimeStr(et)}',
+                                style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF2E7D32)),
+                              ),
+                            ],
+                          ),
+                        );
+                      }).toList(),
+                    );
+                  }
+
+                  // fallback single range styled as a chip
+                  final st = booking['start_time']?.toString() ?? '';
+                  final et = booking['end_time']?.toString() ?? '';
+                  return Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF0FFF4),
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(color: const Color(0xFF4CAF50).withOpacity(0.2)),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(Icons.access_time_outlined, size: 12, color: Color(0xFF4CAF50)),
+                            const SizedBox(width: 6),
+                            Text(
+                              '${_formatTimeStr(st)} – ${_formatTimeStr(et)}',
+                              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF2E7D32)),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  );
+                }),
+              ],
+            ),
+          ),
           const SizedBox(height: 6),
           _infoRow(Icons.currency_rupee,
               'Amount', '₹${booking['total_amount']}'),

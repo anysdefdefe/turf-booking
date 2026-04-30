@@ -3,8 +3,7 @@ import 'admin_dashboard_screen.dart';
 import 'admin_approvals_screen.dart';
 import 'admin_venues_screen.dart';
 import 'admin_users_screen.dart';
-import 'admin_settings_screen.dart';
-import 'admin_bookings_screen.dart'; // ← ADD THIS
+import 'admin_bookings_screen.dart';
 
 class AdminMainScreen extends StatefulWidget {
   const AdminMainScreen({super.key});
@@ -21,10 +20,9 @@ class _AdminMainScreenState extends State<AdminMainScreen> {
     final screens = [
       const AdminDashboardScreen(),
       const AdminApprovalsScreen(),
-      const AdminBookingsScreen(), 
+      const AdminBookingsScreen(),
       const AdminVenuesScreen(),
       const AdminUsersScreen(),
-      const AdminSettingsScreen(),
     ];
 
     return Scaffold(
@@ -37,6 +35,10 @@ class _AdminMainScreenState extends State<AdminMainScreen> {
         unselectedItemColor: Colors.grey,
         backgroundColor: Colors.white,
         elevation: 10,
+        selectedFontSize: 12,
+        unselectedFontSize: 12,
+        selectedIconTheme: const IconThemeData(size: 22),
+        unselectedIconTheme: const IconThemeData(size: 22),
         items: const [
           BottomNavigationBarItem(
             icon: Icon(Icons.dashboard),
@@ -57,10 +59,6 @@ class _AdminMainScreenState extends State<AdminMainScreen> {
           BottomNavigationBarItem(
             icon: Icon(Icons.people),
             label: 'Users',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.settings),
-            label: 'Settings',
           ),
         ],
       ),
