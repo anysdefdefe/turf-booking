@@ -21,8 +21,7 @@ class SupabaseAdminRepository implements AdminRepository {
   }
 
   @override
-  Future<void> approveOwner(
-      String applicationId, String userId) async {
+  Future<void> approveOwner(String applicationId, String userId) async {
     // Update application status
     await _supabase
         .from('owner_applications')
@@ -32,31 +31,26 @@ class SupabaseAdminRepository implements AdminRepository {
     // Update user to be approved owner
     await _supabase
         .from('users')
-        .update({
-          'is_owner': true,
-          'is_approved': true,
-        })
+        .update({'is_owner': true, 'is_approved': true})
         .eq('id', userId);
   }
 
   @override
   Future<void> rejectOwner(
-      String applicationId, String userId, String reason) async {
+    String applicationId,
+    String userId,
+    String reason,
+  ) async {
     // Update application status
     await _supabase
         .from('owner_applications')
-        .update({
-          'status': 'rejected',
-        })
+        .update({'status': 'rejected'})
         .eq('id', applicationId);
 
     // Update user
     await _supabase
         .from('users')
-        .update({
-          'is_owner': false,
-          'is_approved': false,
-        })
+        .update({'is_owner': false, 'is_approved': false})
         .eq('id', userId);
   }
 
@@ -64,38 +58,35 @@ class SupabaseAdminRepository implements AdminRepository {
 
   @override
   @override
-Future<List<Map<String, dynamic>>> getAllUsers() async {
-  final currentUserId = _supabase.auth.currentUser!.id;
-  
-  print('🔍 Current admin ID: $currentUserId');
-  
-  final response = await _supabase
-      .from('users')
-      .select()
-      .neq('id', currentUserId)
-      .order('created_at', ascending: false);
+  Future<List<Map<String, dynamic>>> getAllUsers() async {
+    final currentUserId = _supabase.auth.currentUser!.id;
 
-  print('👥 Users fetched: ${response.length}');
-  print('👥 Users data: $response');
+    print('🔍 Current admin ID: $currentUserId');
 
-  return List<Map<String, dynamic>>.from(response);
-}
+    final response = await _supabase
+        .from('users')
+        .select()
+        .neq('id', currentUserId)
+        .order('created_at', ascending: false);
+
+    print('👥 Users fetched: ${response.length}');
+    print('👥 Users data: $response');
+
+    return List<Map<String, dynamic>>.from(response);
+  }
 
   @override
-Future<void> blockUser(String userId) async {
-  await _supabase
-      .from('users')
-      .update({'is_blocked': true})
-      .eq('id', userId);
-}
+  Future<void> blockUser(String userId) async {
+    await _supabase.from('users').update({'is_blocked': true}).eq('id', userId);
+  }
 
   @override
   Future<void> unblockUser(String userId) async {
-  await _supabase
-      .from('users')
-      .update({'is_blocked': false})
-      .eq('id', userId);
-}
+    await _supabase
+        .from('users')
+        .update({'is_blocked': false})
+        .eq('id', userId);
+  }
 
   // ─── VENUES ──────────────────────────────────────────────
 
@@ -124,34 +115,27 @@ Future<void> blockUser(String userId) async {
         .update({'is_active': true})
         .eq('id', venueId);
   }
-  // ---------------------------- BOOKINGS------------------------------------
- @override
- 
-Future<List<Map<String, dynamic>>> getAllBookings() async {
-  final response = await _supabase
-      .from('bookings')
-      .select('*, users!customer_id(full_name, email)')
-      .order('created_at', ascending: false);
 
-  return List<Map<String, dynamic>>.from(response);
-}
+  // ---------------------------- BOOKINGS------------------------------------
+  @override
+  Future<List<Map<String, dynamic>>> getAllBookings() async {
+    final response = await _supabase
+        .from('bookings')
+        .select('*, users!customer_id(full_name, email), slots(*)')
+        .order('created_at', ascending: false);
+
+    return List<Map<String, dynamic>>.from(response);
+  }
 
   // ─── DASHBOARD ───────────────────────────────────────────
 
   @override
   Future<Map<String, dynamic>> getDashboardStats() async {
-    final users = await _supabase
-        .from('users')
-        .select()
-        .eq('is_admin', false);
+    final users = await _supabase.from('users').select().eq('is_admin', false);
 
-    final stadiums = await _supabase
-        .from('stadiums')
-        .select();
+    final stadiums = await _supabase.from('stadiums').select();
 
-    final bookings = await _supabase
-        .from('bookings')
-        .select();
+    final bookings = await _supabase.from('bookings').select();
 
     final pending = await _supabase
         .from('owner_applications')
