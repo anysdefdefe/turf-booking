@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:turf_booking/app/theme/app_colors.dart';
 
 class StorageImage extends StatefulWidget {
   final String? storagePath;
@@ -154,21 +155,8 @@ class _StorageAvatarState extends State<StorageAvatar> {
     return '${parts.first[0]}${parts.last[0]}'.toUpperCase();
   }
 
-  /// Picks a colour from a curated palette deterministically from the name.
-  Color _avatarColor(String name) {
-    const palette = [
-      Color(0xFF6366F1), // Indigo
-      Color(0xFF0EA5E9), // Sky
-      Color(0xFF22C55E), // Green
-      Color(0xFFF59E0B), // Amber
-      Color(0xFFEC4899), // Pink
-      Color(0xFF8B5CF6), // Violet
-      Color(0xFF14B8A6), // Teal
-      Color(0xFFF97316), // Orange
-    ];
-    final index = name.isEmpty ? 0 : name.codeUnitAt(0) % palette.length;
-    return palette[index];
-  }
+  /// Always returns the app's primary green to match the brand.
+  Color _avatarColor(String _) => AppColors.primary;
 
   @override
   Widget build(BuildContext context) {
