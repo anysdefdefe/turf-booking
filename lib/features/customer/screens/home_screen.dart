@@ -622,19 +622,18 @@ class _StadiumCard extends StatelessWidget {
 
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(18),
+      borderRadius: BorderRadius.circular(24),
       child: Container(
-        // THE FIX: Forces the entire stadium card to stretch horizontally
         width: double.infinity,
-        margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+        margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
         decoration: BoxDecoration(
           color: AppColors.surface,
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(24),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.04),
-              blurRadius: 20,
-              offset: const Offset(0, 8),
+              color: Colors.black.withValues(alpha: 0.05),
+              blurRadius: 24,
+              offset: const Offset(0, 10),
             ),
           ],
         ),
@@ -643,7 +642,7 @@ class _StadiumCard extends StatelessWidget {
           children: [
             ClipRRect(
               borderRadius: const BorderRadius.vertical(
-                top: Radius.circular(20),
+                top: Radius.circular(24),
               ),
               child: Stack(
                 children: [
@@ -652,38 +651,44 @@ class _StadiumCard extends StatelessWidget {
                           storagePath: stadium.imageUrl,
                           bucketName: StadiumRepository.imageBucket,
                           width: double.infinity,
-                          height: 150,
+                          height: 180,
                           fit: BoxFit.cover,
                           borderRadius: BorderRadius.zero,
                           placeholder: _buildPlaceholder(),
                         )
                       : _buildPlaceholder(),
                   Positioned(
-                    top: 12,
-                    right: 12,
+                    top: 14,
+                    right: 14,
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                       decoration: BoxDecoration(
-                        color: AppColors.surface.withValues(alpha: 0.94),
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: AppColors.divider, width: 1),
+                        color: AppColors.surface.withValues(alpha: 0.95),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(color: AppColors.divider, width: 0.5),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.05),
+                            blurRadius: 10,
+                          ),
+                        ],
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           const Icon(
                             Icons.near_me_rounded,
-                            color: AppColors.textSecondary,
-                            size: 11,
+                            color: AppColors.primary,
+                            size: 12,
                           ),
                           const SizedBox(width: 4),
                           Text(
                             '${stadium.distanceKm.toStringAsFixed(1)} km',
                             style: const TextStyle(
                               fontFamily: 'Poppins',
-                              color: AppColors.textSecondary,
-                              fontSize: 10.5,
-                              fontWeight: FontWeight.w600,
+                              color: AppColors.textPrimary,
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
                             ),
                           ),
                         ],
@@ -694,42 +699,61 @@ class _StadiumCard extends StatelessWidget {
               ),
             ),
             Padding(
-              padding: const EdgeInsets.all(14),
+              padding: const EdgeInsets.all(18),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Expanded(
                         child: Text(
                           stadium.name,
                           style: const TextStyle(
                             fontFamily: 'Poppins',
-                            fontSize: 16,
-                            fontWeight: FontWeight.w700,
-                            letterSpacing: -0.3,
+                            fontSize: 18,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: -0.4,
                             color: AppColors.textPrimary,
                           ),
-                        ),
-                      ),
-                      Text(
-                        '$courtCount courts',
-                        style: const TextStyle(
-                          fontFamily: 'Poppins',
-                          fontSize: 12,
-                          color: AppColors.textSecondary,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
                     ],
                   ),
                   const SizedBox(height: 6),
-                  Text(
-                    '${stadium.address}, ${stadium.city}',
-                    style: const TextStyle(
-                      fontFamily: 'Poppins',
-                      fontSize: 12.5,
-                      color: AppColors.textSecondary,
-                    ),
+                  Row(
+                    children: [
+                      const Icon(
+                        Icons.location_on_rounded,
+                        size: 14,
+                        color: AppColors.textSecondary,
+                      ),
+                      const SizedBox(width: 4),
+                      Expanded(
+                        child: Text(
+                          '${stadium.address}, ${stadium.city}',
+                          style: const TextStyle(
+                            fontFamily: 'Poppins',
+                            fontSize: 13,
+                            fontWeight: FontWeight.w500,
+                            color: AppColors.textSecondary,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      _buildStatChip(Icons.sports_tennis_rounded, '$courtCount Courts'),
+                      if (stadium.amenities.isNotEmpty)
+                        _buildStatChip(Icons.star_rounded, '${stadium.amenities.length} Amenities'),
+                    ],
                   ),
                 ],
               ),
@@ -740,12 +764,38 @@ class _StadiumCard extends StatelessWidget {
     );
   }
 
+  Widget _buildStatChip(IconData icon, String label) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: AppColors.background,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 14, color: AppColors.primary),
+          const SizedBox(width: 6),
+          Text(
+            label,
+            style: const TextStyle(
+              fontFamily: 'Poppins',
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: AppColors.textPrimary,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   // Extracted to enforce layout constraints
   Widget _buildPlaceholder() {
     return Container(
-      height: 150,
+      height: 180,
       width: double.infinity, // THE FIX: Forces the placeholder to expand
-      color: AppColors.divider,
+      color: AppColors.divider.withValues(alpha: 0.5),
       child: const Center(
         child: Icon(
           Icons.stadium_rounded,
