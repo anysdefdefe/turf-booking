@@ -11,10 +11,10 @@ class AuthFieldLabel extends StatelessWidget {
     return Text(
       text,
       style: const TextStyle(
-        fontSize: 12.5,
+        fontFamily: 'Poppins',
+        fontSize: 13,
         fontWeight: FontWeight.w600,
         color: AppColors.textPrimary,
-        letterSpacing: 0.2,
       ),
     );
   }
@@ -36,36 +36,32 @@ class AuthRingButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return SizedBox(
       width: double.infinity,
-      height: 52,
-      child: OutlinedButton(
+      height: 56,
+      child: FilledButton(
         onPressed: isLoading ? null : onPressed,
-        style: OutlinedButton.styleFrom(
-          side: const BorderSide(color: AppColors.textPrimary, width: 1.5),
+        style: FilledButton.styleFrom(
+          backgroundColor: AppColors.textPrimary,
+          foregroundColor: Colors.white,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(14),
+            borderRadius: BorderRadius.circular(30),
           ),
-          foregroundColor: AppColors.textPrimary,
-          backgroundColor: Colors.transparent,
-          disabledForegroundColor: AppColors.textMuted,
-        ).copyWith(
-          overlayColor: WidgetStateProperty.all(
-            AppColors.textPrimary.withOpacity(0.05),
-          ),
+          disabledBackgroundColor: AppColors.divider,
         ),
         child: isLoading
             ? const SizedBox(
-                width: 18,
-                height: 18,
+                width: 20,
+                height: 20,
                 child: CircularProgressIndicator(
                   strokeWidth: 2,
-                  color: AppColors.textPrimary,
+                  color: Colors.white,
                 ),
               )
             : Text(
                 label,
                 style: const TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w700,
+                  fontFamily: 'Poppins',
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
                 ),
               ),
       ),
@@ -75,27 +71,31 @@ class AuthRingButton extends StatelessWidget {
 
 InputDecoration authPillInputDecoration(String hint, [Widget? suffixIcon]) {
   final border = OutlineInputBorder(
-    borderRadius: BorderRadius.circular(12),
-    borderSide: const BorderSide(color: AppColors.divider, width: 1.2),
+    borderRadius: BorderRadius.circular(16),
+    borderSide: const BorderSide(color: AppColors.divider, width: 1),
   );
 
   return InputDecoration(
     hintText: hint,
-    hintStyle: const TextStyle(fontSize: 14, color: AppColors.textMuted),
+    hintStyle: const TextStyle(
+      fontFamily: 'Poppins',
+      fontSize: 14, 
+      color: AppColors.textMuted,
+    ),
     filled: true,
     fillColor: AppColors.surface,
     suffixIcon: suffixIcon != null
         ? Padding(padding: const EdgeInsets.only(right: 12), child: suffixIcon)
         : null,
     suffixIconConstraints: const BoxConstraints(minWidth: 40, minHeight: 40),
-    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 15),
+    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
     border: border,
     enabledBorder: border,
     focusedBorder: border.copyWith(
       borderSide: const BorderSide(color: AppColors.textPrimary, width: 1.5),
     ),
     errorBorder: border.copyWith(
-      borderSide: const BorderSide(color: AppColors.error, width: 1.2),
+      borderSide: const BorderSide(color: AppColors.error, width: 1),
     ),
     focusedErrorBorder: border.copyWith(
       borderSide: const BorderSide(color: AppColors.error, width: 1.5),
