@@ -595,8 +595,8 @@ class _CourtTile extends ConsumerWidget {
 
   const _CourtTile({required this.court, required this.stadiumId});
 
-  Future<void> _confirmDelete(BuildContext context, WidgetRef ref) async {
-    // Capture messenger BEFORE any async gaps.
+  // ── Deactivate (soft-delete) ─────────────────────────────────────────────
+  Future<void> _confirmDeactivate(BuildContext context, WidgetRef ref) async {
     final messenger = ScaffoldMessenger.of(context);
 
     final confirmed = await showDialog<bool>(
@@ -721,10 +721,6 @@ class _CourtTile extends ConsumerWidget {
     if (confirmed != true) return;
 
     try {
-      // Soft-delete: set is_active = false.
-      // Hard-delete requires an RLS DELETE policy on the courts table in Supabase.
-      // Soft-delete is safer — existing customer bookings remain intact and
-      // the court disappears from the customer-facing view immediately.
       await ref
           .read(stadiumRepositoryProvider)
           .updateCourt(courtId: court.id, isActive: false);
@@ -736,6 +732,166 @@ class _CourtTile extends ConsumerWidget {
             style: const TextStyle(fontFamily: 'Poppins'),
           ),
           backgroundColor: AppColors.primary,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
+        ),
+      );
+    } catch (e) {
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text(
+            'Failed: $e',
+            style: const TextStyle(fontFamily: 'Poppins'),
+          ),
+          backgroundColor: AppColors.error,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
+        ),
+      );
+    }
+  }
+
+  // ── Activate (re-enable) ─────────────────────────────────────────────────
+  Future<void> _confirmActivate(BuildContext context, WidgetRef ref) async {
+    final messenger = ScaffoldMessenger.of(context);
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      barrierColor: Colors.black.withValues(alpha: 0.45),
+      builder: (ctx) => Dialog(
+        insetPadding: const EdgeInsets.symmetric(horizontal: 22, vertical: 24),
+        backgroundColor: Colors.transparent,
+        child: Container(
+          padding: const EdgeInsets.fromLTRB(20, 22, 20, 18),
+          decoration: BoxDecoration(
+            color: AppColors.surface,
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(color: AppColors.divider),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.12),
+                blurRadius: 28,
+                offset: const Offset(0, 18),
+              ),
+            ],
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 56,
+                height: 56,
+                decoration: BoxDecoration(
+                  color: Colors.green.withValues(alpha: 0.12),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.check_circle_outline_rounded,
+                  color: Colors.green,
+                  size: 30,
+                ),
+              ),
+              const SizedBox(height: 14),
+              const Text(
+                'Activate court?',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontFamily: 'Poppins',
+                  fontSize: 18,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                '"${court.name}" will be visible to customers again and available for new bookings.',
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  fontFamily: 'Poppins',
+                  fontSize: 13,
+                  height: 1.45,
+                  color: AppColors.textSecondary,
+                ),
+              ),
+              const SizedBox(height: 20),
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton(
+                  onPressed: () => Navigator.of(ctx).pop(false),
+                  style: OutlinedButton.styleFrom(
+                    minimumSize: const Size.fromHeight(50),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 18,
+                      vertical: 14,
+                    ),
+                    side: const BorderSide(color: AppColors.divider),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    foregroundColor: AppColors.textPrimary,
+                  ),
+                  child: const Text(
+                    'Cancel',
+                    style: TextStyle(
+                      fontFamily: 'Poppins',
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 10),
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton(
+                  onPressed: () => Navigator.of(ctx).pop(true),
+                  style: FilledButton.styleFrom(
+                    minimumSize: const Size.fromHeight(50),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 18,
+                      vertical: 14,
+                    ),
+                    backgroundColor: Colors.green.shade600,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    tapTargetSize: MaterialTapTargetSize.padded,
+                  ),
+                  child: const Text(
+                    'Activate',
+                    style: TextStyle(
+                      fontFamily: 'Poppins',
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    if (confirmed != true) return;
+
+    try {
+      await ref
+          .read(stadiumRepositoryProvider)
+          .updateCourt(courtId: court.id, isActive: true);
+      ref.invalidate(courtsForStadiumProvider(stadiumId));
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text(
+            '"${court.name}" activated — now visible to customers',
+            style: const TextStyle(fontFamily: 'Poppins'),
+          ),
+          backgroundColor: Colors.green.shade600,
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(10),
@@ -848,19 +1004,25 @@ class _CourtTile extends ConsumerWidget {
           ),
           const SizedBox(width: 6),
 
-          // Delete button
+          // Activate / Deactivate toggle button
           GestureDetector(
-            onTap: () => _confirmDelete(context, ref),
+            onTap: () => court.isActive
+                ? _confirmDeactivate(context, ref)
+                : _confirmActivate(context, ref),
             child: Container(
               padding: const EdgeInsets.all(7),
               decoration: BoxDecoration(
-                color: AppColors.error.withValues(alpha: 0.08),
+                color: court.isActive
+                    ? AppColors.error.withValues(alpha: 0.08)
+                    : Colors.green.withValues(alpha: 0.10),
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: const Icon(
-                Icons.delete_outline_rounded,
+              child: Icon(
+                court.isActive
+                    ? Icons.block_rounded
+                    : Icons.check_circle_outline_rounded,
                 size: 15,
-                color: AppColors.error,
+                color: court.isActive ? AppColors.error : Colors.green.shade600,
               ),
             ),
           ),
