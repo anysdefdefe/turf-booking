@@ -236,6 +236,32 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                                     isLoading: authState.isLoading,
                                     onPressed: _submit,
                                   ),
+                                  const SizedBox(height: 24),
+                                  Row(
+                                    children: [
+                                      Expanded(child: Divider(color: AppColors.divider, thickness: 1)),
+                                      Padding(
+                                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                                        child: Text(
+                                          'Or continue with',
+                                          style: TextStyle(
+                                            fontFamily: 'Poppins',
+                                            fontSize: 13,
+                                            color: AppColors.textSecondary,
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                        ),
+                                      ),
+                                      Expanded(child: Divider(color: AppColors.divider, thickness: 1)),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 24),
+                                  AuthGoogleButton(
+                                    isLoading: authState.isLoading,
+                                    onPressed: () {
+                                      ref.read(authControllerProvider.notifier).signInWithGoogle();
+                                    },
+                                  ),
                                 ],
                               ),
                             ),

@@ -102,3 +102,61 @@ InputDecoration authPillInputDecoration(String hint, [Widget? suffixIcon]) {
     ),
   );
 }
+
+class AuthGoogleButton extends StatelessWidget {
+  final bool isLoading;
+  final VoidCallback onPressed;
+
+  const AuthGoogleButton({
+    super.key,
+    required this.isLoading,
+    required this.onPressed,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: double.infinity,
+      height: 56,
+      child: OutlinedButton(
+        onPressed: isLoading ? null : onPressed,
+        style: OutlinedButton.styleFrom(
+          side: const BorderSide(color: AppColors.divider, width: 1.5),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(30),
+          ),
+          foregroundColor: AppColors.textPrimary,
+          backgroundColor: AppColors.surface,
+        ),
+        child: isLoading
+            ? const SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: AppColors.textPrimary,
+                ),
+              )
+            : Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Image.network(
+                    'https://developers.google.com/static/identity/images/g-logo.png',
+                    width: 24,
+                    height: 24,
+                  ),
+                  const SizedBox(width: 12),
+                  const Text(
+                    'Continue with Google',
+                    style: TextStyle(
+                      fontFamily: 'Poppins',
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+      ),
+    );
+  }
+}

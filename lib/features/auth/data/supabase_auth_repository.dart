@@ -1,3 +1,4 @@
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:turf_booking/shared/models/user_model.dart';
 import 'package:turf_booking/shared/repositories/auth_repository.dart';
@@ -60,15 +61,17 @@ class SupabaseAuthRepository implements AuthRepository {
   }
 
   @override
-  Future<UserModel> signInWithGoogle() async {
-    await _client.auth.signInWithOAuth(
-      OAuthProvider.google,
-      redirectTo: 'io.supabase.turfbooking://login-callback',
-    );
-
-    throw UnimplementedError(
-      'Google sign in completes via authStateChanges stream',
-    );
+  Future<void> signInWithGoogle() async {
+    try {
+      await _client.auth.signInWithOAuth(
+        OAuthProvider.google,
+        redirectTo: dotenv.env['OAUTH_REDIRECT_URL'],
+      );
+    } on AuthException catch (e) {
+      throw AppAuthException(e.message, e.statusCode, e);
+    } catch (e) {
+      throw UnknownException('Google sign in failed: ${e.toString()}', e);
+    }
   }
 
   @override
@@ -94,9 +97,30 @@ class SupabaseAuthRepository implements AuthRepository {
   Stream<AuthState> get authStateChanges => _client.auth.onAuthStateChange;
 
   Future<UserModel> _fetchUserProfile(String userId) async {
-    final data = await _client.from('users').select().eq('id', userId).single();
-
-    return UserModel.fromJson(data);
+    try {
+      final data = await _client.from('users').select().eq('id', userId).single();
+      return UserModel.fromJson(data);
+    } catch (e) {
+      if (e is PostgrestException && e.code == 'PGRST116') {
+        final user = _client.auth.currentUser;
+        if (user != null && user.id == userId) {
+          final metadata = user.userMetadata ?? {};
+          final fullName = metadata['full_name'] ?? metadata['name'] ?? user.email?.split('@').first ?? 'User';
+          
+          try {
+            final insertData = await _client.from('users').insert({
+              'id': userId,
+              'email': user.email ?? '',
+              'full_name': fullName,
+            }).select().single();
+            return UserModel.fromJson(insertData);
+          } catch (insertError) {
+            print('Auto-insert fallback failed: $insertError');
+          }
+        }
+      }
+      rethrow;
+    }
   }
 
   Future<UserModel> _waitForUserProfile(String userId) async {
