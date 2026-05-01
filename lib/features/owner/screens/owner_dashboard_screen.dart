@@ -5,8 +5,10 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:turf_booking/app/constants/app_constants.dart';
 import 'package:turf_booking/app/theme/app_colors.dart';
 import 'package:turf_booking/features/auth/providers/auth_providers.dart';
+import 'package:turf_booking/features/owner/data/repositories/stadium_repository.dart';
 import 'package:turf_booking/features/owner/providers/stadium_providers.dart';
 import 'package:turf_booking/features/owner/providers/owner_bookings_providers.dart';
+import 'package:turf_booking/features/owner/widgets/storage_media.dart';
 import '../widgets/owner_bottom_nav_bar.dart';
 
 class OwnerDashboardScreen extends ConsumerWidget {
@@ -33,8 +35,11 @@ class OwnerDashboardScreen extends ConsumerWidget {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Icon(Icons.error_outline_rounded,
-                    size: 48, color: AppColors.textMuted),
+                const Icon(
+                  Icons.error_outline_rounded,
+                  size: 48,
+                  color: AppColors.textMuted,
+                ),
                 const SizedBox(height: 16),
                 Text(
                   error.toString(),
@@ -78,17 +83,17 @@ class OwnerDashboardScreen extends ConsumerWidget {
         final bookingsCount = bookingsAsync.when(
           loading: () => '--',
           error: (_, __) => '--',
-          data: (bookings) => bookings.todayBookings.toString(),
+          data: (bookings) => bookings.totalBookings.toString(),
         );
 
         final revenueAmount = bookingsAsync.when(
           loading: () => '--',
           error: (_, __) => '--',
-          data: (bookings) => '₹${bookings.todayRevenue.toStringAsFixed(0)}',
+          data: (bookings) => '₹${bookings.totalRevenue.toStringAsFixed(0)}',
         );
 
-        final firstName =
-            user?.fullName?.split(' ').first ?? 'Owner';
+        final firstName = user?.fullName?.split(' ').first ?? 'Owner';
+        final avatarName = user?.fullName ?? user?.email ?? 'Owner';
 
         return Scaffold(
           backgroundColor: AppColors.background,
@@ -96,27 +101,49 @@ class OwnerDashboardScreen extends ConsumerWidget {
           body: SafeArea(
             child: SingleChildScrollView(
               padding: const EdgeInsets.fromLTRB(
-                  AppConstants.paddingL, 16, AppConstants.paddingL, 24),
+                AppConstants.paddingL,
+                16,
+                AppConstants.paddingL,
+                24,
+              ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // ── TOP BAR ─────────────────────────────────────
                   Row(
                     children: [
                       Expanded(
-                        child: Text(
-                          'Hey, $firstName 👋',
-                          style: const TextStyle(
-                            fontFamily: 'Poppins',
-                            fontSize: 22,
-                            fontWeight: FontWeight.w700,
-                            color: AppColors.textPrimary,
-                          ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Owner Dashboard',
+                              style: const TextStyle(
+                                fontFamily: 'Poppins',
+                                fontSize: 22,
+                                fontWeight: FontWeight.w700,
+                                color: AppColors.textPrimary,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              'Welcome back, $firstName',
+                              style: const TextStyle(
+                                fontFamily: 'Poppins',
+                                fontSize: 13,
+                                color: AppColors.textSecondary,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                       PopupMenuButton<String>(
-                        icon: const Icon(Icons.more_vert_rounded,
-                            color: AppColors.textSecondary),
+                        tooltip: 'Profile menu',
+                        child: StorageAvatar(
+                          storagePath: user?.avatarUrl,
+                          bucketName: 'avatars',
+                          displayName: avatarName,
+                          radius: 20,
+                        ),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
@@ -133,16 +160,20 @@ class OwnerDashboardScreen extends ConsumerWidget {
                             value: 'switch',
                             child: Row(
                               children: [
-                                Icon(Icons.swap_horiz_rounded,
-                                    size: 18,
-                                    color: AppColors.textSecondary),
+                                Icon(
+                                  Icons.swap_horiz_rounded,
+                                  size: 18,
+                                  color: AppColors.textSecondary,
+                                ),
                                 SizedBox(width: 10),
-                                Text('Switch Mode',
-                                    style: TextStyle(
-                                      fontFamily: 'Poppins',
-                                      fontSize: 14,
-                                      color: AppColors.textPrimary,
-                                    )),
+                                Text(
+                                  'Switch Mode',
+                                  style: TextStyle(
+                                    fontFamily: 'Poppins',
+                                    fontSize: 14,
+                                    color: AppColors.textPrimary,
+                                  ),
+                                ),
                               ],
                             ),
                           ),
@@ -150,15 +181,20 @@ class OwnerDashboardScreen extends ConsumerWidget {
                             value: 'logout',
                             child: Row(
                               children: [
-                                Icon(Icons.logout,
-                                    size: 18, color: Colors.redAccent),
+                                Icon(
+                                  Icons.logout,
+                                  size: 18,
+                                  color: Colors.redAccent,
+                                ),
                                 SizedBox(width: 10),
-                                Text('Logout',
-                                    style: TextStyle(
-                                      fontFamily: 'Poppins',
-                                      fontSize: 14,
-                                      color: Colors.redAccent,
-                                    )),
+                                Text(
+                                  'Logout',
+                                  style: TextStyle(
+                                    fontFamily: 'Poppins',
+                                    fontSize: 14,
+                                    color: Colors.redAccent,
+                                  ),
+                                ),
                               ],
                             ),
                           ),
@@ -169,39 +205,57 @@ class OwnerDashboardScreen extends ConsumerWidget {
 
                   const SizedBox(height: 20),
 
-                  // ── STADIUM HERO CARD ───────────────────────────
                   Container(
                     width: double.infinity,
-                    padding: const EdgeInsets.all(20),
+                    padding: const EdgeInsets.all(18),
                     decoration: BoxDecoration(
                       gradient: const LinearGradient(
-                        colors: [AppColors.textPrimary, Color(0xFF27272A)],
+                        colors: [Color(0xFFF4FBF7), Colors.white],
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                       ),
-                      borderRadius:
-                          BorderRadius.circular(AppConstants.radiusL),
+                      borderRadius: BorderRadius.circular(AppConstants.radiusL),
+                      border: Border.all(color: AppColors.divider),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.04),
+                          blurRadius: 24,
+                          offset: const Offset(0, 10),
+                        ),
+                      ],
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Row(
                           children: [
-                            Container(
-                              width: 44,
-                              height: 44,
-                              decoration: BoxDecoration(
-                                color: Colors.white.withValues(alpha: 0.15),
-                                borderRadius: BorderRadius.circular(12),
+                            StorageImage(
+                              storagePath: stadium.imageUrl,
+                              bucketName: StadiumRepository.imageBucket,
+                              width: 68,
+                              height: 68,
+                              borderRadius: BorderRadius.circular(18),
+                              placeholder: Container(
+                                width: 68,
+                                height: 68,
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFF3F4F6),
+                                  borderRadius: BorderRadius.circular(18),
+                                  border: Border.all(
+                                    color: const Color(0xFFE5E7EB),
+                                  ),
+                                ),
+                                child: const Icon(
+                                  Icons.stadium_rounded,
+                                  color: Color(0xFF6B7280),
+                                  size: 30,
+                                ),
                               ),
-                              child: const Icon(Icons.stadium_rounded,
-                                  color: Colors.white, size: 22),
                             ),
                             const SizedBox(width: 14),
                             Expanded(
                               child: Column(
-                                crossAxisAlignment:
-                                    CrossAxisAlignment.start,
+                                crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
                                     stadium.name,
@@ -209,7 +263,7 @@ class OwnerDashboardScreen extends ConsumerWidget {
                                       fontFamily: 'Poppins',
                                       fontSize: 18,
                                       fontWeight: FontWeight.w700,
-                                      color: Colors.white,
+                                      color: AppColors.textPrimary,
                                     ),
                                   ),
                                   const SizedBox(height: 2),
@@ -218,90 +272,28 @@ class OwnerDashboardScreen extends ConsumerWidget {
                                     style: TextStyle(
                                       fontFamily: 'Poppins',
                                       fontSize: 12,
-                                      color: Colors.white
-                                          .withValues(alpha: 0.7),
+                                      color: AppColors.textSecondary,
                                     ),
                                   ),
                                 ],
                               ),
                             ),
-                          ],
-                        ),
-                        const SizedBox(height: 16),
-                        Row(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 10, vertical: 4),
-                              decoration: BoxDecoration(
-                                color: stadium.isActive
-                                    ? Colors.green
-                                        .withValues(alpha: 0.2)
-                                    : Colors.red.withValues(alpha: 0.2),
-                                borderRadius: BorderRadius.circular(20),
-                              ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Container(
-                                    width: 6,
-                                    height: 6,
-                                    decoration: BoxDecoration(
-                                      color: stadium.isActive
-                                          ? Colors.greenAccent
-                                          : Colors.redAccent,
-                                      shape: BoxShape.circle,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 6),
-                                  Text(
-                                    stadium.isActive
-                                        ? 'Active'
-                                        : 'Inactive',
-                                    style: TextStyle(
-                                      fontFamily: 'Poppins',
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.w600,
-                                      color: stadium.isActive
-                                          ? Colors.greenAccent
-                                          : Colors.redAccent,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            const Spacer(),
+                            const SizedBox(width: 8),
                             GestureDetector(
-                              onTap: () =>
-                                  context.push('/owner/edit-stadium'),
+                              onTap: () => context.push('/owner/edit-stadium'),
                               child: Container(
                                 padding: const EdgeInsets.symmetric(
-                                    horizontal: 12, vertical: 6),
-                                decoration: BoxDecoration(
-                                  color:
-                                      Colors.white.withValues(alpha: 0.1),
-                                  borderRadius: BorderRadius.circular(20),
-                                  border: Border.all(
-                                    color: Colors.white
-                                        .withValues(alpha: 0.2),
-                                  ),
+                                  horizontal: 12,
+                                  vertical: 10,
                                 ),
-                                child: const Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Icon(Icons.edit_outlined,
-                                        size: 13, color: Colors.white70),
-                                    SizedBox(width: 4),
-                                    Text(
-                                      'Edit',
-                                      style: TextStyle(
-                                        fontFamily: 'Poppins',
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.w500,
-                                        color: Colors.white70,
-                                      ),
-                                    ),
-                                  ],
+                                decoration: BoxDecoration(
+                                  color: AppColors.badgeBg,
+                                  borderRadius: BorderRadius.circular(14),
+                                ),
+                                child: const Icon(
+                                  Icons.edit_outlined,
+                                  size: 18,
+                                  color: AppColors.primary,
                                 ),
                               ),
                             ),
@@ -363,17 +355,27 @@ class OwnerDashboardScreen extends ConsumerWidget {
                     loading: () => const Center(
                       child: Padding(
                         padding: EdgeInsets.all(24.0),
-                        child: CircularProgressIndicator(color: AppColors.primary),
+                        child: CircularProgressIndicator(
+                          color: AppColors.primary,
+                        ),
                       ),
                     ),
                     error: (err, _) => Center(
-                      child: Text('Error: $err',
-                          style: const TextStyle(color: AppColors.error)),
+                      child: Text(
+                        'Error: $err',
+                        style: const TextStyle(color: AppColors.error),
+                      ),
                     ),
                     data: (bookings) {
-                      final todayStr = DateTime.now().toIso8601String().substring(0, 10);
+                      final todayStr = DateTime.now()
+                          .toIso8601String()
+                          .substring(0, 10);
                       final todayBookingsList = bookings
-                          .where((b) => b.bookingDate == todayStr && b.status != 'cancelled')
+                          .where(
+                            (b) =>
+                                b.bookingDate == todayStr &&
+                                b.status != 'cancelled',
+                          )
                           .toList();
 
                       if (todayBookingsList.isEmpty) {
@@ -382,13 +384,18 @@ class OwnerDashboardScreen extends ConsumerWidget {
                           padding: const EdgeInsets.all(24),
                           decoration: BoxDecoration(
                             color: AppColors.surface,
-                            borderRadius: BorderRadius.circular(AppConstants.radiusM),
+                            borderRadius: BorderRadius.circular(
+                              AppConstants.radiusM,
+                            ),
                             border: Border.all(color: AppColors.divider),
                           ),
                           child: const Column(
                             children: [
-                              Icon(Icons.event_available_rounded,
-                                  color: AppColors.textMuted, size: 32),
+                              Icon(
+                                Icons.event_available_rounded,
+                                color: AppColors.textMuted,
+                                size: 32,
+                              ),
                               SizedBox(height: 8),
                               Text(
                                 'No bookings yet',
@@ -407,7 +414,10 @@ class OwnerDashboardScreen extends ConsumerWidget {
                       return ListView.separated(
                         shrinkWrap: true,
                         physics: const NeverScrollableScrollPhysics(),
-                        itemCount: todayBookingsList.length.clamp(0, 3), // Show max 3 previews
+                        itemCount: todayBookingsList.length.clamp(
+                          0,
+                          3,
+                        ), // Show max 3 previews
                         separatorBuilder: (_, __) => const SizedBox(height: 10),
                         itemBuilder: (context, index) {
                           final b = todayBookingsList[index];
@@ -415,7 +425,9 @@ class OwnerDashboardScreen extends ConsumerWidget {
                             padding: const EdgeInsets.all(12),
                             decoration: BoxDecoration(
                               color: AppColors.surface,
-                              borderRadius: BorderRadius.circular(AppConstants.radiusM),
+                              borderRadius: BorderRadius.circular(
+                                AppConstants.radiusM,
+                              ),
                               border: Border.all(color: AppColors.divider),
                             ),
                             child: Row(
@@ -425,15 +437,21 @@ class OwnerDashboardScreen extends ConsumerWidget {
                                   height: 38,
                                   decoration: BoxDecoration(
                                     color: AppColors.badgeBg,
-                                    borderRadius: BorderRadius.circular(AppConstants.radiusS),
+                                    borderRadius: BorderRadius.circular(
+                                      AppConstants.radiusS,
+                                    ),
                                   ),
-                                  child: const Icon(Icons.person_outline_rounded, 
-                                      color: AppColors.primary, size: 20),
+                                  child: const Icon(
+                                    Icons.person_outline_rounded,
+                                    color: AppColors.primary,
+                                    size: 20,
+                                  ),
                                 ),
                                 const SizedBox(width: 10),
                                 Expanded(
                                   child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
                                       Text(
                                         b.customerName ?? 'Unknown',

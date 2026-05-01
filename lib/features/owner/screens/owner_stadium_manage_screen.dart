@@ -1,12 +1,16 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:turf_booking/app/theme/app_colors.dart';
 import 'package:turf_booking/app/constants/app_constants.dart';
 import 'package:turf_booking/features/owner/data/models/court_model.dart';
 import 'package:turf_booking/features/owner/data/repositories/stadium_repository.dart';
 import 'package:turf_booking/features/owner/providers/stadium_providers.dart';
+import 'package:turf_booking/features/owner/widgets/storage_media.dart';
 import '../widgets/owner_bottom_nav_bar.dart';
 
 // ── Sport icon helper ─────────────────────────────────────────────────────────
@@ -54,7 +58,9 @@ class OwnerStadiumManageScreen extends ConsumerWidget {
     return stadiumAsync.when(
       loading: () => const Scaffold(
         backgroundColor: Colors.white,
-        body: Center(child: CircularProgressIndicator(color: AppColors.primary)),
+        body: Center(
+          child: CircularProgressIndicator(color: AppColors.primary),
+        ),
       ),
       error: (error, _) => Scaffold(
         backgroundColor: AppColors.background,
@@ -64,8 +70,11 @@ class OwnerStadiumManageScreen extends ConsumerWidget {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Icon(Icons.error_outline_rounded,
-                    size: 48, color: AppColors.textMuted),
+                const Icon(
+                  Icons.error_outline_rounded,
+                  size: 48,
+                  color: AppColors.textMuted,
+                ),
                 const SizedBox(height: 16),
                 Text(
                   error.toString(),
@@ -105,7 +114,8 @@ class OwnerStadiumManageScreen extends ConsumerWidget {
           loading: () => const Scaffold(
             backgroundColor: Colors.white,
             body: Center(
-                child: CircularProgressIndicator(color: AppColors.primary)),
+              child: CircularProgressIndicator(color: AppColors.primary),
+            ),
           ),
           error: (err, _) => Scaffold(
             backgroundColor: AppColors.background,
@@ -115,8 +125,8 @@ class OwnerStadiumManageScreen extends ConsumerWidget {
             final minPrice = courts.isEmpty
                 ? null
                 : courts
-                    .map((c) => c.pricePerHour)
-                    .reduce((a, b) => a < b ? a : b);
+                      .map((c) => c.pricePerHour)
+                      .reduce((a, b) => a < b ? a : b);
 
             final defaultOpen = courts.isNotEmpty
                 ? courts.first.openTime
@@ -129,8 +139,7 @@ class OwnerStadiumManageScreen extends ConsumerWidget {
               value: SystemUiOverlayStyle.light,
               child: Scaffold(
                 backgroundColor: Colors.white,
-                bottomNavigationBar:
-                    const OwnerBottomNavBar(selectedIndex: 1),
+                bottomNavigationBar: const OwnerBottomNavBar(selectedIndex: 1),
                 body: Column(
                   children: [
                     Expanded(
@@ -140,8 +149,7 @@ class OwnerStadiumManageScreen extends ConsumerWidget {
                           SliverToBoxAdapter(
                             child: _HeroImage(
                               imageUrl: stadium.imageUrl,
-                              onEdit: () =>
-                                  context.push('/owner/edit-stadium'),
+                              onEdit: () => context.push('/owner/edit-stadium'),
                             ),
                           ),
                           // Venue details
@@ -167,8 +175,7 @@ class OwnerStadiumManageScreen extends ConsumerWidget {
                               stadiumId: stadium.id,
                             ),
                           ),
-                          const SliverToBoxAdapter(
-                              child: SizedBox(height: 24)),
+                          const SliverToBoxAdapter(child: SizedBox(height: 24)),
                         ],
                       ),
                     ),
@@ -204,13 +211,14 @@ class _HeroImage extends StatelessWidget {
         SizedBox(
           height: 240,
           width: double.infinity,
-          child: imageUrl != null && imageUrl!.isNotEmpty
-              ? Image.network(
-                  imageUrl!,
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stack) => _PlaceholderHero(),
-                )
-              : _PlaceholderHero(),
+          child: StorageImage(
+            storagePath: imageUrl,
+            bucketName: StadiumRepository.imageBucket,
+            width: double.infinity,
+            height: 240,
+            borderRadius: BorderRadius.zero,
+            placeholder: _PlaceholderHero(),
+          ),
         ),
         // Gradient
         Positioned(
@@ -284,10 +292,7 @@ class _CircleButton extends StatelessWidget {
         color: Colors.white,
         shape: BoxShape.circle,
         boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.12),
-            blurRadius: 8,
-          ),
+          BoxShadow(color: Colors.black.withValues(alpha: 0.12), blurRadius: 8),
         ],
       ),
       child: Icon(icon, color: iconColor, size: iconSize),
@@ -330,7 +335,11 @@ class _VenueDetails extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(
-          AppConstants.paddingL, 18, AppConstants.paddingL, 0),
+        AppConstants.paddingL,
+        18,
+        AppConstants.paddingL,
+        0,
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -358,8 +367,11 @@ class _VenueDetails extends StatelessWidget {
           const SizedBox(height: 6),
           Row(
             children: [
-              const Icon(Icons.location_on_outlined,
-                  size: 15, color: AppColors.textSecondary),
+              const Icon(
+                Icons.location_on_outlined,
+                size: 15,
+                color: AppColors.textSecondary,
+              ),
               const SizedBox(width: 4),
               Expanded(
                 child: Text(
@@ -432,7 +444,11 @@ class _SportTypesSection extends StatelessWidget {
     final sports = courts.map((c) => c.sportType).toSet().toList();
     return Padding(
       padding: const EdgeInsets.fromLTRB(
-          AppConstants.paddingL, 20, AppConstants.paddingL, 0),
+        AppConstants.paddingL,
+        20,
+        AppConstants.paddingL,
+        0,
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -471,7 +487,11 @@ class _CourtsSection extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(
-          AppConstants.paddingL, 24, AppConstants.paddingL, 0),
+        AppConstants.paddingL,
+        24,
+        AppConstants.paddingL,
+        0,
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -501,9 +521,7 @@ class _CourtsSection extends ConsumerWidget {
               ),
             )
           else
-            ...courts.map(
-              (c) => _CourtTile(court: c, stadiumId: stadiumId),
-            ),
+            ...courts.map((c) => _CourtTile(court: c, stadiumId: stadiumId)),
         ],
       ),
     );
@@ -583,68 +601,120 @@ class _CourtTile extends ConsumerWidget {
 
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
-        icon: const Icon(
-          Icons.warning_amber_rounded,
-          color: Colors.orange,
-          size: 44,
-        ),
-        title: const Text(
-          'Remove Court?',
-          style: TextStyle(
-            fontFamily: 'Poppins',
-            fontWeight: FontWeight.w700,
-            color: AppColors.error,
-          ),
-        ),
-        content: Text(
-          '"${court.name}" will be deactivated and hidden from customers.\n\nAll existing bookings will remain safe.',
-          textAlign: TextAlign.center,
-          style: const TextStyle(
-            fontFamily: 'Poppins',
-            fontSize: 13,
-            color: AppColors.textSecondary,
-            height: 1.5,
-          ),
-        ),
-        actionsAlignment: MainAxisAlignment.spaceEvenly,
-        actions: [
-          OutlinedButton(
-            onPressed: () => Navigator.of(ctx).pop(false),
-            style: OutlinedButton.styleFrom(
-              side: const BorderSide(color: AppColors.divider),
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10)),
-            ),
-            child: const Text(
-              'Cancel',
-              style: TextStyle(
-                fontFamily: 'Poppins',
-                fontWeight: FontWeight.w600,
-                color: AppColors.textSecondary,
+      barrierColor: Colors.black.withValues(alpha: 0.45),
+      builder: (ctx) => Dialog(
+        insetPadding: const EdgeInsets.symmetric(horizontal: 22, vertical: 24),
+        backgroundColor: Colors.transparent,
+        child: Container(
+          padding: const EdgeInsets.fromLTRB(20, 22, 20, 18),
+          decoration: BoxDecoration(
+            color: AppColors.surface,
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(color: AppColors.divider),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.12),
+                blurRadius: 28,
+                offset: const Offset(0, 18),
               ),
-            ),
+            ],
           ),
-          FilledButton(
-            onPressed: () => Navigator.of(ctx).pop(true),
-            style: FilledButton.styleFrom(
-              backgroundColor: AppColors.error,
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10)),
-            ),
-            child: const Text(
-              'Deactivate',
-              style: TextStyle(
-                fontFamily: 'Poppins',
-                fontWeight: FontWeight.w700,
-                color: Colors.white,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 56,
+                height: 56,
+                decoration: BoxDecoration(
+                  color: Colors.orange.withValues(alpha: 0.12),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.warning_amber_rounded,
+                  color: Colors.orange,
+                  size: 30,
+                ),
               ),
-            ),
+              const SizedBox(height: 14),
+              const Text(
+                'Deactivate court?',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontFamily: 'Poppins',
+                  fontSize: 18,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                '"${court.name}" will be hidden from customers, but all existing bookings will remain safe.',
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  fontFamily: 'Poppins',
+                  fontSize: 13,
+                  height: 1.45,
+                  color: AppColors.textSecondary,
+                ),
+              ),
+              const SizedBox(height: 20),
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton(
+                  onPressed: () => Navigator.of(ctx).pop(false),
+                  style: OutlinedButton.styleFrom(
+                    minimumSize: const Size.fromHeight(50),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 18,
+                      vertical: 14,
+                    ),
+                    side: const BorderSide(color: AppColors.divider),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    foregroundColor: AppColors.textPrimary,
+                  ),
+                  child: const Text(
+                    'Cancel',
+                    style: TextStyle(
+                      fontFamily: 'Poppins',
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 10),
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton(
+                  onPressed: () => Navigator.of(ctx).pop(true),
+                  style: FilledButton.styleFrom(
+                    minimumSize: const Size.fromHeight(50),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 18,
+                      vertical: 14,
+                    ),
+                    backgroundColor: AppColors.error,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    tapTargetSize: MaterialTapTargetSize.padded,
+                  ),
+                  child: const Text(
+                    'Deactivate',
+                    style: TextStyle(
+                      fontFamily: 'Poppins',
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
 
@@ -655,34 +725,39 @@ class _CourtTile extends ConsumerWidget {
       // Hard-delete requires an RLS DELETE policy on the courts table in Supabase.
       // Soft-delete is safer — existing customer bookings remain intact and
       // the court disappears from the customer-facing view immediately.
-      await ref.read(stadiumRepositoryProvider).updateCourt(
-            courtId: court.id,
-            isActive: false,
-          );
+      await ref
+          .read(stadiumRepositoryProvider)
+          .updateCourt(courtId: court.id, isActive: false);
       ref.invalidate(courtsForStadiumProvider(stadiumId));
-      messenger.showSnackBar(SnackBar(
-        content: Text(
-          '"${court.name}" deactivated — hidden from customers',
-          style: const TextStyle(fontFamily: 'Poppins'),
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text(
+            '"${court.name}" deactivated — hidden from customers',
+            style: const TextStyle(fontFamily: 'Poppins'),
+          ),
+          backgroundColor: AppColors.primary,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
         ),
-        backgroundColor: AppColors.primary,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-      ));
+      );
     } catch (e) {
-      messenger.showSnackBar(SnackBar(
-        content: Text(
-          'Failed: $e',
-          style: const TextStyle(fontFamily: 'Poppins'),
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text(
+            'Failed: $e',
+            style: const TextStyle(fontFamily: 'Poppins'),
+          ),
+          backgroundColor: AppColors.error,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
         ),
-        backgroundColor: AppColors.error,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-      ));
+      );
     }
   }
-
-
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -698,15 +773,25 @@ class _CourtTile extends ConsumerWidget {
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           // Sport icon
-          Container(
+          StorageImage(
+            storagePath: court.imageUrl,
+            bucketName: StadiumRepository.imageBucket,
             width: 40,
             height: 40,
-            decoration: const BoxDecoration(
-              color: AppColors.badgeBg,
-              shape: BoxShape.circle,
+            borderRadius: BorderRadius.circular(20),
+            placeholder: Container(
+              width: 40,
+              height: 40,
+              decoration: const BoxDecoration(
+                color: AppColors.badgeBg,
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                _sportIcon(court.sportType),
+                color: AppColors.primary,
+                size: 20,
+              ),
             ),
-            child: Icon(_sportIcon(court.sportType),
-                color: AppColors.primary, size: 20),
           ),
           const SizedBox(width: 12),
 
@@ -754,8 +839,11 @@ class _CourtTile extends ConsumerWidget {
                 color: AppColors.divider,
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: const Icon(Icons.edit_outlined,
-                  size: 15, color: AppColors.textSecondary),
+              child: const Icon(
+                Icons.edit_outlined,
+                size: 15,
+                color: AppColors.textSecondary,
+              ),
             ),
           ),
           const SizedBox(width: 6),
@@ -769,8 +857,11 @@ class _CourtTile extends ConsumerWidget {
                 color: AppColors.error.withValues(alpha: 0.08),
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: const Icon(Icons.delete_outline_rounded,
-                  size: 15, color: AppColors.error),
+              child: const Icon(
+                Icons.delete_outline_rounded,
+                size: 15,
+                color: AppColors.error,
+              ),
             ),
           ),
         ],
@@ -798,15 +889,59 @@ class _AddCourtSheet extends ConsumerStatefulWidget {
 
 class _AddCourtSheetState extends ConsumerState<_AddCourtSheet> {
   final _nameController = TextEditingController();
+  final _descriptionController = TextEditingController();
   final _priceController = TextEditingController();
+  final _imagePicker = ImagePicker();
   String? _selectedSport;
+  File? _selectedImage;
+  late TimeOfDay _openTime;
+  late TimeOfDay _closeTime;
   bool _isSaving = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _openTime = _parseTime(widget.defaultOpenTime);
+    _closeTime = _parseTime(widget.defaultCloseTime);
+  }
 
   @override
   void dispose() {
     _nameController.dispose();
+    _descriptionController.dispose();
     _priceController.dispose();
     super.dispose();
+  }
+
+  TimeOfDay _parseTime(String value) {
+    final parts = value.split(':');
+    return TimeOfDay(hour: int.parse(parts[0]), minute: int.parse(parts[1]));
+  }
+
+  Future<void> _pickImage() async {
+    final xfile = await _imagePicker.pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 82,
+    );
+    if (xfile != null && mounted) {
+      setState(() => _selectedImage = File(xfile.path));
+    }
+  }
+
+  Future<void> _pickTime(bool isOpen) async {
+    final picked = await showTimePicker(
+      context: context,
+      initialTime: isOpen ? _openTime : _closeTime,
+    );
+    if (picked != null && mounted) {
+      setState(() {
+        if (isOpen) {
+          _openTime = picked;
+        } else {
+          _closeTime = picked;
+        }
+      });
+    }
   }
 
   Future<void> _submit() async {
@@ -829,26 +964,39 @@ class _AddCourtSheetState extends ConsumerState<_AddCourtSheet> {
     setState(() => _isSaving = true);
 
     try {
-      await ref.read(stadiumRepositoryProvider).addCourt(
+      await ref
+          .read(stadiumRepositoryProvider)
+          .addCourt(
             stadiumId: widget.stadiumId,
             name: name,
             sportType: _selectedSport!,
+            description: _descriptionController.text.trim().isEmpty
+                ? null
+                : _descriptionController.text.trim(),
             pricePerHour: price,
-            openTime: widget.defaultOpenTime,
-            closeTime: widget.defaultCloseTime,
+            openTime:
+                '${_openTime.hour.toString().padLeft(2, '0')}:${_openTime.minute.toString().padLeft(2, '0')}:00',
+            closeTime:
+                '${_closeTime.hour.toString().padLeft(2, '0')}:${_closeTime.minute.toString().padLeft(2, '0')}:00',
+            imageFile: _selectedImage,
           );
       // Invalidate while ref is still valid (widget still mounted)
       ref.invalidate(courtsForStadiumProvider(widget.stadiumId));
       if (mounted) {
         Navigator.of(context).pop();
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: const Text('✓ Court added',
-              style: TextStyle(fontFamily: 'Poppins')),
-          backgroundColor: AppColors.primary,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10)),
-        ));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text(
+              '✓ Court added',
+              style: TextStyle(fontFamily: 'Poppins'),
+            ),
+            backgroundColor: AppColors.primary,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+          ),
+        );
       }
     } catch (e) {
       if (mounted) _snack('Failed to add court: $e');
@@ -858,12 +1006,14 @@ class _AddCourtSheetState extends ConsumerState<_AddCourtSheet> {
   }
 
   void _snack(String msg) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      content: Text(msg, style: const TextStyle(fontFamily: 'Poppins')),
-      backgroundColor: AppColors.error,
-      behavior: SnackBarBehavior.floating,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-    ));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(msg, style: const TextStyle(fontFamily: 'Poppins')),
+        backgroundColor: AppColors.error,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      ),
+    );
   }
 
   @override
@@ -911,6 +1061,70 @@ class _AddCourtSheetState extends ConsumerState<_AddCourtSheet> {
             _field(_nameController, hint: 'e.g. Court A'),
             const SizedBox(height: 16),
 
+            _label('About / Description'),
+            _field(
+              _descriptionController,
+              hint: 'Short description for customers',
+              maxLines: 3,
+            ),
+            const SizedBox(height: 16),
+
+            _label('Court Image'),
+            const SizedBox(height: 8),
+            GestureDetector(
+              onTap: _pickImage,
+              child: Container(
+                height: 150,
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  color: AppColors.background,
+                  borderRadius: BorderRadius.circular(AppConstants.radiusM),
+                  border: Border.all(color: AppColors.divider),
+                ),
+                child: _selectedImage == null
+                    ? const Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.add_a_photo_outlined,
+                            size: 30,
+                            color: AppColors.textMuted,
+                          ),
+                          SizedBox(height: 8),
+                          Text(
+                            'Tap to add court image',
+                            style: TextStyle(
+                              fontFamily: 'Poppins',
+                              fontSize: 12,
+                              color: AppColors.textSecondary,
+                            ),
+                          ),
+                        ],
+                      )
+                    : Stack(
+                        children: [
+                          Positioned.fill(
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(
+                                AppConstants.radiusM,
+                              ),
+                              child: Image.file(
+                                _selectedImage!,
+                                fit: BoxFit.cover,
+                              ),
+                            ),
+                          ),
+                          Positioned(
+                            bottom: 12,
+                            left: 12,
+                            child: _courtImagePill('Tap to change'),
+                          ),
+                        ],
+                      ),
+              ),
+            ),
+            const SizedBox(height: 16),
+
             // Sport type
             _label('Sport Type'),
             Wrap(
@@ -923,14 +1137,14 @@ class _AddCourtSheetState extends ConsumerState<_AddCourtSheet> {
                   child: AnimatedContainer(
                     duration: const Duration(milliseconds: 150),
                     padding: const EdgeInsets.symmetric(
-                        horizontal: 14, vertical: 8),
+                      horizontal: 14,
+                      vertical: 8,
+                    ),
                     decoration: BoxDecoration(
                       color: selected ? AppColors.primary : Colors.white,
                       borderRadius: BorderRadius.circular(50),
                       border: Border.all(
-                        color: selected
-                            ? AppColors.primary
-                            : AppColors.divider,
+                        color: selected ? AppColors.primary : AppColors.divider,
                         width: 1.5,
                       ),
                     ),
@@ -969,8 +1183,30 @@ class _AddCourtSheetState extends ConsumerState<_AddCourtSheet> {
             _field(
               _priceController,
               hint: 'e.g. 800',
-              keyboardType:
-                  const TextInputType.numberWithOptions(decimal: true),
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+              ),
+            ),
+            const SizedBox(height: 16),
+
+            Row(
+              children: [
+                Expanded(
+                  child: _TimeField(
+                    label: 'Start Time',
+                    time: _openTime,
+                    onTap: () => _pickTime(true),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _TimeField(
+                    label: 'End Time',
+                    time: _closeTime,
+                    onTap: () => _pickTime(false),
+                  ),
+                ),
+              ],
             ),
             const SizedBox(height: 28),
 
@@ -983,14 +1219,17 @@ class _AddCourtSheetState extends ConsumerState<_AddCourtSheet> {
                 style: FilledButton.styleFrom(
                   backgroundColor: AppColors.primary,
                   shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12)),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                 ),
                 child: _isSaving
                     ? const SizedBox(
                         height: 20,
                         width: 20,
                         child: CircularProgressIndicator(
-                            strokeWidth: 2, color: Colors.white),
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
                       )
                     : const Text(
                         'Add Court',
@@ -1010,57 +1249,116 @@ class _AddCourtSheetState extends ConsumerState<_AddCourtSheet> {
   }
 
   Widget _label(String text) => Padding(
-        padding: const EdgeInsets.only(bottom: 6),
-        child: Text(
-          text,
-          style: const TextStyle(
-            fontFamily: 'Poppins',
-            fontSize: 13,
-            fontWeight: FontWeight.w500,
-            color: AppColors.textSecondary,
-          ),
-        ),
-      );
+    padding: const EdgeInsets.only(bottom: 6),
+    child: Text(
+      text,
+      style: const TextStyle(
+        fontFamily: 'Poppins',
+        fontSize: 13,
+        fontWeight: FontWeight.w500,
+        color: AppColors.textSecondary,
+      ),
+    ),
+  );
 
   Widget _field(
     TextEditingController controller, {
     String hint = '',
     TextInputType keyboardType = TextInputType.text,
-  }) =>
-      TextField(
-        controller: controller,
-        keyboardType: keyboardType,
+    int maxLines = 1,
+  }) => TextField(
+    controller: controller,
+    keyboardType: keyboardType,
+    maxLines: maxLines,
+    style: const TextStyle(
+      fontFamily: 'Poppins',
+      fontSize: 14,
+      color: AppColors.textPrimary,
+    ),
+    decoration: InputDecoration(
+      hintText: hint,
+      hintStyle: const TextStyle(
+        fontFamily: 'Poppins',
+        fontSize: 14,
+        color: AppColors.textMuted,
+      ),
+      filled: true,
+      fillColor: AppColors.background,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(AppConstants.radiusM),
+        borderSide: const BorderSide(color: AppColors.divider),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(AppConstants.radiusM),
+        borderSide: const BorderSide(color: AppColors.divider),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(AppConstants.radiusM),
+        borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
+      ),
+    ),
+  );
+
+  Widget _courtImagePill(String label) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: Colors.black.withValues(alpha: 0.4),
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Text(
+        label,
         style: const TextStyle(
           fontFamily: 'Poppins',
-          fontSize: 14,
-          color: AppColors.textPrimary,
+          color: Colors.white,
+          fontSize: 11,
+          fontWeight: FontWeight.w600,
         ),
-        decoration: InputDecoration(
-          hintText: hint,
-          hintStyle: const TextStyle(
-            fontFamily: 'Poppins',
-            fontSize: 14,
-            color: AppColors.textMuted,
-          ),
-          filled: true,
-          fillColor: AppColors.background,
-          contentPadding:
-              const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(AppConstants.radiusM),
-            borderSide: const BorderSide(color: AppColors.divider),
-          ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(AppConstants.radiusM),
-            borderSide: const BorderSide(color: AppColors.divider),
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(AppConstants.radiusM),
-            borderSide:
-                const BorderSide(color: AppColors.primary, width: 1.5),
-          ),
+      ),
+    );
+  }
+
+  Widget _TimeField({
+    required String label,
+    required TimeOfDay time,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        decoration: BoxDecoration(
+          color: AppColors.background,
+          borderRadius: BorderRadius.circular(AppConstants.radiusM),
+          border: Border.all(color: AppColors.divider),
         ),
-      );
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              label,
+              style: const TextStyle(
+                fontFamily: 'Poppins',
+                fontSize: 11,
+                color: AppColors.textSecondary,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              time.format(context),
+              style: const TextStyle(
+                fontFamily: 'Poppins',
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: AppColors.textPrimary,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }
 
 // ── AMENITY CHIP ──────────────────────────────────────────────────────────────
@@ -1104,8 +1402,7 @@ class _SportChip extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(50),
-        border: Border.all(
-            color: AppColors.primary.withValues(alpha: 0.5)),
+        border: Border.all(color: AppColors.primary.withValues(alpha: 0.5)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -1149,8 +1446,7 @@ class _StatusChip extends StatelessWidget {
           fontFamily: 'Poppins',
           fontSize: 10,
           fontWeight: FontWeight.w600,
-          color:
-              isActive ? Colors.green.shade700 : Colors.red.shade400,
+          color: isActive ? Colors.green.shade700 : Colors.red.shade400,
         ),
       ),
     );
