@@ -195,25 +195,79 @@ class _CourtDetailScreenState extends State<CourtDetailScreen> {
 
     final court = _court!;
     return Scaffold(
-      backgroundColor: AppColors.background,
-      body: CustomScrollView(
-        slivers: [
-          _buildAppBar(context, court),
-          SliverToBoxAdapter(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+      backgroundColor: AppColors.surface,
+      body: Stack(
+        children: [
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            height: 340,
+            child: Stack(
+              fit: StackFit.expand,
               children: [
-                _buildHeader(court),
-                _divider(),
-                _buildAbout(court),
-                _divider(),
-                _buildEquipments(court),
-                _divider(),
-                _buildDatePicker(),
-                _divider(),
-                _buildTimeSlotPicker(),
-                const SizedBox(height: 110),
+                StorageImage(
+                  storagePath: court.imageUrl,
+                  bucketName: StadiumRepository.imageBucket,
+                  width: double.infinity,
+                  height: 340,
+                  fit: BoxFit.cover,
+                  borderRadius: BorderRadius.zero,
+                  placeholder: Container(
+                    color: AppColors.divider,
+                    child: const Icon(
+                      Icons.sports_tennis_rounded,
+                      size: 72,
+                      color: AppColors.textMuted,
+                    ),
+                  ),
+                ),
+                const DecoratedBox(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      stops: [0.0, 0.4],
+                      colors: [Colors.black45, Colors.transparent],
+                    ),
+                  ),
+                ),
               ],
+            ),
+          ),
+          Positioned.fill(
+            child: CustomScrollView(
+              slivers: [
+                const SliverToBoxAdapter(child: SizedBox(height: 290)),
+                SliverToBoxAdapter(
+                  child: Container(
+                    decoration: const BoxDecoration(
+                      color: AppColors.surface,
+                      borderRadius: BorderRadius.vertical(top: Radius.circular(40)),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const SizedBox(height: 32),
+                        _buildHeader(court),
+                        _buildAbout(court),
+                        _buildEquipments(court),
+                        _buildDatePicker(),
+                        _buildTimeSlotPicker(),
+                        const SizedBox(height: 110),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Positioned(
+            top: MediaQuery.of(context).padding.top + 10,
+            left: 20,
+            child: _CircleBtn(
+              icon: Icons.arrow_back_ios_new_rounded,
+              onTap: () => Navigator.of(context).maybePop(),
             ),
           ),
         ],
@@ -222,66 +276,11 @@ class _CourtDetailScreenState extends State<CourtDetailScreen> {
     );
   }
 
-  // ── App Bar ───────────────────────────────────────────────────────────────
-
-  SliverAppBar _buildAppBar(BuildContext context, Court court) {
-    return SliverAppBar(
-      expandedHeight: 290,
-      pinned: true,
-      stretch: true,
-      backgroundColor: AppColors.surface,
-      surfaceTintColor: Colors.transparent,
-      automaticallyImplyLeading: false,
-      leading: Padding(
-        padding: const EdgeInsets.only(left: 10, top: 10, bottom: 10),
-        child: _CircleBtn(
-          icon: Icons.arrow_back_ios_new_rounded,
-          onTap: () => Navigator.of(context).maybePop(),
-          iconSize: 12,
-        ),
-      ),
-      flexibleSpace: FlexibleSpaceBar(
-        stretchModes: const [StretchMode.zoomBackground],
-        background: Stack(
-          fit: StackFit.expand,
-          children: [
-            StorageImage(
-              storagePath: court.imageUrl,
-              bucketName: StadiumRepository.imageBucket,
-              width: double.infinity,
-              height: 290,
-              fit: BoxFit.cover,
-              borderRadius: BorderRadius.zero,
-              placeholder: Container(
-                color: AppColors.divider,
-                child: const Icon(
-                  Icons.sports_tennis_rounded,
-                  size: 72,
-                  color: AppColors.textMuted,
-                ),
-              ),
-            ),
-            const DecoratedBox(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  stops: [0.5, 1.0],
-                  colors: [Colors.transparent, Colors.black54],
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
   // ── Header ────────────────────────────────────────────────────────────────
 
   Widget _buildHeader(Court court) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
+      padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -293,45 +292,48 @@ class _CourtDetailScreenState extends State<CourtDetailScreen> {
                   court.name,
                   style: const TextStyle(
                     fontFamily: 'Poppins',
-                    fontSize: 22,
+                    fontSize: 26,
                     fontWeight: FontWeight.w800,
                     color: AppColors.textPrimary,
-                    height: 1.2,
+                    height: 1.1,
+                    letterSpacing: -0.5,
                   ),
                 ),
               ),
-              const SizedBox(width: 12),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text(
-                    '₹${court.pricePerHour.toInt()}',
-                    style: const TextStyle(
-                      fontFamily: 'Poppins',
-                      fontSize: 22,
-                      fontWeight: FontWeight.w800,
-                      color: AppColors.primary,
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color: AppColors.divider.withValues(alpha: 0.5),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(
+                      Icons.currency_rupee_rounded,
+                      size: 14,
+                      color: AppColors.textPrimary,
                     ),
-                  ),
-                  const Text(
-                    'per hour',
-                    style: TextStyle(
-                      fontFamily: 'Poppins',
-                      fontSize: 11,
-                      color: AppColors.textSecondary,
+                    Text(
+                      '${court.pricePerHour.toInt()}',
+                      style: const TextStyle(
+                        fontFamily: 'Poppins',
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.textPrimary,
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ],
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 12),
           Row(
             children: [
               const Icon(
                 Icons.stadium_rounded,
-                size: 14,
-                color: AppColors.primary,
+                size: 16,
+                color: AppColors.textSecondary,
               ),
               const SizedBox(width: 4),
               Expanded(
@@ -340,28 +342,53 @@ class _CourtDetailScreenState extends State<CourtDetailScreen> {
                   style: const TextStyle(
                     fontFamily: 'Poppins',
                     fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.textPrimary,
+                    fontWeight: FontWeight.w500,
+                    color: AppColors.textSecondary,
                   ),
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 14),
-          Wrap(
-            spacing: 16,
-            runSpacing: 8,
+          const SizedBox(height: 24),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
-              InfoRowChip(
-                icon: Icons.access_time_rounded,
-                label: '${court.openTime} – ${court.closeTime}',
-                color: AppColors.primary,
-              ),
+              _buildSkeletalStat('Timing', '${court.openTime}-${court.closeTime}'),
+              Container(height: 30, width: 1, color: AppColors.divider),
+              _buildSkeletalStat('Type', court.courtTypes.isNotEmpty ? court.courtTypes.first : 'N/A'),
+              Container(height: 30, width: 1, color: AppColors.divider),
+              _buildSkeletalStat('Size', court.teamSize),
             ],
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildSkeletalStat(String label, String value) {
+    return Column(
+      children: [
+        Text(
+          label,
+          style: const TextStyle(
+            fontFamily: 'Poppins',
+            fontSize: 12,
+            color: AppColors.textSecondary,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          value,
+          style: const TextStyle(
+            fontFamily: 'Poppins',
+            fontSize: 14,
+            fontWeight: FontWeight.w700,
+            color: AppColors.textPrimary,
+          ),
+        ),
+      ],
     );
   }
 
@@ -778,48 +805,15 @@ class _CourtDetailScreenState extends State<CourtDetailScreen> {
 
   Widget _buildBottomBar(BuildContext context, Court court) {
     return Container(
-      padding: EdgeInsets.fromLTRB(
-        20,
-        14,
-        20,
-        MediaQuery.of(context).padding.bottom + 14,
-      ),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        border: const Border(
-          top: BorderSide(color: AppColors.divider, width: 1),
-        ),
-      ),
-      child: Row(
-        children: [
-          Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Total Price ($_selectedHours hr${_selectedHours == 1 ? '' : 's'})',
-                style: const TextStyle(
-                  fontFamily: 'Poppins',
-                  fontSize: 9,
-                  color: AppColors.textSecondary,
-                ),
-              ),
-              const SizedBox(height: 2),
-              Text(
-                '₹${(court.pricePerHour * _selectedHours).toInt()}',
-                style: const TextStyle(
-                  fontFamily: 'Poppins',
-                  fontSize: 26,
-                  fontWeight: FontWeight.w800,
-                  height: 0.95,
-                  color: AppColors.textPrimary,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: FilledButton.icon(
+      color: AppColors.surface,
+      width: double.infinity,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(20, 10, 20, 20),
+        child: SafeArea(
+          top: false,
+          child: SizedBox(
+            width: double.infinity,
+            child: FilledButton(
               onPressed: _canBook
                   ? () {
                       final selectedSlots = _orderedSelectedSlots();
@@ -832,9 +826,7 @@ class _CourtDetailScreenState extends State<CourtDetailScreen> {
                       if (existsInCart) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(
-                            content: Text(
-                              'These exact slots are already in your cart.',
-                            ),
+                            content: Text('These exact slots are already in your cart.'),
                           ),
                         );
                         return;
@@ -869,26 +861,34 @@ class _CourtDetailScreenState extends State<CourtDetailScreen> {
                     }
                   : null,
               style: FilledButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
                 backgroundColor: AppColors.textPrimary,
                 foregroundColor: Colors.white,
                 disabledBackgroundColor: AppColors.divider,
-              ),
-              icon: const Icon(Icons.add_shopping_cart_rounded, size: 18),
-              label: Text(
-                _canBook ? 'Add to Cart' : 'Select Date & Slots',
-                style: const TextStyle(
-                  fontFamily: 'Poppins',
-                  fontWeight: FontWeight.w600,
-                  fontSize: 16,
+                padding: const EdgeInsets.symmetric(vertical: 20),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(30),
                 ),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.add_shopping_cart_rounded, size: 18),
+                  const SizedBox(width: 8),
+                  Text(
+                    _canBook 
+                        ? 'Add to Cart  •  ₹${(court.pricePerHour * _selectedHours).toInt()}' 
+                        : 'Select Date & Slots',
+                    style: const TextStyle(
+                      fontFamily: 'Poppins',
+                      fontWeight: FontWeight.w600,
+                      fontSize: 16,
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
-        ],
+        ),
       ),
     );
   }
@@ -958,14 +958,13 @@ class _CircleBtn extends StatelessWidget {
   Widget build(BuildContext context) => GestureDetector(
     onTap: onTap,
     child: Container(
-      width: 34,
-      height: 34,
+      width: 42,
+      height: 42,
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: AppColors.surface.withValues(alpha: 0.9),
         shape: BoxShape.circle,
-        border: Border.all(color: AppColors.divider, width: 1),
       ),
-      child: Icon(icon, size: iconSize, color: AppColors.textPrimary),
+      child: Icon(icon, size: 18, color: AppColors.textPrimary),
     ),
   );
 }

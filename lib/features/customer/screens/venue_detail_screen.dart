@@ -213,7 +213,7 @@ class _VenueDetailScreenState extends State<VenueDetailScreen> {
     final lowestPricePerHour = _lowestPricePerHour;
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: AppColors.surface,
       bottomNavigationBar: MediaQuery.removePadding(
         context: context,
         removeBottom: true,
@@ -231,9 +231,9 @@ class _VenueDetailScreenState extends State<VenueDetailScreen> {
                   style: FilledButton.styleFrom(
                     backgroundColor: AppColors.textPrimary,
                     foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 25),
+                    padding: const EdgeInsets.symmetric(vertical: 20),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(5),
+                      borderRadius: BorderRadius.circular(30),
                     ),
                   ),
                   icon: const Icon(Icons.sports_tennis_rounded, size: 18),
@@ -251,207 +251,277 @@ class _VenueDetailScreenState extends State<VenueDetailScreen> {
           ),
         ),
       ),
-      body: CustomScrollView(
-        slivers: [
-          SliverAppBar(
-            expandedHeight: 260,
-            pinned: true,
-            backgroundColor: AppColors.surface,
-            surfaceTintColor: Colors.transparent,
-            leading: Padding(
-              padding: const EdgeInsets.only(left: 10, top: 10, bottom: 10),
-              child: _CircleBtn(
-                icon: Icons.arrow_back_ios_new_rounded,
-                onTap: () => Navigator.of(context).maybePop(),
-              ),
-            ),
-            flexibleSpace: FlexibleSpaceBar(
-              background: Stack(
-                fit: StackFit.expand,
-                children: [
-                  StorageImage(
-                    storagePath: venue.imageUrl,
-                    bucketName: StadiumRepository.imageBucket,
-                    width: double.infinity,
-                    height: 260,
-                    fit: BoxFit.cover,
-                    borderRadius: BorderRadius.zero,
-                    placeholder: Container(
-                      color: AppColors.divider,
-                      child: const Icon(
-                        Icons.stadium_rounded,
-                        size: 70,
-                        color: AppColors.textMuted,
-                      ),
+      body: Stack(
+        children: [
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            height: 340,
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                StorageImage(
+                  storagePath: venue.imageUrl,
+                  bucketName: StadiumRepository.imageBucket,
+                  width: double.infinity,
+                  height: 340,
+                  fit: BoxFit.cover,
+                  borderRadius: BorderRadius.zero,
+                  placeholder: Container(
+                    color: AppColors.divider,
+                    child: const Icon(
+                      Icons.stadium_rounded,
+                      size: 70,
+                      color: AppColors.textMuted,
                     ),
                   ),
-                  const DecoratedBox(
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        stops: [0.45, 1.0],
-                        colors: [Colors.transparent, Colors.black45],
-                      ),
+                ),
+                const DecoratedBox(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      stops: [0.0, 0.4],
+                      colors: [Colors.black45, Colors.transparent],
                     ),
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(20, 20, 20, 26),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    venue.name,
-                    style: const TextStyle(
-                      fontFamily: 'Poppins',
-                      fontSize: 24,
-                      fontWeight: FontWeight.w800,
-                      color: AppColors.textPrimary,
-                      height: 1.2,
+          Positioned.fill(
+            child: CustomScrollView(
+              slivers: [
+                const SliverToBoxAdapter(child: SizedBox(height: 290)),
+                SliverToBoxAdapter(
+                  child: Container(
+                    decoration: const BoxDecoration(
+                      color: AppColors.surface,
+                      borderRadius: BorderRadius.vertical(top: Radius.circular(40)),
                     ),
-                  ),
-                  const SizedBox(height: 8),
-                  if (lowestPricePerHour != null)
-                    Row(
-                      children: [
-                        const Icon(
-                          Icons.currency_rupee_rounded,
-                          size: 16,
-                          color: AppColors.textPrimary,
-                        ),
-                        Text(
-                          '$lowestPricePerHour onwards',
-                          style: const TextStyle(
-                            fontFamily: 'Poppins',
-                            fontSize: 13,
-                            fontWeight: FontWeight.w600,
-                            color: AppColors.textPrimary,
-                          ),
-                        ),
-                      ],
-                    ),
-                  if (lowestPricePerHour != null) const SizedBox(height: 8),
-                  Row(
-                    children: [
-                      const Icon(
-                        Icons.location_on_outlined,
-                        size: 16,
-                        color: AppColors.textSecondary,
-                      ),
-                      const SizedBox(width: 4),
-                      Expanded(
-                        child: Text(
-                          '${venue.address}, ${venue.city}',
-                          style: const TextStyle(
-                            fontFamily: 'Poppins',
-                            fontSize: 13,
-                            color: AppColors.textSecondary,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 18),
-                  const DetailSectionTitle(title: 'About Venue'),
-                  const SizedBox(height: 10),
-                  Text(
-                    venue.description.isEmpty
-                        ? 'No description provided for this venue yet.'
-                        : venue.description,
-                    style: const TextStyle(
-                      fontFamily: 'Poppins',
-                      fontSize: 13.5,
-                      color: AppColors.textSecondary,
-                      height: 1.65,
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  const DetailSectionTitle(title: 'Amenities'),
-                  const SizedBox(height: 10),
-                  if (venue.amenities.isEmpty)
-                    const Text(
-                      'No amenities listed yet.',
-                      style: TextStyle(
-                        fontFamily: 'Poppins',
-                        fontSize: 13,
-                        color: AppColors.textSecondary,
-                      ),
-                    )
-                  else
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: venue.amenities
-                          .map(
-                            (amenity) => Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 12,
-                                vertical: 8,
-                              ),
-                              decoration: BoxDecoration(
-                                color: AppColors.surface,
-                                borderRadius: BorderRadius.circular(20),
-                                border: Border.all(color: AppColors.divider),
-                              ),
-                              child: Text(
-                                amenity,
-                                style: const TextStyle(
-                                  fontFamily: 'Poppins',
-                                  fontSize: 12,
-                                  color: AppColors.textPrimary,
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 32, 20, 26),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  venue.name,
+                                  style: const TextStyle(
+                                    fontFamily: 'Poppins',
+                                    fontSize: 26,
+                                    fontWeight: FontWeight.w800,
+                                    color: AppColors.textPrimary,
+                                    height: 1.1,
+                                    letterSpacing: -0.5,
+                                  ),
                                 ),
                               ),
-                            ),
-                          )
-                          .toList(growable: false),
-                    ),
-                  const SizedBox(height: 22),
-                  const DetailSectionTitle(title: 'Sport Types'),
-                  const SizedBox(height: 10),
-                  if (sports.isEmpty)
-                    const Text(
-                      'No sport types available for this venue.',
-                      style: TextStyle(
-                        fontFamily: 'Poppins',
-                        fontSize: 13,
-                        color: AppColors.textSecondary,
-                      ),
-                    )
-                  else
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: sports
-                          .map(
-                            (sport) => ActionChip(
-                              avatar: Icon(
-                                sportIconForName(sport),
+                              if (lowestPricePerHour != null)
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.divider.withValues(alpha: 0.5),
+                                    borderRadius: BorderRadius.circular(20),
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      const Icon(
+                                        Icons.currency_rupee_rounded,
+                                        size: 14,
+                                        color: AppColors.textPrimary,
+                                      ),
+                                      Text(
+                                        '$lowestPricePerHour onwards',
+                                        style: const TextStyle(
+                                          fontFamily: 'Poppins',
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w700,
+                                          color: AppColors.textPrimary,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                            ],
+                          ),
+                          const SizedBox(height: 12),
+                          Row(
+                            children: [
+                              const Icon(
+                                Icons.location_on_outlined,
                                 size: 16,
-                                color: AppColors.primary,
+                                color: AppColors.textSecondary,
                               ),
-                              label: Text(
-                                sport,
-                                style: const TextStyle(fontFamily: 'Poppins'),
+                              const SizedBox(width: 4),
+                              Expanded(
+                                child: Text(
+                                  '${venue.address}, ${venue.city}',
+                                  style: const TextStyle(
+                                    fontFamily: 'Poppins',
+                                    fontSize: 13,
+                                    color: AppColors.textSecondary,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
                               ),
-                              backgroundColor: AppColors.surface,
-                              side: const BorderSide(color: AppColors.divider),
-                              onPressed: () => _openCourtsForSport(sport),
+                            ],
+                          ),
+                          const SizedBox(height: 24),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                            children: [
+                              _buildSkeletalStat('Courts', '${_venueCourts.length}'),
+                              Container(height: 30, width: 1, color: AppColors.divider),
+                              _buildSkeletalStat('Sports', '${sports.length}'),
+                              Container(height: 30, width: 1, color: AppColors.divider),
+                              _buildSkeletalStat('City', venue.city),
+                            ],
+                          ),
+                          const SizedBox(height: 24),
+                          const DetailSectionTitle(title: 'About Venue'),
+                          const SizedBox(height: 10),
+                          Text(
+                            venue.description.isEmpty
+                                ? 'No description provided for this venue yet.'
+                                : venue.description,
+                            style: const TextStyle(
+                              fontFamily: 'Poppins',
+                              fontSize: 13.5,
+                              color: AppColors.textSecondary,
+                              height: 1.65,
                             ),
-                          )
-                          .toList(growable: false),
+                          ),
+                          const SizedBox(height: 24),
+                          const DetailSectionTitle(title: 'Amenities'),
+                          const SizedBox(height: 10),
+                          if (venue.amenities.isEmpty)
+                            const Text(
+                              'No amenities listed yet.',
+                              style: TextStyle(
+                                fontFamily: 'Poppins',
+                                fontSize: 13,
+                                color: AppColors.textSecondary,
+                              ),
+                            )
+                          else
+                            Wrap(
+                              spacing: 8,
+                              runSpacing: 8,
+                              children: venue.amenities
+                                  .map(
+                                    (amenity) => Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 14,
+                                        vertical: 10,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: AppColors.surface,
+                                        borderRadius: BorderRadius.circular(10),
+                                        border: Border.all(color: AppColors.divider),
+                                      ),
+                                      child: Text(
+                                        amenity,
+                                        style: const TextStyle(
+                                          fontFamily: 'Poppins',
+                                          fontSize: 13,
+                                          fontWeight: FontWeight.w500,
+                                          color: AppColors.textPrimary,
+                                        ),
+                                      ),
+                                    ),
+                                  )
+                                  .toList(growable: false),
+                            ),
+                          const SizedBox(height: 24),
+                          const DetailSectionTitle(title: 'Sport Types'),
+                          const SizedBox(height: 10),
+                          if (sports.isEmpty)
+                            const Text(
+                              'No sport types available for this venue.',
+                              style: TextStyle(
+                                fontFamily: 'Poppins',
+                                fontSize: 13,
+                                color: AppColors.textSecondary,
+                              ),
+                            )
+                          else
+                            Wrap(
+                              spacing: 8,
+                              runSpacing: 8,
+                              children: sports
+                                  .map(
+                                    (sport) => ActionChip(
+                                      avatar: Icon(
+                                        sportIconForName(sport),
+                                        size: 18,
+                                        color: AppColors.primary,
+                                      ),
+                                      label: Text(
+                                        sport,
+                                        style: const TextStyle(
+                                          fontFamily: 'Poppins',
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                      backgroundColor: AppColors.surface,
+                                      side: const BorderSide(color: AppColors.divider),
+                                      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                      onPressed: () => _openCourtsForSport(sport),
+                                    ),
+                                  )
+                                  .toList(growable: false),
+                            ),
+                          const SizedBox(height: 40),
+                        ],
+                      ),
                     ),
-                  const SizedBox(height: 90),
-                ],
-              ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Positioned(
+            top: MediaQuery.of(context).padding.top + 10,
+            left: 20,
+            child: _CircleBtn(
+              icon: Icons.arrow_back_ios_new_rounded,
+              onTap: () => Navigator.of(context).maybePop(),
             ),
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildSkeletalStat(String label, String value) {
+    return Column(
+      children: [
+        Text(
+          label,
+          style: const TextStyle(
+            fontFamily: 'Poppins',
+            fontSize: 12,
+            color: AppColors.textSecondary,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          value,
+          style: const TextStyle(
+            fontFamily: 'Poppins',
+            fontSize: 16,
+            fontWeight: FontWeight.w700,
+            color: AppColors.textPrimary,
+          ),
+        ),
+      ],
     );
   }
 }
@@ -467,14 +537,13 @@ class _CircleBtn extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        width: 34,
-        height: 34,
+        width: 42,
+        height: 42,
         decoration: BoxDecoration(
-          color: AppColors.surface,
+          color: AppColors.surface.withValues(alpha: 0.9),
           shape: BoxShape.circle,
-          border: Border.all(color: AppColors.divider, width: 1),
         ),
-        child: Icon(icon, size: 12, color: AppColors.textPrimary),
+        child: Icon(icon, size: 18, color: AppColors.textPrimary),
       ),
     );
   }
