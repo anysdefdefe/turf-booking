@@ -46,6 +46,21 @@ const _kSportOptions = [
   'Padel',
 ];
 
+const _kEquipmentOptions = [
+  'Rackets',
+  'Balls',
+  'Nets',
+  'Gloves',
+  'Helmets',
+  'Pads',
+  'Stumps',
+  'Cones',
+  'Bibs',
+  'First Aid Kit',
+  'Water Station',
+  'Scoreboard',
+];
+
 // ── Root screen ───────────────────────────────────────────────────────────────
 
 class OwnerStadiumManageScreen extends ConsumerWidget {
@@ -559,10 +574,17 @@ class _CtaBar extends StatelessWidget {
             context: context,
             isScrollControlled: true,
             backgroundColor: Colors.transparent,
-            builder: (_) => _AddCourtSheet(
-              stadiumId: stadiumId,
-              defaultOpenTime: defaultOpenTime,
-              defaultCloseTime: defaultCloseTime,
+            builder: (_) => DraggableScrollableSheet(
+              initialChildSize: 0.75,
+              minChildSize: 0.5,
+              maxChildSize: 0.95,
+              expand: false,
+              builder: (_, scrollController) => _AddCourtSheet(
+                stadiumId: stadiumId,
+                defaultOpenTime: defaultOpenTime,
+                defaultCloseTime: defaultCloseTime,
+                scrollController: scrollController,
+              ),
             ),
           ),
           icon: const Icon(Icons.add_rounded, size: 20),
@@ -1038,11 +1060,13 @@ class _AddCourtSheet extends ConsumerStatefulWidget {
   final String stadiumId;
   final String defaultOpenTime;
   final String defaultCloseTime;
+  final ScrollController? scrollController;
 
   const _AddCourtSheet({
     required this.stadiumId,
     required this.defaultOpenTime,
     required this.defaultCloseTime,
+    this.scrollController,
   });
 
   @override
@@ -1059,6 +1083,7 @@ class _AddCourtSheetState extends ConsumerState<_AddCourtSheet> {
   late TimeOfDay _openTime;
   late TimeOfDay _closeTime;
   bool _isSaving = false;
+  final List<String> _selectedEquipments = [];
 
   @override
   void initState() {
@@ -1072,6 +1097,7 @@ class _AddCourtSheetState extends ConsumerState<_AddCourtSheet> {
     _nameController.dispose();
     _descriptionController.dispose();
     _priceController.dispose();
+    widget.scrollController?.dispose();
     super.dispose();
   }
 
@@ -1136,6 +1162,7 @@ class _AddCourtSheetState extends ConsumerState<_AddCourtSheet> {
                 ? null
                 : _descriptionController.text.trim(),
             pricePerHour: price,
+            equipments: List.unmodifiable(_selectedEquipments),
             openTime:
                 '${_openTime.hour.toString().padLeft(2, '0')}:${_openTime.minute.toString().padLeft(2, '0')}:00',
             closeTime:
@@ -1189,6 +1216,7 @@ class _AddCourtSheetState extends ConsumerState<_AddCourtSheet> {
       ),
       padding: EdgeInsets.fromLTRB(24, 20, 24, bottomInset + 24),
       child: SingleChildScrollView(
+        controller: widget.scrollController,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
@@ -1369,6 +1397,70 @@ class _AddCourtSheetState extends ConsumerState<_AddCourtSheet> {
                   ),
                 ),
               ],
+            ),
+            const SizedBox(height: 16),
+
+            // Equipments
+            _label('Equipments Available'),
+            const SizedBox(height: 2),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: _kEquipmentOptions.map((eq) {
+                final selected = _selectedEquipments.contains(eq);
+                return GestureDetector(
+                  onTap: () => setState(() {
+                    if (selected) {
+                      _selectedEquipments.remove(eq);
+                    } else {
+                      _selectedEquipments.add(eq);
+                    }
+                  }),
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 150),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 7,
+                    ),
+                    decoration: BoxDecoration(
+                      color: selected
+                          ? AppColors.primary.withValues(alpha: 0.10)
+                          : Colors.white,
+                      borderRadius: BorderRadius.circular(50),
+                      border: Border.all(
+                        color: selected
+                            ? AppColors.primary
+                            : AppColors.divider,
+                        width: 1.5,
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (selected) ...[
+                          Icon(
+                            Icons.check_rounded,
+                            size: 12,
+                            color: AppColors.primary,
+                          ),
+                          const SizedBox(width: 4),
+                        ],
+                        Text(
+                          eq,
+                          style: TextStyle(
+                            fontFamily: 'Poppins',
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                            color: selected
+                                ? AppColors.primary
+                                : AppColors.textSecondary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              }).toList(),
             ),
             const SizedBox(height: 28),
 
