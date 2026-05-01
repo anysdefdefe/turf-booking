@@ -3,6 +3,8 @@ import 'package:go_router/go_router.dart';
 
 import '../../../app/constants/app_constants.dart';
 import '../../../app/theme/app_colors.dart';
+import 'package:turf_booking/features/owner/widgets/storage_media.dart';
+import 'package:turf_booking/features/owner/data/repositories/stadium_repository.dart';
 import '../data/models/court_model.dart';
 import '../data/models/stadium_model.dart';
 import '../data/repositories/court_repository.dart';
@@ -267,10 +269,14 @@ class _VenueDetailScreenState extends State<VenueDetailScreen> {
               background: Stack(
                 fit: StackFit.expand,
                 children: [
-                  Image.network(
-                    venue.imageUrl,
+                  StorageImage(
+                    storagePath: venue.imageUrl,
+                    bucketName: StadiumRepository.imageBucket,
+                    width: double.infinity,
+                    height: 260,
                     fit: BoxFit.cover,
-                    errorBuilder: (_, _, _) => Container(
+                    borderRadius: BorderRadius.zero,
+                    placeholder: Container(
                       color: AppColors.divider,
                       child: const Icon(
                         Icons.stadium_rounded,

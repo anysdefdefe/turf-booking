@@ -1,4 +1,5 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:geolocator/geolocator.dart';
 
 import '../models/court_model.dart';
 import '../models/stadium_model.dart';
@@ -16,6 +17,23 @@ class CourtRepository {
   List<Court> _courts = const [];
 
   Future<void> refreshCatalog() async {
+    Position? userPosition;
+    try {
+      bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (serviceEnabled) {
+        LocationPermission permission = await Geolocator.checkPermission();
+        if (permission == LocationPermission.denied) {
+          permission = await Geolocator.requestPermission();
+        }
+        if (permission == LocationPermission.whileInUse || permission == LocationPermission.always) {
+          userPosition = await Geolocator.getLastKnownPosition();
+          userPosition ??= await Geolocator.getCurrentPosition();
+        }
+      }
+    } catch (_) {
+      // Ignore location errors, distance will default to 0
+    }
+
     final stadiumRows = await _client
         .from('stadiums')
         .select()
@@ -24,7 +42,7 @@ class CourtRepository {
 
     final stadiums = stadiumRows
         .cast<Map<String, dynamic>>()
-        .map(_mapStadium)
+        .map((row) => _mapStadium(row, userPosition))
         .toList(growable: false);
     final stadiumById = {for (final stadium in stadiums) stadium.id: stadium};
 
@@ -268,7 +286,7 @@ class CourtRepository {
     return teamSizes;
   }
 
-  Stadium _mapStadium(Map<String, dynamic> row) {
+  Stadium _mapStadium(Map<String, dynamic> row, Position? userPosition) {
     String imageUrl = row['image_url'] as String? ?? '';
     if (imageUrl.isEmpty && row['image_urls'] is List) {
       final urls = row['image_urls'] as List;
@@ -282,6 +300,19 @@ class CourtRepository {
         ? amenitiesRaw.map((e) => e.toString()).toList(growable: false)
         : <String>[];
 
+    final lat = (row['latitude'] as num?)?.toDouble() ?? 0.0;
+    final lng = (row['longitude'] as num?)?.toDouble() ?? 0.0;
+    
+    double distanceKm = 0.0;
+    if (userPosition != null && lat != 0.0 && lng != 0.0) {
+      distanceKm = Geolocator.distanceBetween(
+        userPosition.latitude,
+        userPosition.longitude,
+        lat,
+        lng,
+      ) / 1000.0; // Convert meters to km
+    }
+
     return Stadium(
       id: row['id'] as String,
       ownerId: row['owner_id'] as String? ?? '',
@@ -290,13 +321,14 @@ class CourtRepository {
       amenities: amenities,
       address: row['address'] as String? ?? '',
       city: row['city'] as String? ?? '',
-      latitude: (row['latitude'] as num?)?.toDouble() ?? 0,
-      longitude: (row['longitude'] as num?)?.toDouble() ?? 0,
+      latitude: lat,
+      longitude: lng,
       imageUrl: imageUrl,
       isActive: row['is_active'] as bool? ?? true,
       createdAt:
           DateTime.tryParse(row['created_at']?.toString() ?? '') ??
           DateTime.now(),
+      distanceKm: distanceKm,
     );
   }
 
@@ -347,7 +379,6 @@ class CourtRepository {
       equipments: equipments,
       openTime: openTime,
       closeTime: closeTime,
-      distanceKm: 0,
       teamSize: _defaultTeamSizeForSport(
         courtTypes.isEmpty ? 'Court' : courtTypes.first,
       ),

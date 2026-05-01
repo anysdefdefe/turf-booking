@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../../app/constants/app_constants.dart';
 import '../../../app/theme/app_colors.dart';
+import 'package:turf_booking/features/owner/widgets/storage_media.dart';
+import 'package:turf_booking/features/owner/data/repositories/stadium_repository.dart';
 import '../data/models/booking_cart_item.dart';
 import '../data/models/court_detail_args.dart';
 import '../data/models/court_model.dart';
@@ -243,10 +245,14 @@ class _CourtDetailScreenState extends State<CourtDetailScreen> {
         background: Stack(
           fit: StackFit.expand,
           children: [
-            Image.network(
-              court.imageUrl,
+            StorageImage(
+              storagePath: court.imageUrl,
+              bucketName: StadiumRepository.imageBucket,
+              width: double.infinity,
+              height: 290,
               fit: BoxFit.cover,
-              errorBuilder: (_, _, _) => Container(
+              borderRadius: BorderRadius.zero,
+              placeholder: Container(
                 color: AppColors.divider,
                 child: const Icon(
                   Icons.sports_tennis_rounded,
@@ -264,11 +270,6 @@ class _CourtDetailScreenState extends State<CourtDetailScreen> {
                   colors: [Colors.transparent, Colors.black54],
                 ),
               ),
-            ),
-            Positioned(
-              bottom: 14,
-              right: 16,
-              child: _DistBadge(km: court.distanceKm),
             ),
           ],
         ),
@@ -965,41 +966,6 @@ class _CircleBtn extends StatelessWidget {
         border: Border.all(color: AppColors.divider, width: 1),
       ),
       child: Icon(icon, size: iconSize, color: AppColors.textPrimary),
-    ),
-  );
-}
-
-class _DistBadge extends StatelessWidget {
-  final double km;
-  const _DistBadge({required this.km});
-
-  @override
-  Widget build(BuildContext context) => Container(
-    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-    decoration: BoxDecoration(
-      color: AppColors.surface.withValues(alpha: 0.94),
-      borderRadius: BorderRadius.circular(20),
-      border: Border.all(color: AppColors.divider, width: 1),
-    ),
-    child: Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        const Icon(
-          Icons.near_me_rounded,
-          color: AppColors.textSecondary,
-          size: 11,
-        ),
-        const SizedBox(width: 4),
-        Text(
-          '${km.toStringAsFixed(1)} km',
-          style: const TextStyle(
-            fontFamily: 'Poppins',
-            color: AppColors.textSecondary,
-            fontSize: 10.5,
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-      ],
     ),
   );
 }
