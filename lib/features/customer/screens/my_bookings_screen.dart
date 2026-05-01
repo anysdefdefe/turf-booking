@@ -71,11 +71,30 @@ class _MyBookingsScreenState extends ConsumerState<MyBookingsScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Keep booking'),
+            style: TextButton.styleFrom(
+              foregroundColor: AppColors.textPrimary,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(30),
+              ),
+            ),
+            child: const Text(
+              'Keep booking',
+              style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w600),
+            ),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Cancel booking'),
+            style: FilledButton.styleFrom(
+              backgroundColor: AppColors.textPrimary,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(30),
+              ),
+            ),
+            child: const Text(
+              'Cancel booking',
+              style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w600),
+            ),
           ),
         ],
       ),
@@ -106,9 +125,19 @@ class _MyBookingsScreenState extends ConsumerState<MyBookingsScreen> {
           'Receipt for booking ${booking.id} will be available soon.',
         ),
         actions: [
-          TextButton(
+          FilledButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Close'),
+            style: FilledButton.styleFrom(
+              backgroundColor: AppColors.textPrimary,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(30),
+              ),
+            ),
+            child: const Text(
+              'Close',
+              style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w600),
+            ),
           ),
         ],
       ),
@@ -148,8 +177,10 @@ class _MyBookingsScreenState extends ConsumerState<MyBookingsScreen> {
           'My Bookings',
           style: TextStyle(
             fontFamily: 'Poppins',
-            color: AppColors.textPrimary,
+            fontSize: 22,
             fontWeight: FontWeight.w700,
+            letterSpacing: -0.3,
+            color: AppColors.textPrimary,
           ),
         ),
       ),

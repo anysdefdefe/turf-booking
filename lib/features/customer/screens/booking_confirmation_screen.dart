@@ -95,8 +95,9 @@ class _BookingConfirmationScreenState
           'Booking Confirmation',
           style: TextStyle(
             fontFamily: 'Poppins',
+            fontSize: 20,
             fontWeight: FontWeight.w700,
-            fontSize: 18,
+            letterSpacing: -0.3,
           ),
         ),
         backgroundColor: AppColors.surface,
@@ -221,10 +222,10 @@ class _BookingConfirmationScreenState
                     child: OutlinedButton(
                       onPressed: () => _onCancel(context),
                       style: OutlinedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        padding: const EdgeInsets.symmetric(vertical: 18),
                         side: const BorderSide(color: AppColors.textPrimary),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(30),
                         ),
                         foregroundColor: AppColors.textPrimary,
                       ),
@@ -232,7 +233,7 @@ class _BookingConfirmationScreenState
                         'Cancel',
                         style: TextStyle(
                           fontFamily: 'Poppins',
-                          fontSize: 14,
+                          fontSize: 15,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
@@ -243,10 +244,10 @@ class _BookingConfirmationScreenState
                     child: OutlinedButton(
                       onPressed: () => _onKeepInCart(context),
                       style: OutlinedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        padding: const EdgeInsets.symmetric(vertical: 18),
                         side: const BorderSide(color: AppColors.textPrimary),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(30),
                         ),
                         foregroundColor: AppColors.textPrimary,
                       ),
@@ -254,7 +255,7 @@ class _BookingConfirmationScreenState
                         'Keep in Cart',
                         style: TextStyle(
                           fontFamily: 'Poppins',
-                          fontSize: 14,
+                          fontSize: 15,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
@@ -272,9 +273,9 @@ class _BookingConfirmationScreenState
                   style: FilledButton.styleFrom(
                     backgroundColor: AppColors.textPrimary,
                     foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    padding: const EdgeInsets.symmetric(vertical: 20),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(30),
                     ),
                   ),
                   child: _isProcessing
