@@ -4,7 +4,10 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:turf_booking/features/auth/providers/auth_controller.dart';
 import 'package:go_router/go_router.dart';
 import '../../../app/theme/app_colors.dart';
-import '../widgets/customer_floating_nav_bar.dart';
+import '../widgets/customer_bottom_nav_bar.dart';
+import '../providers/customer_providers.dart';
+import '../providers/customer_bookings_controller.dart';
+import '../data/models/customer_booking.dart';
 
 DateTime _parseCreatedAt(dynamic value, dynamic fallback) {
   if (value is DateTime) return value;
@@ -335,7 +338,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      bottomNavigationBar: CustomerFloatingNavBar(
+      bottomNavigationBar: CustomerBottomNavBar(
         selectedIndex: 3,
         onTap: _onNavTap,
       ),
@@ -881,27 +884,50 @@ class _HeroInfoRow extends StatelessWidget {
 
 // ─── Stats Row ───────────────────────────────────────────────────────────────
 
-class _CustomerStatsRow extends StatelessWidget {
+class _CustomerStatsRow extends ConsumerWidget {
   const _CustomerStatsRow();
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    // This watches the async provider, though we can just read from repo directly if it's already loaded,
+    // but watching the controller ensures it rebuilds on changes.
+    ref.watch(customerBookingsControllerProvider);
+    final repo = ref.watch(customerBookingRepositoryProvider);
+    final allBookings = repo.getAllBookings();
+
+    // Compute stats
+    int activeBookings = 0;
+    double spent = 0;
+    final Set<String> uniqueVenues = {};
+
+    for (final b in allBookings) {
+      if (b.status != BookingStatus.cancelled) {
+        activeBookings++;
+        uniqueVenues.add(b.court.stadiumId);
+        
+        // Let's assume paid means not unpaid and not cancelled
+        if (b.status != BookingStatus.unpaid) {
+          spent += b.totalAmount;
+        }
+      }
+    }
+
     return Row(
       children: [
-        const _StatChip(
-          value: '0',
+        _StatChip(
+          value: activeBookings.toString(),
           label: 'Bookings',
           icon: Icons.event_note_rounded,
         ),
         const SizedBox(width: 10),
-        const _StatChip(
-          value: '0',
+        _StatChip(
+          value: uniqueVenues.length.toString(),
           label: 'Venues',
           icon: Icons.stadium_rounded,
         ),
         const SizedBox(width: 10),
-        const _StatChip(
-          value: '₹0',
+        _StatChip(
+          value: '₹${spent.toInt()}',
           label: 'Spent',
           icon: Icons.account_balance_wallet_rounded,
         ),
@@ -1250,31 +1276,32 @@ class _LogoutButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
+    return InkWell(
       onTap: onTap,
+      borderRadius: BorderRadius.circular(14),
       child: Container(
         width: double.infinity,
-        padding: const EdgeInsets.symmetric(vertical: 15),
+        padding: const EdgeInsets.symmetric(vertical: 16),
         decoration: BoxDecoration(
-          color: const Color(0xFFFEF2F2),
+          color: AppColors.surface,
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: const Color(0xFFFECACA), width: 1),
+          border: Border.all(color: AppColors.divider, width: 1),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             const Icon(
               Icons.logout_rounded,
-              size: 18,
+              size: 20,
               color: Color(0xFFDC2626),
             ),
-            const SizedBox(width: 8),
-            Text(
+            const SizedBox(width: 10),
+            const Text(
               'Log out',
               style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w700,
-                color: const Color(0xFFDC2626),
+                fontSize: 14.5,
+                fontWeight: FontWeight.w600,
+                color: Color(0xFFDC2626),
               ),
             ),
           ],

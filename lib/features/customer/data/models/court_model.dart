@@ -13,7 +13,6 @@ class Court {
   final List<String> equipments;
   final String openTime;
   final String closeTime;
-  final double distanceKm;
   final String teamSize;
 
   const Court({
@@ -31,7 +30,6 @@ class Court {
     required this.equipments,
     required this.openTime,
     required this.closeTime,
-    required this.distanceKm,
     required this.teamSize,
   });
 }

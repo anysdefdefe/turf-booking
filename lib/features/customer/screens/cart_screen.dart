@@ -7,7 +7,7 @@ import '../../../shared/widgets/empty_state.dart';
 import '../data/models/booking_args.dart';
 import '../data/models/booking_cart_item.dart';
 import '../data/repositories/customer_cart_repository.dart';
-import '../widgets/customer_floating_nav_bar.dart';
+import '../widgets/customer_bottom_nav_bar.dart';
 
 class CartScreen extends StatefulWidget {
   const CartScreen({super.key});
@@ -70,7 +70,7 @@ class _CartScreenState extends State<CartScreen> {
         backgroundColor: AppColors.background,
         elevation: 0,
       ),
-      bottomNavigationBar: CustomerFloatingNavBar(
+      bottomNavigationBar: CustomerBottomNavBar(
         selectedIndex: 1,
         onTap: _onNavTap,
       ),
