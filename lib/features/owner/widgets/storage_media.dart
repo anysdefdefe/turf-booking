@@ -144,16 +144,63 @@ class _StorageAvatarState extends State<StorageAvatar> {
     }
   }
 
+  // ── Helpers ──────────────────────────────────────────────────────────────────
+
+  /// Extracts up to 2 initials from a display name.
+  String _initials(String name) {
+    final parts = name.trim().split(RegExp(r'\s+'));
+    if (parts.isEmpty || parts.first.isEmpty) return '';
+    if (parts.length == 1) return parts.first[0].toUpperCase();
+    return '${parts.first[0]}${parts.last[0]}'.toUpperCase();
+  }
+
+  /// Picks a colour from a curated palette deterministically from the name.
+  Color _avatarColor(String name) {
+    const palette = [
+      Color(0xFF6366F1), // Indigo
+      Color(0xFF0EA5E9), // Sky
+      Color(0xFF22C55E), // Green
+      Color(0xFFF59E0B), // Amber
+      Color(0xFFEC4899), // Pink
+      Color(0xFF8B5CF6), // Violet
+      Color(0xFF14B8A6), // Teal
+      Color(0xFFF97316), // Orange
+    ];
+    final index = name.isEmpty ? 0 : name.codeUnitAt(0) % palette.length;
+    return palette[index];
+  }
+
   @override
   Widget build(BuildContext context) {
-    Widget neutralPlaceholder() {
+    final initials = _initials(widget.displayName);
+    final color = _avatarColor(widget.displayName);
+
+    // Initials placeholder — shown while loading, on error, or when no URL.
+    Widget initialsAvatar() {
+      if (initials.isEmpty) {
+        // Absolute fallback: person icon
+        return CircleAvatar(
+          radius: widget.radius,
+          backgroundColor: const Color(0xFFF4F4F5),
+          child: Icon(
+            Icons.person_rounded,
+            size: widget.radius * 0.95,
+            color: const Color(0xFF71717A),
+          ),
+        );
+      }
       return CircleAvatar(
         radius: widget.radius,
-        backgroundColor: const Color(0xFFF4F4F5),
-        child: Icon(
-          Icons.person_outline_rounded,
-          size: widget.radius * 0.95,
-          color: const Color(0xFF71717A),
+        backgroundColor: color,
+        child: Text(
+          initials,
+          style: TextStyle(
+            fontFamily: 'Poppins',
+            fontSize: widget.radius * 0.75,
+            fontWeight: FontWeight.w700,
+            color: Colors.white,
+            letterSpacing: 0.5,
+          ),
         ),
       );
     }
@@ -161,19 +208,31 @@ class _StorageAvatarState extends State<StorageAvatar> {
     return FutureBuilder<String?>(
       future: _resolvedUrl,
       builder: (context, snapshot) {
-        final url = snapshot.data;
+        // While resolving — show initials immediately (no flash)
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return neutralPlaceholder();
+          return initialsAvatar();
         }
 
+        final url = snapshot.data;
         if (url == null || url.isEmpty) {
-          return neutralPlaceholder();
+          return initialsAvatar();
         }
 
         return CircleAvatar(
           radius: widget.radius,
           backgroundColor: widget.backgroundColor,
           backgroundImage: NetworkImage(url),
+          // If the network image fails to load, show initials
+          onBackgroundImageError: (_, __) {},
+          child: ClipOval(
+            child: Image.network(
+              url,
+              width: widget.radius * 2,
+              height: widget.radius * 2,
+              fit: BoxFit.cover,
+              errorBuilder: (_, __, ___) => initialsAvatar(),
+            ),
+          ),
         );
       },
     );
