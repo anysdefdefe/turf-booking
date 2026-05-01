@@ -46,20 +46,6 @@ const _kSportOptions = [
   'Padel',
 ];
 
-const _kEquipmentOptions = [
-  'Rackets',
-  'Balls',
-  'Nets',
-  'Gloves',
-  'Helmets',
-  'Pads',
-  'Stumps',
-  'Cones',
-  'Bibs',
-  'First Aid Kit',
-  'Water Station',
-  'Scoreboard',
-];
 
 // ── Root screen ───────────────────────────────────────────────────────────────
 
@@ -1077,13 +1063,14 @@ class _AddCourtSheetState extends ConsumerState<_AddCourtSheet> {
   final _nameController = TextEditingController();
   final _descriptionController = TextEditingController();
   final _priceController = TextEditingController();
+  final _equipmentController = TextEditingController();
   final _imagePicker = ImagePicker();
   String? _selectedSport;
   File? _selectedImage;
   late TimeOfDay _openTime;
   late TimeOfDay _closeTime;
   bool _isSaving = false;
-  final List<String> _selectedEquipments = [];
+  final List<String> _equipments = [];
 
   @override
   void initState() {
@@ -1097,8 +1084,24 @@ class _AddCourtSheetState extends ConsumerState<_AddCourtSheet> {
     _nameController.dispose();
     _descriptionController.dispose();
     _priceController.dispose();
-    widget.scrollController?.dispose();
+    _equipmentController.dispose();
+    // NOTE: do NOT dispose widget.scrollController — it is owned by
+    // DraggableScrollableSheet and will be disposed by the framework.
     super.dispose();
+  }
+
+  void _addEquipment() {
+    final item = _equipmentController.text.trim();
+    if (item.isEmpty) return;
+    // Avoid duplicates (case-insensitive)
+    if (_equipments.any((e) => e.toLowerCase() == item.toLowerCase())) {
+      _equipmentController.clear();
+      return;
+    }
+    setState(() {
+      _equipments.add(item);
+      _equipmentController.clear();
+    });
   }
 
   TimeOfDay _parseTime(String value) {
@@ -1162,7 +1165,7 @@ class _AddCourtSheetState extends ConsumerState<_AddCourtSheet> {
                 ? null
                 : _descriptionController.text.trim(),
             pricePerHour: price,
-            equipments: List.unmodifiable(_selectedEquipments),
+            equipments: List.unmodifiable(_equipments),
             openTime:
                 '${_openTime.hour.toString().padLeft(2, '0')}:${_openTime.minute.toString().padLeft(2, '0')}:00',
             closeTime:
@@ -1403,65 +1406,116 @@ class _AddCourtSheetState extends ConsumerState<_AddCourtSheet> {
             // Equipments
             _label('Equipments Available'),
             const SizedBox(height: 2),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: _kEquipmentOptions.map((eq) {
-                final selected = _selectedEquipments.contains(eq);
-                return GestureDetector(
-                  onTap: () => setState(() {
-                    if (selected) {
-                      _selectedEquipments.remove(eq);
-                    } else {
-                      _selectedEquipments.add(eq);
-                    }
-                  }),
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 150),
+            // Type-and-add row
+            Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _equipmentController,
+                    textCapitalization: TextCapitalization.words,
+                    onSubmitted: (_) => _addEquipment(),
+                    decoration: InputDecoration(
+                      hintText: 'e.g. Rackets, Balls…',
+                      hintStyle: const TextStyle(
+                        fontFamily: 'Poppins',
+                        fontSize: 13,
+                        color: AppColors.textMuted,
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 12,
+                      ),
+                      filled: true,
+                      fillColor: AppColors.background,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                        borderSide: const BorderSide(color: AppColors.divider),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                        borderSide: const BorderSide(color: AppColors.divider),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                        borderSide: BorderSide(
+                          color: AppColors.primary,
+                          width: 1.5,
+                        ),
+                      ),
+                    ),
+                    style: const TextStyle(
+                      fontFamily: 'Poppins',
+                      fontSize: 13,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                GestureDetector(
+                  onTap: _addEquipment,
+                  child: Container(
+                    height: 46,
+                    width: 46,
+                    decoration: BoxDecoration(
+                      color: AppColors.primary,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const Icon(
+                      Icons.add_rounded,
+                      color: Colors.white,
+                      size: 22,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            // Added equipment chips
+            if (_equipments.isNotEmpty) ...[
+              const SizedBox(height: 10),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: _equipments.map((eq) {
+                  return Container(
                     padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 7,
+                      horizontal: 10,
+                      vertical: 6,
                     ),
                     decoration: BoxDecoration(
-                      color: selected
-                          ? AppColors.primary.withValues(alpha: 0.10)
-                          : Colors.white,
+                      color: AppColors.primary.withValues(alpha: 0.08),
                       borderRadius: BorderRadius.circular(50),
                       border: Border.all(
-                        color: selected
-                            ? AppColors.primary
-                            : AppColors.divider,
-                        width: 1.5,
+                        color: AppColors.primary.withValues(alpha: 0.3),
                       ),
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        if (selected) ...[
-                          Icon(
-                            Icons.check_rounded,
-                            size: 12,
-                            color: AppColors.primary,
-                          ),
-                          const SizedBox(width: 4),
-                        ],
                         Text(
                           eq,
-                          style: TextStyle(
+                          style: const TextStyle(
                             fontFamily: 'Poppins',
                             fontSize: 12,
                             fontWeight: FontWeight.w500,
-                            color: selected
-                                ? AppColors.primary
-                                : AppColors.textSecondary,
+                            color: AppColors.primary,
+                          ),
+                        ),
+                        const SizedBox(width: 4),
+                        GestureDetector(
+                          onTap: () =>
+                              setState(() => _equipments.remove(eq)),
+                          child: const Icon(
+                            Icons.close_rounded,
+                            size: 14,
+                            color: AppColors.primary,
                           ),
                         ),
                       ],
                     ),
-                  ),
-                );
-              }).toList(),
-            ),
+                  );
+                }).toList(),
+              ),
+            ],
             const SizedBox(height: 28),
 
             // Submit
