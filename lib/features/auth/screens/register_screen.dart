@@ -60,211 +60,243 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        backgroundColor: AppColors.background,
-        elevation: 0,
-        surfaceTintColor: AppColors.background,
-        leading: GestureDetector(
-          onTap: () => context.pop(),
-          child: Container(
-            margin: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: AppColors.surface,
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: AppColors.divider),
-            ),
-            child: const Icon(
-              Icons.arrow_back_rounded,
-              size: 18,
-              color: AppColors.textPrimary,
-            ),
+      body: Stack(
+        children: [
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            height: 340,
+            child: const _HeroImage(),
           ),
-        ),
-      ),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(24, 8, 24, 32),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const SizedBox(height: 8),
-              const FadeSlideTransition(
-                child: Text(
-                  'Create account',
-                  style: TextStyle(
-                    fontSize: 26,
-                    fontWeight: FontWeight.w800,
-                    color: AppColors.textPrimary,
-                    letterSpacing: -0.5,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 4),
-              const FadeSlideTransition(
-                delay: Duration(milliseconds: 100),
-                child: Text(
-                  'Fill in your details to get started',
-                  style: TextStyle(fontSize: 14, color: AppColors.textSecondary),
-                ),
-              ),
-              const SizedBox(height: 28),
-              FadeSlideTransition(
-                delay: Duration(milliseconds: 150),
-                child: Form(
-                  key: _formKey,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // First + Last name side by side
-                      Row(
+          Positioned.fill(
+            child: CustomScrollView(
+              slivers: [
+                const SliverToBoxAdapter(child: SizedBox(height: 290)),
+                SliverToBoxAdapter(
+                  child: Container(
+                    decoration: const BoxDecoration(
+                      color: AppColors.background,
+                      borderRadius: BorderRadius.vertical(top: Radius.circular(40)),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(24, 32, 24, 32),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Expanded(
-                            child: _buildField(
-                              label: 'First Name',
-                              controller: _firstNameController,
-                              hint: 'John',
-                              capitalization: TextCapitalization.words,
-                              validator: (v) {
-                                if (v == null || v.trim().isEmpty) return 'Required';
-                                return null;
-                              },
+                          const FadeSlideTransition(
+                            child: Text(
+                              'Create account',
+                              style: TextStyle(
+                                fontFamily: 'Poppins',
+                                fontSize: 28,
+                                fontWeight: FontWeight.w800,
+                                color: AppColors.textPrimary,
+                                letterSpacing: -0.5,
+                              ),
                             ),
                           ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: _buildField(
-                              label: 'Last Name',
-                              controller: _lastNameController,
-                              hint: 'Doe',
-                              capitalization: TextCapitalization.words,
-                              validator: (v) {
-                                if (v == null || v.trim().isEmpty) return 'Required';
-                                return null;
-                              },
+                          const SizedBox(height: 6),
+                          const FadeSlideTransition(
+                            delay: Duration(milliseconds: 100),
+                            child: Text(
+                              'Fill in your details to get started',
+                              style: TextStyle(
+                                fontFamily: 'Poppins', 
+                                fontSize: 14, 
+                                color: AppColors.textSecondary,
+                              ),
                             ),
                           ),
-                        ],
-                      ),
-                      const SizedBox(height: 18),
-                      _buildField(
-                        label: 'Email',
-                        controller: _emailController,
-                        hint: 'you@example.com',
-                        keyboardType: TextInputType.emailAddress,
-                        validator: (v) {
-                          if (v == null || v.trim().isEmpty) return 'Email is required';
-                          if (!v.contains('@')) return 'Enter a valid email';
-                          return null;
-                        },
-                      ),
-                      const SizedBox(height: 18),
-                      _buildField(
-                        label: 'Password',
-                        controller: _passwordController,
-                        hint: '••••••••',
-                        obscureText: !_passwordVisible,
-                        validator: (v) {
-                          if (v == null || v.trim().isEmpty) return 'Password is required';
-                          if (v.length < 6) return 'At least 6 characters';
-                          return null;
-                        },
-                        suffixIcon: GestureDetector(
-                          onTap: () => setState(() => _passwordVisible = !_passwordVisible),
-                          child: Icon(
-                            _passwordVisible
-                                ? Icons.visibility_off_outlined
-                                : Icons.visibility_outlined,
-                            size: 18,
-                            color: AppColors.textSecondary,
+                          const SizedBox(height: 32),
+                          FadeSlideTransition(
+                            delay: Duration(milliseconds: 150),
+                            child: Form(
+                              key: _formKey,
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  // First + Last name side by side
+                                  Row(
+                                    children: [
+                                      Expanded(
+                                        child: _buildField(
+                                          label: 'First Name',
+                                          controller: _firstNameController,
+                                          hint: 'John',
+                                          capitalization: TextCapitalization.words,
+                                          validator: (v) {
+                                            if (v == null || v.trim().isEmpty) return 'Required';
+                                            return null;
+                                          },
+                                        ),
+                                      ),
+                                      const SizedBox(width: 12),
+                                      Expanded(
+                                        child: _buildField(
+                                          label: 'Last Name',
+                                          controller: _lastNameController,
+                                          hint: 'Doe',
+                                          capitalization: TextCapitalization.words,
+                                          validator: (v) {
+                                            if (v == null || v.trim().isEmpty) return 'Required';
+                                            return null;
+                                          },
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 20),
+                                  _buildField(
+                                    label: 'Email',
+                                    controller: _emailController,
+                                    hint: 'you@example.com',
+                                    keyboardType: TextInputType.emailAddress,
+                                    validator: (v) {
+                                      if (v == null || v.trim().isEmpty) return 'Email is required';
+                                      if (!v.contains('@')) return 'Enter a valid email';
+                                      return null;
+                                    },
+                                  ),
+                                  const SizedBox(height: 20),
+                                  _buildField(
+                                    label: 'Password',
+                                    controller: _passwordController,
+                                    hint: '••••••••',
+                                    obscureText: !_passwordVisible,
+                                    validator: (v) {
+                                      if (v == null || v.trim().isEmpty) return 'Password is required';
+                                      if (v.length < 6) return 'At least 6 characters';
+                                      return null;
+                                    },
+                                    suffixIcon: GestureDetector(
+                                      onTap: () => setState(() => _passwordVisible = !_passwordVisible),
+                                      child: Icon(
+                                        _passwordVisible
+                                            ? Icons.visibility_off_outlined
+                                            : Icons.visibility_outlined,
+                                        size: 18,
+                                        color: AppColors.textSecondary,
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 20),
+                                  _buildField(
+                                    label: 'Confirm Password',
+                                    controller: _confirmPasswordController,
+                                    hint: '••••••••',
+                                    obscureText: !_confirmVisible,
+                                    validator: (v) {
+                                      if (v == null || v.trim().isEmpty) return 'Please confirm your password';
+                                      if (v != _passwordController.text) return 'Passwords do not match';
+                                      return null;
+                                    },
+                                    suffixIcon: GestureDetector(
+                                      onTap: () => setState(() => _confirmVisible = !_confirmVisible),
+                                      child: Icon(
+                                        _confirmVisible
+                                            ? Icons.visibility_off_outlined
+                                            : Icons.visibility_outlined,
+                                        size: 18,
+                                        color: AppColors.textSecondary,
+                                      ),
+                                    ),
+                                  ),
+                                  if (authState.hasError) ...[
+                                    const SizedBox(height: 16),
+                                    Container(
+                                      padding: const EdgeInsets.all(12),
+                                      decoration: BoxDecoration(
+                                        color: AppColors.error.withValues(alpha: 0.1),
+                                        borderRadius: BorderRadius.circular(10),
+                                        border: Border.all(color: AppColors.error.withValues(alpha: 0.3)),
+                                      ),
+                                      child: Row(
+                                        children: [
+                                          const Icon(Icons.error_outline_rounded, color: AppColors.error, size: 20),
+                                          const SizedBox(width: 8),
+                                          Expanded(
+                                            child: Text(
+                                              authState.error.toString(),
+                                              style: const TextStyle(
+                                                fontFamily: 'Poppins',
+                                                color: AppColors.error,
+                                                fontSize: 13,
+                                                fontWeight: FontWeight.w600,
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                  const SizedBox(height: 32),
+                                  AuthRingButton(
+                                    label: 'Sign Up',
+                                    isLoading: authState.isLoading,
+                                    onPressed: _submit,
+                                  ),
+                                ],
+                              ),
+                            ),
                           ),
-                        ),
-                      ),
-                      const SizedBox(height: 18),
-                      _buildField(
-                        label: 'Confirm Password',
-                        controller: _confirmPasswordController,
-                        hint: '••••••••',
-                        obscureText: !_confirmVisible,
-                        validator: (v) {
-                          if (v == null || v.trim().isEmpty) return 'Please confirm your password';
-                          if (v != _passwordController.text) return 'Passwords do not match';
-                          return null;
-                        },
-                        suffixIcon: GestureDetector(
-                          onTap: () => setState(() => _confirmVisible = !_confirmVisible),
-                          child: Icon(
-                            _confirmVisible
-                                ? Icons.visibility_off_outlined
-                                : Icons.visibility_outlined,
-                            size: 18,
-                            color: AppColors.textSecondary,
-                          ),
-                        ),
-                      ),
-                      if (authState.hasError) ...[
-                        const SizedBox(height: 12),
-                        Container(
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: AppColors.error.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(10),
-                            border: Border.all(color: AppColors.error.withOpacity(0.3)),
-                          ),
-                          child: Row(
-                            children: [
-                              const Icon(Icons.error_outline_rounded, color: AppColors.error, size: 20),
-                              const SizedBox(width: 8),
-                              Expanded(
-                                child: Text(
-                                  authState.error.toString(),
-                                  style: const TextStyle(
-                                    color: AppColors.error,
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w600,
+                          const SizedBox(height: 24),
+                          FadeSlideTransition(
+                            delay: Duration(milliseconds: 250),
+                            child: Center(
+                              child: GestureDetector(
+                                onTap: () => context.pop(),
+                                child: RichText(
+                                  text: const TextSpan(
+                                    style: TextStyle(
+                                      fontFamily: 'Poppins',
+                                      fontSize: 13.5, 
+                                      color: AppColors.textSecondary,
+                                    ),
+                                    children: [
+                                      TextSpan(text: 'Already have an account? '),
+                                      TextSpan(
+                                        text: 'Sign in',
+                                        style: TextStyle(
+                                          color: AppColors.textPrimary,
+                                          fontWeight: FontWeight.w700,
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ),
                               ),
-                            ],
-                          ),
-                        ),
-                      ],
-                      const SizedBox(height: 28),
-                      AuthRingButton(
-                        label: 'Sign Up',
-                        isLoading: authState.isLoading,
-                        onPressed: _submit,
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(height: 20),
-              FadeSlideTransition(
-                delay: Duration(milliseconds: 250),
-                child: Center(
-                  child: GestureDetector(
-                    onTap: () => context.pop(),
-                    child: RichText(
-                      text: const TextSpan(
-                        style: TextStyle(fontSize: 13.5, color: AppColors.textSecondary),
-                        children: [
-                          TextSpan(text: 'Already have an account? '),
-                          TextSpan(
-                            text: 'Sign in',
-                            style: TextStyle(
-                              color: AppColors.textPrimary,
-                              fontWeight: FontWeight.w700,
                             ),
                           ),
+                          const SizedBox(height: 40),
                         ],
                       ),
                     ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
-        ),
+          Positioned(
+            top: MediaQuery.of(context).padding.top + 8,
+            left: 16,
+            child: GestureDetector(
+              onTap: () => context.pop(),
+              child: Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.15),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.arrow_back_rounded,
+                  size: 20,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -294,6 +326,86 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           decoration: authPillInputDecoration(hint, suffixIcon),
         ),
       ],
+    );
+  }
+}
+
+class _HeroImage extends StatelessWidget {
+  const _HeroImage();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      height: 340,
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        image: DecorationImage(
+          image: const NetworkImage(
+            'https://images.unsplash.com/photo-1452573992436-6d508f200b30?q=80&w=1473&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+          ),
+          fit: BoxFit.cover,
+          colorFilter: ColorFilter.mode(
+            Colors.black.withValues(alpha: 0.4),
+            BlendMode.darken,
+          ),
+        ),
+      ),
+      child: Stack(
+        children: [
+          const DecoratedBox(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                stops: [0.0, 0.5],
+                colors: [Colors.black54, Colors.transparent],
+              ),
+            ),
+          ),
+          Center(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.15),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.sports_soccer_rounded, 
+                    size: 48, 
+                    color: Colors.white,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                const Text(
+                  'Courtly', 
+                  style: TextStyle(
+                    fontFamily: 'Poppins',
+                    color: Colors.white,
+                    fontSize: 32,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: -0.5,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  'Book a venue, play your game',
+                  style: TextStyle(
+                    fontFamily: 'Poppins',
+                    color: Colors.white.withValues(alpha: 0.9), 
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                const SizedBox(height: 40),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

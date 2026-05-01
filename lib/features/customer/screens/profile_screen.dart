@@ -282,12 +282,13 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                           foregroundColor: const Color(0xFF0A0A0B),
                           padding: const EdgeInsets.symmetric(vertical: 14),
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(14),
+                            borderRadius: BorderRadius.circular(30),
                           ),
                         ),
                         child: Text(
                           'Cancel',
                           style: TextStyle(
+                            fontFamily: 'Poppins',
                             fontSize: 14,
                             fontWeight: FontWeight.w600,
                           ),
@@ -304,12 +305,13 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                           elevation: 0,
                           padding: const EdgeInsets.symmetric(vertical: 14),
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(14),
+                            borderRadius: BorderRadius.circular(30),
                           ),
                         ),
                         child: Text(
                           'Log out',
                           style: TextStyle(
+                            fontFamily: 'Poppins',
                             fontSize: 14,
                             fontWeight: FontWeight.w700,
                           ),
@@ -350,6 +352,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         title: Text(
           'Profile',
           style: TextStyle(
+            fontFamily: 'Poppins',
             fontSize: 22,
             color: AppColors.textPrimary,
             fontWeight: FontWeight.w700,
@@ -550,9 +553,13 @@ class _EditProfileSheetState extends State<_EditProfileSheet> {
                 foregroundColor: AppColors.background,
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(14),
+                  borderRadius: BorderRadius.circular(30),
                 ),
-                textStyle: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+                textStyle: TextStyle(
+                  fontFamily: 'Poppins',
+                  fontWeight: FontWeight.w600, 
+                  fontSize: 15,
+                ),
               ),
               child: const Text('Save Changes'),
             ),

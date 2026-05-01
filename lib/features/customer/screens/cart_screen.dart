@@ -62,7 +62,9 @@ class _CartScreenState extends State<CartScreen> {
           'Booking Cart',
           style: TextStyle(
             fontFamily: 'Poppins',
+            fontSize: 22,
             fontWeight: FontWeight.w700,
+            letterSpacing: -0.3,
             color: AppColors.textPrimary,
           ),
         ),
@@ -154,17 +156,17 @@ class _CartScreenState extends State<CartScreen> {
                         style: FilledButton.styleFrom(
                           backgroundColor: AppColors.textPrimary,
                           foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          padding: const EdgeInsets.symmetric(vertical: 20),
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: BorderRadius.circular(30),
                           ),
                         ),
-                        icon: const Icon(Icons.event_available_rounded),
+                        icon: const Icon(Icons.event_available_rounded, size: 18),
                         label: const Text(
                           'Proceed to Booking',
                           style: TextStyle(
                             fontFamily: 'Poppins',
-                            fontSize: 15,
+                            fontSize: 16,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
