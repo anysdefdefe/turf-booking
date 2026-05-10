@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter/material.dart';
@@ -11,7 +13,86 @@ part 'stadium_repository.g.dart';
 class StadiumRepository {
   final SupabaseClient _client;
 
+  static const String imageBucket = 'stadium_and_court_image';
+
   StadiumRepository(this._client);
+
+  Future<String?> resolveStorageUrl({
+    required String? storagePath,
+    required String bucketName,
+  }) async {
+    if (storagePath == null || storagePath.isEmpty) return null;
+    if (storagePath.startsWith('http://') ||
+        storagePath.startsWith('https://')) {
+      return storagePath;
+    }
+
+    try {
+      return await _client.storage
+          .from(bucketName)
+          .createSignedUrl(storagePath, 60 * 60);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<String?> _uploadImage({
+    required String bucketName,
+    required String ownerId,
+    required File file,
+    required String folder,
+    String? oldStoragePath,
+  }) async {
+    final extension = _fileExtension(file.path);
+    final fileName =
+        '${DateTime.now().microsecondsSinceEpoch}${extension.isEmpty ? '.jpg' : extension}';
+    final storagePath = '$ownerId/$folder/$fileName';
+
+    await _client.storage
+        .from(bucketName)
+        .uploadBinary(
+          storagePath,
+          await file.readAsBytes(),
+          fileOptions: FileOptions(
+            upsert: true,
+            contentType: _contentType(extension),
+          ),
+        );
+
+    if (oldStoragePath != null &&
+        oldStoragePath.isNotEmpty &&
+        oldStoragePath != storagePath &&
+        !oldStoragePath.startsWith('http')) {
+      try {
+        await _client.storage.from(bucketName).remove([oldStoragePath]);
+      } catch (_) {
+        // Ignore cleanup failures; the new image has already been saved.
+      }
+    }
+
+    return storagePath;
+  }
+
+  String _fileExtension(String path) {
+    final dotIndex = path.lastIndexOf('.');
+    if (dotIndex == -1 || dotIndex == path.length - 1) return '';
+    return path.substring(dotIndex).toLowerCase();
+  }
+
+  String _contentType(String extension) {
+    switch (extension.toLowerCase()) {
+      case '.png':
+        return 'image/png';
+      case '.webp':
+        return 'image/webp';
+      case '.heic':
+        return 'image/heic';
+      case '.jpg':
+      case '.jpeg':
+      default:
+        return 'image/jpeg';
+    }
+  }
 
   // ── READ ─────────────────────────────────────────────────────────
 
@@ -77,8 +158,17 @@ class StadiumRepository {
     required String openTime,
     required String closeTime,
     required List<CourtInsertPayload> courts,
+    File? imageFile,
   }) async {
     final userId = _client.auth.currentUser!.id;
+    final stadiumImagePath = imageFile == null
+        ? null
+        : await _uploadImage(
+            bucketName: imageBucket,
+            ownerId: userId,
+            file: imageFile,
+            folder: 'stadium',
+          );
 
     // ── Step 1: Insert Stadium ────────────────────────────────────
     late final StadiumModel stadium;
@@ -94,7 +184,7 @@ class StadiumRepository {
             'city': city,
             'latitude': latitude,
             'longitude': longitude,
-            'image_url': null,
+            'image_url': stadiumImagePath,
             'is_active': true,
           })
           .select()
@@ -107,18 +197,31 @@ class StadiumRepository {
 
     // ── Step 2: Insert Courts (batch) ─────────────────────────────
     try {
-      final courtPayloads = courts.map((court) => {
-        'stadium_id': stadium.id,
-        'name': court.name,
-        'sport_type': court.sportType,
-        'description': court.description,
-        'price_per_hour': court.pricePerHour,
-        'image_url': null,
-        'equipments': court.equipments,
-        'open_time': openTime,  // Stadium-level timing cascaded
-        'close_time': closeTime, // Stadium-level timing cascaded
-        'is_active': true,
-      }).toList();
+      final courtPayloads = <Map<String, dynamic>>[];
+
+      for (final court in courts) {
+        final courtImagePath = court.imageFile == null
+            ? null
+            : await _uploadImage(
+                bucketName: imageBucket,
+                ownerId: userId,
+                file: court.imageFile!,
+                folder: 'court',
+              );
+
+        courtPayloads.add({
+          'stadium_id': stadium.id,
+          'name': court.name,
+          'sport_type': court.sportType,
+          'description': court.description,
+          'price_per_hour': court.pricePerHour,
+          'image_url': courtImagePath,
+          'equipments': court.equipments,
+          'open_time': court.openTime ?? openTime,
+          'close_time': court.closeTime ?? closeTime,
+          'is_active': true,
+        });
+      }
 
       await _client.from('courts').insert(courtPayloads);
     } catch (e) {
@@ -131,7 +234,8 @@ class StadiumRepository {
         // The admin can manually reconcile orphaned rows.
       }
       throw UnknownException(
-        'Failed to create courts. Stadium insertion was rolled back: $e', e,
+        'Failed to create courts. Stadium insertion was rolled back: $e',
+        e,
       );
     }
 
@@ -150,8 +254,19 @@ class StadiumRepository {
     List<String> equipments = const [],
     required String openTime,
     required String closeTime,
+    File? imageFile,
   }) async {
     try {
+      final userId = _client.auth.currentUser!.id;
+      final imagePath = imageFile == null
+          ? null
+          : await _uploadImage(
+              bucketName: imageBucket,
+              ownerId: userId,
+              file: imageFile,
+              folder: 'court',
+            );
+
       final response = await _client
           .from('courts')
           .insert({
@@ -160,7 +275,7 @@ class StadiumRepository {
             'sport_type': sportType,
             'description': description,
             'price_per_hour': pricePerHour,
-            'image_url': null,
+            'image_url': imagePath,
             'equipments': equipments,
             'open_time': openTime,
             'close_time': closeTime,
@@ -206,8 +321,11 @@ class StadiumRepository {
     String? address,
     String? city,
     bool? isActive,
+    File? imageFile,
+    String? currentImagePath,
   }) async {
     try {
+      final userId = _client.auth.currentUser!.id;
       final Map<String, dynamic> payload = {};
       if (name != null) payload['name'] = name;
       if (description != null) payload['description'] = description;
@@ -215,6 +333,16 @@ class StadiumRepository {
       if (address != null) payload['address'] = address;
       if (city != null) payload['city'] = city;
       if (isActive != null) payload['is_active'] = isActive;
+
+      if (imageFile != null) {
+        payload['image_url'] = await _uploadImage(
+          bucketName: imageBucket,
+          ownerId: userId,
+          file: imageFile,
+          folder: 'stadium',
+          oldStoragePath: currentImagePath,
+        );
+      }
 
       if (payload.isEmpty) return;
 
@@ -235,8 +363,11 @@ class StadiumRepository {
     String? openTime,
     String? closeTime,
     bool? isActive,
+    File? imageFile,
+    String? currentImagePath,
   }) async {
     try {
+      final userId = _client.auth.currentUser!.id;
       final Map<String, dynamic> payload = {};
       if (name != null) payload['name'] = name;
       if (sportType != null) payload['sport_type'] = sportType;
@@ -246,6 +377,16 @@ class StadiumRepository {
       if (openTime != null) payload['open_time'] = openTime;
       if (closeTime != null) payload['close_time'] = closeTime;
       if (isActive != null) payload['is_active'] = isActive;
+
+      if (imageFile != null) {
+        payload['image_url'] = await _uploadImage(
+          bucketName: imageBucket,
+          ownerId: userId,
+          file: imageFile,
+          folder: 'court',
+          oldStoragePath: currentImagePath,
+        );
+      }
 
       if (payload.isEmpty) return;
 
@@ -264,8 +405,20 @@ class StadiumRepository {
     required TimeOfDay endTime,
   }) async {
     try {
-      final start = DateTime(date.year, date.month, date.day, startTime.hour, startTime.minute);
-      final end = DateTime(date.year, date.month, date.day, endTime.hour, endTime.minute);
+      final start = DateTime(
+        date.year,
+        date.month,
+        date.day,
+        startTime.hour,
+        startTime.minute,
+      );
+      final end = DateTime(
+        date.year,
+        date.month,
+        date.day,
+        endTime.hour,
+        endTime.minute,
+      );
 
       if (end.isBefore(start) || end.isAtSameMomentAs(start)) {
         throw Exception('End time must be after start time.');
@@ -275,9 +428,11 @@ class StadiumRepository {
       var cursor = start;
       while (cursor.isBefore(end)) {
         final nextCursor = cursor.add(const Duration(hours: 1));
-        
-        final stStr = '${cursor.year.toString().padLeft(4, '0')}-${cursor.month.toString().padLeft(2, '0')}-${cursor.day.toString().padLeft(2, '0')} ${cursor.hour.toString().padLeft(2, '0')}:${cursor.minute.toString().padLeft(2, '0')}:00';
-        final etStr = '${nextCursor.year.toString().padLeft(4, '0')}-${nextCursor.month.toString().padLeft(2, '0')}-${nextCursor.day.toString().padLeft(2, '0')} ${nextCursor.hour.toString().padLeft(2, '0')}:${nextCursor.minute.toString().padLeft(2, '0')}:00';
+
+        final stStr =
+            '${cursor.year.toString().padLeft(4, '0')}-${cursor.month.toString().padLeft(2, '0')}-${cursor.day.toString().padLeft(2, '0')} ${cursor.hour.toString().padLeft(2, '0')}:${cursor.minute.toString().padLeft(2, '0')}:00';
+        final etStr =
+            '${nextCursor.year.toString().padLeft(4, '0')}-${nextCursor.month.toString().padLeft(2, '0')}-${nextCursor.day.toString().padLeft(2, '0')} ${nextCursor.hour.toString().padLeft(2, '0')}:${nextCursor.minute.toString().padLeft(2, '0')}:00';
 
         inserts.add({
           'court_id': courtId,
@@ -306,6 +461,9 @@ class CourtInsertPayload {
   final String? description;
   final double pricePerHour;
   final List<String> equipments;
+  final String? openTime;
+  final String? closeTime;
+  final File? imageFile;
 
   const CourtInsertPayload({
     required this.name,
@@ -313,6 +471,9 @@ class CourtInsertPayload {
     this.description,
     required this.pricePerHour,
     this.equipments = const [],
+    this.openTime,
+    this.closeTime,
+    this.imageFile,
   });
 }
 

@@ -9,7 +9,12 @@ import '../data/models/stadium_model.dart';
 import '../data/repositories/court_repository.dart';
 import '../providers/customer_catalog_controller.dart';
 import '../widgets/court_search_bar.dart';
-import '../widgets/customer_floating_nav_bar.dart';
+import '../widgets/customer_bottom_nav_bar.dart';
+import 'package:turf_booking/features/owner/widgets/storage_media.dart';
+import 'package:turf_booking/features/owner/data/repositories/stadium_repository.dart';
+import 'package:turf_booking/features/auth/providers/auth_controller.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import '../widgets/sport_icon_mapper.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -57,6 +62,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       if (!cityMatch) {
         return false;
       }
+      final distanceMatch =
+          stadium.distanceKm >= _distanceRange.start &&
+          stadium.distanceKm <= _distanceRange.end;
+
+      if (!distanceMatch) {
+        return false;
+      }
+
       if (query.isEmpty) {
         return true;
       }
@@ -131,15 +144,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       final priceMatch =
           court.pricePerHour >= _priceRange.start &&
           court.pricePerHour <= _priceRange.end;
-      final distanceMatch =
-          court.distanceKm >= _distanceRange.start &&
-          court.distanceKm <= _distanceRange.end;
 
-      return cityMatch &&
-          sportMatch &&
-          teamSizeMatch &&
-          priceMatch &&
-          distanceMatch;
+      return cityMatch && sportMatch && teamSizeMatch && priceMatch;
     }).toList();
 
     if (_searchQuery.isNotEmpty) {
@@ -265,7 +271,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     if (catalogState.hasError && _stadiums.isEmpty) {
       return Scaffold(
         backgroundColor: AppColors.background,
-        bottomNavigationBar: CustomerFloatingNavBar(
+        bottomNavigationBar: CustomerBottomNavBar(
           selectedIndex: 0,
           onTap: _onNavTap,
         ),
@@ -310,7 +316,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      bottomNavigationBar: CustomerFloatingNavBar(
+      bottomNavigationBar: CustomerBottomNavBar(
         selectedIndex: 0,
         onTap: _onNavTap,
       ),
@@ -323,7 +329,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 child: Center(child: CircularProgressIndicator()),
               )
             else ...[
-              _buildHeader(),
+              _buildHeader(ref),
               if (_hasActiveFilters) _buildFilterSummary(),
               _buildResultsHeader(),
               _buildVenuesSection(),
@@ -335,43 +341,132 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
-  SliverToBoxAdapter _buildHeader() {
+  SliverToBoxAdapter _buildHeader(WidgetRef ref) {
+    final user = Supabase.instance.client.auth.currentUser;
+    final firstName = user?.userMetadata?['full_name']?.toString().split(' ').first ?? 'User';
+
     return SliverToBoxAdapter(
       child: Padding(
         padding: const EdgeInsets.fromLTRB(20, 18, 20, 8),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            const SizedBox(height: 4),
             Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Icon(
-                  Icons.stadium_rounded,
-                  size: 22,
-                  color: AppColors.textPrimary,
-                ),
-                const SizedBox(width: 8),
                 const Expanded(
                   child: Text(
-                    'Find Your Venue',
+                    'Find Your\nVenue',
                     style: TextStyle(
                       fontFamily: 'Poppins',
-                      fontSize: 18,
-                      fontWeight: FontWeight.w700,
+                      fontSize: 32,
+                      fontWeight: FontWeight.w800,
+                      height: 1.1,
+                      letterSpacing: -1.0,
                       color: AppColors.textPrimary,
                     ),
                   ),
                 ),
                 _OutlineIconButton(
-                  icon: Icons.filter_alt_outlined,
+                  icon: Icons.tune_rounded,
                   onTap: _openLocationSheet,
                   isActive: _hasActiveFilters,
                 ),
+                
               ],
             ),
-            const SizedBox(height: 10),
+            Text(
+              "Your game starts here.",
+              style: const TextStyle(
+                fontFamily: 'Poppins',
+                fontSize: 16,
+                fontWeight: FontWeight.w200,
+                color: AppColors.textPrimary,
+              ),
+            ),
+            const SizedBox(height: 18),
             CourtSearchBar(onChanged: _onSearch),
+            const SizedBox(height: 24),
+            _buildCategories(),
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildCategories() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Categories',
+          style: TextStyle(
+            fontFamily: 'Poppins',
+            fontSize: 18,
+            fontWeight: FontWeight.w800,
+            letterSpacing: -0.5,
+            color: AppColors.textPrimary,
+          ),
+        ),
+        const SizedBox(height: 12),
+        SizedBox(
+          height: 80,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            itemCount: _allSports.length,
+            separatorBuilder: (_, _) => const SizedBox(width: 12),
+            itemBuilder: (context, index) {
+              final sport = _allSports[index];
+              final isSelected = _selectedSports.contains(sport);
+              final icon = sportIconForName(sport);
+              
+              return GestureDetector(
+                onTap: () {
+                  setState(() {
+                    if (isSelected) {
+                      _selectedSports.remove(sport);
+                    } else {
+                      _selectedSports.add(sport);
+                    }
+                    _applyFilters();
+                  });
+                },
+                child: Column(
+                  children: [
+                    Container(
+                      width: 56,
+                      height: 56,
+                      decoration: BoxDecoration(
+                        color: isSelected ? AppColors.primary : AppColors.surface,
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: isSelected ? AppColors.primary : AppColors.divider,
+                        ),
+                      ),
+                      child: Icon(
+                        icon,
+                        color: isSelected ? Colors.white : AppColors.textSecondary,
+                        size: 24,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      sport,
+                      style: TextStyle(
+                        fontFamily: 'Poppins',
+                        fontSize: 11,
+                        fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                        color: isSelected ? AppColors.primary : AppColors.textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+        ),
+      ],
     );
   }
 
@@ -460,8 +555,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               title,
               style: const TextStyle(
                 fontFamily: 'Poppins',
-                fontSize: 16,
-                fontWeight: FontWeight.w700,
+                fontSize: 18,
+                fontWeight: FontWeight.w800,
+                letterSpacing: -0.5,
                 color: AppColors.textPrimary,
               ),
             ),
@@ -526,69 +622,138 @@ class _StadiumCard extends StatelessWidget {
 
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(18),
+      borderRadius: BorderRadius.circular(24),
       child: Container(
-        // THE FIX: Forces the entire stadium card to stretch horizontally
         width: double.infinity,
-        margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+        margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
         decoration: BoxDecoration(
           color: AppColors.surface,
-          borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: AppColors.divider, width: 1),
+          borderRadius: BorderRadius.circular(24),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.05),
+              blurRadius: 24,
+              offset: const Offset(0, 10),
+            ),
+          ],
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             ClipRRect(
               borderRadius: const BorderRadius.vertical(
-                top: Radius.circular(18),
+                top: Radius.circular(24),
               ),
-              child: hasImage
-                  ? Image.network(
-                      stadium.imageUrl,
-                      height: 150,
-                      width: double.infinity,
-                      fit: BoxFit.cover,
-                      errorBuilder: (_, _, _) => _buildPlaceholder(),
-                    )
-                  : _buildPlaceholder(),
+              child: Stack(
+                children: [
+                  hasImage
+                      ? StorageImage(
+                          storagePath: stadium.imageUrl,
+                          bucketName: StadiumRepository.imageBucket,
+                          width: double.infinity,
+                          height: 180,
+                          fit: BoxFit.cover,
+                          borderRadius: BorderRadius.zero,
+                          placeholder: _buildPlaceholder(),
+                        )
+                      : _buildPlaceholder(),
+                  Positioned(
+                    top: 14,
+                    right: 14,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: AppColors.surface.withValues(alpha: 0.95),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(color: AppColors.divider, width: 0.5),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.05),
+                            blurRadius: 10,
+                          ),
+                        ],
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(
+                            Icons.near_me_rounded,
+                            color: AppColors.primary,
+                            size: 12,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            '${stadium.distanceKm.toStringAsFixed(1)} km',
+                            style: const TextStyle(
+                              fontFamily: 'Poppins',
+                              color: AppColors.textPrimary,
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
             Padding(
-              padding: const EdgeInsets.all(14),
+              padding: const EdgeInsets.all(18),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Expanded(
                         child: Text(
                           stadium.name,
                           style: const TextStyle(
                             fontFamily: 'Poppins',
-                            fontSize: 15.5,
-                            fontWeight: FontWeight.w700,
+                            fontSize: 18,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: -0.4,
                             color: AppColors.textPrimary,
                           ),
-                        ),
-                      ),
-                      Text(
-                        '$courtCount courts',
-                        style: const TextStyle(
-                          fontFamily: 'Poppins',
-                          fontSize: 12,
-                          color: AppColors.textSecondary,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
                     ],
                   ),
                   const SizedBox(height: 6),
-                  Text(
-                    '${stadium.address}, ${stadium.city}',
-                    style: const TextStyle(
-                      fontFamily: 'Poppins',
-                      fontSize: 12.5,
-                      color: AppColors.textSecondary,
-                    ),
+                  Row(
+                    children: [
+                      const Icon(
+                        Icons.location_on_rounded,
+                        size: 14,
+                        color: AppColors.textSecondary,
+                      ),
+                      const SizedBox(width: 4),
+                      Expanded(
+                        child: Text(
+                          '${stadium.address}, ${stadium.city}',
+                          style: const TextStyle(
+                            fontFamily: 'Poppins',
+                            fontSize: 13,
+                            fontWeight: FontWeight.w500,
+                            color: AppColors.textSecondary,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      _buildStatChip(Icons.sports_tennis_rounded, '$courtCount Courts'),
+                      if (stadium.amenities.isNotEmpty)
+                        _buildStatChip(Icons.star_rounded, '${stadium.amenities.length} Amenities'),
+                    ],
                   ),
                 ],
               ),
@@ -599,12 +764,38 @@ class _StadiumCard extends StatelessWidget {
     );
   }
 
+  Widget _buildStatChip(IconData icon, String label) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: AppColors.background,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 14, color: AppColors.primary),
+          const SizedBox(width: 6),
+          Text(
+            label,
+            style: const TextStyle(
+              fontFamily: 'Poppins',
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: AppColors.textPrimary,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   // Extracted to enforce layout constraints
   Widget _buildPlaceholder() {
     return Container(
-      height: 150,
+      height: 180,
       width: double.infinity, // THE FIX: Forces the placeholder to expand
-      color: AppColors.divider,
+      color: AppColors.divider.withValues(alpha: 0.5),
       child: const Center(
         child: Icon(
           Icons.stadium_rounded,
@@ -637,17 +828,13 @@ class _OutlineIconButton extends StatelessWidget {
         width: 46,
         height: 46,
         decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(
-            color: isActive ? AppColors.primary : AppColors.divider,
-            width: isActive ? 1.4 : 1,
-          ),
+          borderRadius: BorderRadius.circular(16),
+          color: isActive ? AppColors.textPrimary : const Color(0xFFEFEFF0),
         ),
         child: Icon(
           icon,
-          size: 22,
-          color: isActive ? AppColors.textPrimary : AppColors.textSecondary,
+          size: 20,
+          color: isActive ? Colors.white : AppColors.textPrimary,
         ),
       ),
     );

@@ -11,6 +11,7 @@ class Stadium {
   final String imageUrl;
   final bool isActive;
   final DateTime createdAt;
+  final double distanceKm;
 
   const Stadium({
     required this.id,
@@ -25,5 +26,6 @@ class Stadium {
     required this.imageUrl,
     required this.isActive,
     required this.createdAt,
+    required this.distanceKm,
   });
 }

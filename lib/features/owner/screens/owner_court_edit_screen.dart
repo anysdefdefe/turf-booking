@@ -6,6 +6,9 @@ import 'package:turf_booking/app/constants/app_constants.dart';
 import 'package:turf_booking/features/owner/data/models/court_model.dart';
 import 'package:turf_booking/features/owner/data/repositories/stadium_repository.dart';
 import 'package:turf_booking/features/owner/providers/stadium_providers.dart';
+import 'package:turf_booking/features/owner/widgets/storage_media.dart';
+import 'dart:io';
+import 'package:image_picker/image_picker.dart';
 
 class OwnerCourtEditScreen extends ConsumerStatefulWidget {
   final String courtId;
@@ -16,22 +19,25 @@ class OwnerCourtEditScreen extends ConsumerStatefulWidget {
       _OwnerCourtEditScreenState();
 }
 
-class _OwnerCourtEditScreenState
-    extends ConsumerState<OwnerCourtEditScreen> {
+class _OwnerCourtEditScreenState extends ConsumerState<OwnerCourtEditScreen> {
   final _nameController = TextEditingController();
   final _sportController = TextEditingController();
+  final _descriptionController = TextEditingController();
   final _priceController = TextEditingController();
   final _equipmentController = TextEditingController();
   final _openTimeController = TextEditingController();
   final _closeTimeController = TextEditingController();
+  final _imagePicker = ImagePicker();
   late bool _isActive;
   bool _isSaving = false;
   bool _initialized = false;
+  File? _selectedImage;
 
   @override
   void dispose() {
     _nameController.dispose();
     _sportController.dispose();
+    _descriptionController.dispose();
     _priceController.dispose();
     _equipmentController.dispose();
     _openTimeController.dispose();
@@ -43,6 +49,7 @@ class _OwnerCourtEditScreenState
     if (_initialized) return;
     _nameController.text = court.name;
     _sportController.text = court.sportType;
+    _descriptionController.text = court.description ?? '';
     _priceController.text = court.pricePerHour.toStringAsFixed(0);
     _equipmentController.text = court.equipments.join(', ');
     _openTimeController.text = court.openTime;
@@ -64,15 +71,32 @@ class _OwnerCourtEditScreenState
     TimeOfDay initialTime = TimeOfDay.now();
     if (text.isNotEmpty && text.contains(':')) {
       final parts = text.split(':');
-      initialTime = TimeOfDay(hour: int.parse(parts[0]), minute: int.parse(parts[1]));
+      initialTime = TimeOfDay(
+        hour: int.parse(parts[0]),
+        minute: int.parse(parts[1]),
+      );
     }
-    final time = await showTimePicker(context: context, initialTime: initialTime);
+    final time = await showTimePicker(
+      context: context,
+      initialTime: initialTime,
+    );
     if (time != null && mounted) {
-      controller.text = '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}:00';
+      controller.text =
+          '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}:00';
     }
   }
 
-  Future<void> _save(String stadiumId) async {
+  Future<void> _pickImage() async {
+    final xfile = await _imagePicker.pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 82,
+    );
+    if (xfile != null && mounted) {
+      setState(() => _selectedImage = File(xfile.path));
+    }
+  }
+
+  Future<void> _save(String stadiumId, String? currentImagePath) async {
     final name = _nameController.text.trim();
     final sport = _sportController.text.trim();
     final price = double.tryParse(_priceController.text.trim());
@@ -92,15 +116,22 @@ class _OwnerCourtEditScreenState
     setState(() => _isSaving = true);
 
     try {
-      await ref.read(stadiumRepositoryProvider).updateCourt(
+      await ref
+          .read(stadiumRepositoryProvider)
+          .updateCourt(
             courtId: widget.courtId,
             name: name,
             sportType: sport,
+            description: _descriptionController.text.trim().isEmpty
+                ? null
+                : _descriptionController.text.trim(),
             pricePerHour: price,
             equipments: equipments,
             openTime: openTime,
             closeTime: closeTime,
             isActive: _isActive,
+            imageFile: _selectedImage,
+            currentImagePath: currentImagePath,
           );
 
       ref.invalidate(courtsForStadiumProvider(stadiumId));
@@ -129,12 +160,17 @@ class _OwnerCourtEditScreenState
     );
   }
 
-  void _showMaintenanceSheet(BuildContext context, String courtId, String stadiumId) {
+  void _showMaintenanceSheet(
+    BuildContext context,
+    String courtId,
+    String stadiumId,
+  ) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (_) => _MaintenanceBlockSheet(courtId: courtId, stadiumId: stadiumId),
+      builder: (_) =>
+          _MaintenanceBlockSheet(courtId: courtId, stadiumId: stadiumId),
     );
   }
 
@@ -158,8 +194,7 @@ class _OwnerCourtEditScreenState
           return const Scaffold(backgroundColor: AppColors.background);
         }
 
-        final courtsAsync =
-            ref.watch(courtsForStadiumProvider(stadium.id));
+        final courtsAsync = ref.watch(courtsForStadiumProvider(stadium.id));
 
         return courtsAsync.when(
           loading: () => const Scaffold(
@@ -173,7 +208,9 @@ class _OwnerCourtEditScreenState
             body: Center(child: Text('Error: $error')),
           ),
           data: (courts) {
-            final court = courts.where((c) => c.id == widget.courtId).firstOrNull;
+            final court = courts
+                .where((c) => c.id == widget.courtId)
+                .firstOrNull;
 
             if (court == null) {
               return Scaffold(
@@ -213,11 +250,20 @@ class _OwnerCourtEditScreenState
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    _buildImageCard(court),
+                    const SizedBox(height: 18),
                     _buildLabel('Court Name'),
                     _buildField(_nameController, hint: 'e.g. Court A'),
                     const SizedBox(height: 16),
                     _buildLabel('Sport'),
                     _buildField(_sportController, hint: 'e.g. Football'),
+                    const SizedBox(height: 16),
+                    _buildLabel('About / Description'),
+                    _buildField(
+                      _descriptionController,
+                      hint: 'Short description for customers',
+                      maxLines: 3,
+                    ),
                     const SizedBox(height: 16),
                     _buildLabel('Price per Hour (₹)'),
                     _buildField(
@@ -243,7 +289,10 @@ class _OwnerCourtEditScreenState
                               GestureDetector(
                                 onTap: () => _selectTime(_openTimeController),
                                 child: AbsorbPointer(
-                                  child: _buildField(_openTimeController, hint: '06:00:00'),
+                                  child: _buildField(
+                                    _openTimeController,
+                                    hint: '06:00:00',
+                                  ),
                                 ),
                               ),
                             ],
@@ -258,7 +307,10 @@ class _OwnerCourtEditScreenState
                               GestureDetector(
                                 onTap: () => _selectTime(_closeTimeController),
                                 child: AbsorbPointer(
-                                  child: _buildField(_closeTimeController, hint: '22:00:00'),
+                                  child: _buildField(
+                                    _closeTimeController,
+                                    hint: '22:00:00',
+                                  ),
                                 ),
                               ),
                             ],
@@ -271,17 +323,23 @@ class _OwnerCourtEditScreenState
                     // ── Active toggle ──────────────────────────────
                     Container(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 16, vertical: 12),
+                        horizontal: 16,
+                        vertical: 12,
+                      ),
                       decoration: BoxDecoration(
                         color: AppColors.surface,
-                        borderRadius:
-                            BorderRadius.circular(AppConstants.radiusM),
+                        borderRadius: BorderRadius.circular(
+                          AppConstants.radiusM,
+                        ),
                         border: Border.all(color: AppColors.divider),
                       ),
                       child: Row(
                         children: [
-                          const Icon(Icons.event_available_outlined,
-                              size: 18, color: AppColors.textSecondary),
+                          const Icon(
+                            Icons.event_available_outlined,
+                            size: 18,
+                            color: AppColors.textSecondary,
+                          ),
                           const SizedBox(width: 12),
                           const Expanded(
                             child: Text(
@@ -295,8 +353,7 @@ class _OwnerCourtEditScreenState
                           ),
                           Switch.adaptive(
                             value: _isActive,
-                            onChanged: (v) =>
-                                setState(() => _isActive = v),
+                            onChanged: (v) => setState(() => _isActive = v),
                             activeThumbColor: AppColors.primary,
                           ),
                         ],
@@ -311,14 +368,14 @@ class _OwnerCourtEditScreenState
                       child: FilledButton(
                         onPressed: _isSaving
                             ? null
-                            : () => _save(stadium.id),
+                            : () => _save(stadium.id, court.imageUrl),
                         style: FilledButton.styleFrom(
                           backgroundColor: AppColors.primary,
-                          padding:
-                              const EdgeInsets.symmetric(vertical: 14),
+                          padding: const EdgeInsets.symmetric(vertical: 14),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(
-                                AppConstants.radiusM),
+                              AppConstants.radiusM,
+                            ),
                           ),
                         ),
                         child: _isSaving
@@ -368,7 +425,11 @@ class _OwnerCourtEditScreenState
                     SizedBox(
                       width: double.infinity,
                       child: OutlinedButton.icon(
-                        onPressed: () => _showMaintenanceSheet(context, widget.courtId, stadium.id),
+                        onPressed: () => _showMaintenanceSheet(
+                          context,
+                          widget.courtId,
+                          stadium.id,
+                        ),
                         icon: const Icon(Icons.build_circle_outlined, size: 18),
                         label: const Text('Add Maintenance Block'),
                         style: OutlinedButton.styleFrom(
@@ -376,7 +437,9 @@ class _OwnerCourtEditScreenState
                           side: const BorderSide(color: AppColors.error),
                           padding: const EdgeInsets.symmetric(vertical: 14),
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(AppConstants.radiusM),
+                            borderRadius: BorderRadius.circular(
+                              AppConstants.radiusM,
+                            ),
                           ),
                           textStyle: const TextStyle(
                             fontFamily: 'Poppins',
@@ -397,71 +460,151 @@ class _OwnerCourtEditScreenState
     );
   }
 
-  Widget _buildLabel(String label) => Padding(
-        padding: const EdgeInsets.only(bottom: 6),
-        child: Text(
-          label,
-          style: const TextStyle(
-            fontFamily: 'Poppins',
-            fontSize: 13,
-            fontWeight: FontWeight.w500,
-            color: AppColors.textSecondary,
-          ),
+  Widget _buildImageCard(CourtModel court) {
+    return GestureDetector(
+      onTap: _pickImage,
+      child: Container(
+        height: 180,
+        width: double.infinity,
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(AppConstants.radiusL),
+          border: Border.all(color: AppColors.divider),
         ),
-      );
+        child: Stack(
+          children: [
+            Positioned.fill(
+              child: _selectedImage != null
+                  ? ClipRRect(
+                      borderRadius: BorderRadius.circular(AppConstants.radiusL),
+                      child: Image.file(_selectedImage!, fit: BoxFit.cover),
+                    )
+                  : StorageImage(
+                      storagePath: court.imageUrl,
+                       bucketName: StadiumRepository.imageBucket,
+                      width: double.infinity,
+                      height: 180,
+                      borderRadius: BorderRadius.circular(AppConstants.radiusL),
+                      placeholder: Container(
+                        decoration: BoxDecoration(
+                          gradient: const LinearGradient(
+                            colors: [Color(0xFFF4FBF7), Colors.white],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                          borderRadius: BorderRadius.circular(
+                            AppConstants.radiusL,
+                          ),
+                        ),
+                        child: const Center(
+                          child: Icon(
+                            Icons.sports_tennis_rounded,
+                            size: 42,
+                            color: AppColors.primary,
+                          ),
+                        ),
+                      ),
+                    ),
+            ),
+            Positioned(
+              bottom: 12,
+              left: 12,
+              child: _photoPill('Tap to change'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _photoPill(String label) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: Colors.black.withOpacity(0.4),
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Text(
+        label,
+        style: const TextStyle(
+          fontFamily: 'Poppins',
+          color: Colors.white,
+          fontSize: 11,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLabel(String label) => Padding(
+    padding: const EdgeInsets.only(bottom: 6),
+    child: Text(
+      label,
+      style: const TextStyle(
+        fontFamily: 'Poppins',
+        fontSize: 13,
+        fontWeight: FontWeight.w500,
+        color: AppColors.textSecondary,
+      ),
+    ),
+  );
 
   Widget _buildField(
     TextEditingController controller, {
     String hint = '',
     TextInputType keyboardType = TextInputType.text,
-  }) =>
-      TextField(
-        controller: controller,
-        keyboardType: keyboardType,
-        style: const TextStyle(
-          fontFamily: 'Poppins',
-          fontSize: 14,
-          color: AppColors.textPrimary,
-        ),
-        decoration: InputDecoration(
-          hintText: hint,
-          hintStyle: const TextStyle(
-            fontFamily: 'Poppins',
-            fontSize: 14,
-            color: AppColors.textMuted,
-          ),
-          filled: true,
-          fillColor: AppColors.surface,
-          contentPadding:
-              const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(AppConstants.radiusM),
-            borderSide: const BorderSide(color: AppColors.divider),
-          ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(AppConstants.radiusM),
-            borderSide: const BorderSide(color: AppColors.divider),
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(AppConstants.radiusM),
-            borderSide:
-                const BorderSide(color: AppColors.primary, width: 1.5),
-          ),
-        ),
-      );
+    int maxLines = 1,
+  }) => TextField(
+    controller: controller,
+    keyboardType: keyboardType,
+    maxLines: maxLines,
+    style: const TextStyle(
+      fontFamily: 'Poppins',
+      fontSize: 14,
+      color: AppColors.textPrimary,
+    ),
+    decoration: InputDecoration(
+      hintText: hint,
+      hintStyle: const TextStyle(
+        fontFamily: 'Poppins',
+        fontSize: 14,
+        color: AppColors.textMuted,
+      ),
+      filled: true,
+      fillColor: AppColors.surface,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(AppConstants.radiusM),
+        borderSide: const BorderSide(color: AppColors.divider),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(AppConstants.radiusM),
+        borderSide: const BorderSide(color: AppColors.divider),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(AppConstants.radiusM),
+        borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
+      ),
+    ),
+  );
 }
 
 class _MaintenanceBlockSheet extends ConsumerStatefulWidget {
   final String courtId;
   final String stadiumId;
 
-  const _MaintenanceBlockSheet({required this.courtId, required this.stadiumId});
+  const _MaintenanceBlockSheet({
+    required this.courtId,
+    required this.stadiumId,
+  });
 
   @override
-  ConsumerState<_MaintenanceBlockSheet> createState() => _MaintenanceBlockSheetState();
+  ConsumerState<_MaintenanceBlockSheet> createState() =>
+      _MaintenanceBlockSheetState();
 }
 
-class _MaintenanceBlockSheetState extends ConsumerState<_MaintenanceBlockSheet> {
+class _MaintenanceBlockSheetState
+    extends ConsumerState<_MaintenanceBlockSheet> {
   DateTime? _selectedDate;
   TimeOfDay? _startTime;
   TimeOfDay? _endTime;
@@ -486,8 +629,10 @@ class _MaintenanceBlockSheetState extends ConsumerState<_MaintenanceBlockSheet> 
     );
     if (time != null && mounted) {
       setState(() {
-        if (isStart) _startTime = time;
-        else _endTime = time;
+        if (isStart)
+          _startTime = time;
+        else
+          _endTime = time;
       });
     }
   }
@@ -495,25 +640,37 @@ class _MaintenanceBlockSheetState extends ConsumerState<_MaintenanceBlockSheet> 
   Future<void> _submit() async {
     if (_selectedDate == null || _startTime == null || _endTime == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select Date, Start Time and End Time', style: TextStyle(fontFamily: 'Poppins'))),
+        const SnackBar(
+          content: Text(
+            'Please select Date, Start Time and End Time',
+            style: TextStyle(fontFamily: 'Poppins'),
+          ),
+        ),
       );
       return;
     }
 
     setState(() => _isSaving = true);
     try {
-      await ref.read(stadiumRepositoryProvider).createMaintenanceSlot(
-        courtId: widget.courtId,
-        date: _selectedDate!,
-        startTime: _startTime!,
-        endTime: _endTime!,
-      );
+      await ref
+          .read(stadiumRepositoryProvider)
+          .createMaintenanceSlot(
+            courtId: widget.courtId,
+            date: _selectedDate!,
+            startTime: _startTime!,
+            endTime: _endTime!,
+          );
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: const Text('Maintenance block added successfully', style: TextStyle(fontFamily: 'Poppins')),
+            content: const Text(
+              'Maintenance block added successfully',
+              style: TextStyle(fontFamily: 'Poppins'),
+            ),
             backgroundColor: AppColors.primary,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
           ),
         );
         Navigator.pop(context);
@@ -521,12 +678,19 @@ class _MaintenanceBlockSheetState extends ConsumerState<_MaintenanceBlockSheet> 
     } catch (e) {
       print('MAINTENANCE ERROR: $e');
       if (mounted) {
-        Navigator.pop(context); // Pop bottom sheet to reveal the original screen
+        Navigator.pop(
+          context,
+        ); // Pop bottom sheet to reveal the original screen
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error: $e', style: const TextStyle(fontFamily: 'Poppins')),
+            content: Text(
+              'Error: $e',
+              style: const TextStyle(fontFamily: 'Poppins'),
+            ),
             backgroundColor: AppColors.error,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
           ),
         );
       }
@@ -574,7 +738,9 @@ class _MaintenanceBlockSheetState extends ConsumerState<_MaintenanceBlockSheet> 
                   ),
                   style: OutlinedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                   ),
                 ),
               ),
@@ -594,7 +760,9 @@ class _MaintenanceBlockSheetState extends ConsumerState<_MaintenanceBlockSheet> 
                   ),
                   style: OutlinedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                   ),
                 ),
               ),
@@ -608,7 +776,9 @@ class _MaintenanceBlockSheetState extends ConsumerState<_MaintenanceBlockSheet> 
                   ),
                   style: OutlinedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                   ),
                 ),
               ),
@@ -620,13 +790,25 @@ class _MaintenanceBlockSheetState extends ConsumerState<_MaintenanceBlockSheet> 
             style: FilledButton.styleFrom(
               backgroundColor: AppColors.error,
               padding: const EdgeInsets.symmetric(vertical: 16),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
             ),
             child: _isSaving
-                ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                ? const SizedBox(
+                    height: 20,
+                    width: 20,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: Colors.white,
+                    ),
+                  )
                 : const Text(
                     'Confirm Maintenace Block',
-                    style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w700),
+                    style: TextStyle(
+                      fontFamily: 'Poppins',
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
           ),
         ],

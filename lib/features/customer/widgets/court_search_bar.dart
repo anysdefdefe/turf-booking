@@ -36,9 +36,8 @@ class _CourtSearchBarState extends State<CourtSearchBar> {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.divider, width: 1),
+        color: const Color(0xFFEFEFF0), // iOS like grey search background
+        borderRadius: BorderRadius.circular(12),
       ),
       child: TextField(
         controller: _controller,

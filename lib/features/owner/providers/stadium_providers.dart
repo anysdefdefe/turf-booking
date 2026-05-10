@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -53,11 +55,14 @@ class AddStadiumController extends _$AddStadiumController {
     required TimeOfDay openTime,
     required TimeOfDay closeTime,
     required List<CourtInsertPayload> courts,
+    File? imageFile,
   }) async {
     state = const AsyncLoading();
 
     state = await AsyncValue.guard(() async {
-      await ref.read(stadiumRepositoryProvider).createStadiumWithCourts(
+      await ref
+          .read(stadiumRepositoryProvider)
+          .createStadiumWithCourts(
             name: name,
             description: description,
             amenities: amenities,
@@ -68,6 +73,7 @@ class AddStadiumController extends _$AddStadiumController {
             openTime: _timeOfDayToPostgres(openTime),
             closeTime: _timeOfDayToPostgres(closeTime),
             courts: courts,
+            imageFile: imageFile,
           );
 
       // Invalidate the gateway provider so it refetches on next access.
@@ -92,10 +98,13 @@ class AddCourtController extends _$AddCourtController {
     List<String> equipments = const [],
     required String openTime,
     required String closeTime,
+    File? imageFile,
   }) async {
     state = const AsyncLoading();
     state = await AsyncValue.guard(() async {
-      await ref.read(stadiumRepositoryProvider).addCourt(
+      await ref
+          .read(stadiumRepositoryProvider)
+          .addCourt(
             stadiumId: stadiumId,
             name: name,
             sportType: sportType,
@@ -103,6 +112,7 @@ class AddCourtController extends _$AddCourtController {
             equipments: equipments,
             openTime: openTime,
             closeTime: closeTime,
+            imageFile: imageFile,
           );
       ref.invalidate(courtsForStadiumProvider(stadiumId));
     });

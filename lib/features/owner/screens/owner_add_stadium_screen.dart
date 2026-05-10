@@ -17,29 +17,41 @@ import '../widgets/owner_bottom_nav_bar.dart';
 // Lightweight mutable class for UI form state only. NOT a DB model.
 
 class _CourtFormEntry {
-  String sportType;
-  String equipments;
-  double pricePerHour;
+  String sportType = '';
+  String equipments = '';
+  String description = '';
+  double pricePerHour = 0;
+  File? imageFile;
+  TimeOfDay? openTime;
+  TimeOfDay? closeTime;
 
-  _CourtFormEntry({
-    this.sportType = '',
-    this.equipments = '',
-    this.pricePerHour = 0,
-  });
+  _CourtFormEntry();
 
   /// Converts the raw form data into the repository's DTO.
-  CourtInsertPayload toPayload() {
+  CourtInsertPayload toPayload({
+    required TimeOfDay defaultOpenTime,
+    required TimeOfDay defaultCloseTime,
+  }) {
     final equipmentList = equipments
         .split(',')
         .map((s) => s.trim())
         .where((s) => s.isNotEmpty)
         .toList();
 
+    final resolvedOpenTime = openTime ?? defaultOpenTime;
+    final resolvedCloseTime = closeTime ?? defaultCloseTime;
+
     return CourtInsertPayload(
       name: sportType.trim(),
       sportType: sportType.trim(),
+      description: description.trim().isEmpty ? null : description.trim(),
       pricePerHour: pricePerHour,
       equipments: equipmentList,
+      openTime:
+          '${resolvedOpenTime.hour.toString().padLeft(2, '0')}:${resolvedOpenTime.minute.toString().padLeft(2, '0')}:00',
+      closeTime:
+          '${resolvedCloseTime.hour.toString().padLeft(2, '0')}:${resolvedCloseTime.minute.toString().padLeft(2, '0')}:00',
+      imageFile: imageFile,
     );
   }
 }
@@ -56,6 +68,7 @@ class OwnerAddStadiumScreen extends ConsumerStatefulWidget {
 
 class _OwnerAddStadiumScreenState extends ConsumerState<OwnerAddStadiumScreen> {
   final _stadiumNameController = TextEditingController();
+  final _descriptionController = TextEditingController();
   final _contactController = TextEditingController();
   final _locationController = TextEditingController();
   final _cityController = TextEditingController();
@@ -65,7 +78,7 @@ class _OwnerAddStadiumScreenState extends ConsumerState<OwnerAddStadiumScreen> {
   TimeOfDay _closeTime = const TimeOfDay(hour: 22, minute: 0);
 
   final List<_CourtFormEntry> _courts = [_CourtFormEntry()];
-  final List<File> _stadiumImages = []; // Kept for UI preview, not uploaded
+  File? _stadiumImage;
 
   LatLng? _selectedLatLng;
 
@@ -74,6 +87,7 @@ class _OwnerAddStadiumScreenState extends ConsumerState<OwnerAddStadiumScreen> {
   @override
   void dispose() {
     _stadiumNameController.dispose();
+    _descriptionController.dispose();
     _contactController.dispose();
     _locationController.dispose();
     _cityController.dispose();
@@ -107,7 +121,7 @@ class _OwnerAddStadiumScreenState extends ConsumerState<OwnerAddStadiumScreen> {
   }
 
   // ── IMAGE PICKER (preview only — no upload) ────────────────────
-  Future<void> _pickImages({required bool forCourt, int? courtIndex}) async {
+  Future<void> _pickStadiumImage() async {
     showModalBottomSheet<void>(
       context: context,
       backgroundColor: Colors.transparent,
@@ -143,7 +157,7 @@ class _OwnerAddStadiumScreenState extends ConsumerState<OwnerAddStadiumScreen> {
                   );
                   if (xfile != null) {
                     setState(() {
-                      _stadiumImages.add(File(xfile.path));
+                      _stadiumImage = File(xfile.path);
                     });
                   }
                 },
@@ -159,7 +173,7 @@ class _OwnerAddStadiumScreenState extends ConsumerState<OwnerAddStadiumScreen> {
                   );
                   if (files.isNotEmpty) {
                     setState(() {
-                      _stadiumImages.addAll(files.map((f) => File(f.path)));
+                      _stadiumImage = File(files.first.path);
                     });
                   }
                 },
@@ -169,6 +183,34 @@ class _OwnerAddStadiumScreenState extends ConsumerState<OwnerAddStadiumScreen> {
         ),
       ),
     );
+  }
+
+  Future<void> _pickCourtImage(int courtIndex) async {
+    final xfile = await _imagePicker.pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 80,
+    );
+    if (xfile != null && mounted) {
+      setState(() {
+        _courts[courtIndex].imageFile = File(xfile.path);
+      });
+    }
+  }
+
+  Future<void> _pickCourtTime(int courtIndex, bool isOpen) async {
+    final current = isOpen
+        ? (_courts[courtIndex].openTime ?? _openTime)
+        : (_courts[courtIndex].closeTime ?? _closeTime);
+    final picked = await showTimePicker(context: context, initialTime: current);
+    if (picked != null && mounted) {
+      setState(() {
+        if (isOpen) {
+          _courts[courtIndex].openTime = picked;
+        } else {
+          _courts[courtIndex].closeTime = picked;
+        }
+      });
+    }
   }
 
   // ── MAPS PICKER (flutter_map / OSM — FREE) ─────────────────────
@@ -243,12 +285,22 @@ class _OwnerAddStadiumScreenState extends ConsumerState<OwnerAddStadiumScreen> {
   Future<void> _save() async {
     if (!_validate()) return;
 
-    final courtPayloads = _courts.map((c) => c.toPayload()).toList();
+    final courtPayloads = _courts
+        .map(
+          (c) => c.toPayload(
+            defaultOpenTime: _openTime,
+            defaultCloseTime: _closeTime,
+          ),
+        )
+        .toList();
 
     final success = await ref
         .read(addStadiumControllerProvider.notifier)
         .submitStadium(
           name: _stadiumNameController.text.trim(),
+          description: _descriptionController.text.trim().isEmpty
+              ? null
+              : _descriptionController.text.trim(),
           amenities: _parseCsv(_amenitiesController.text),
           address: _locationController.text.trim(),
           city: _cityController.text.trim(),
@@ -257,6 +309,7 @@ class _OwnerAddStadiumScreenState extends ConsumerState<OwnerAddStadiumScreen> {
           openTime: _openTime,
           closeTime: _closeTime,
           courts: courtPayloads,
+          imageFile: _stadiumImage,
         );
 
     if (!mounted) return;
@@ -345,6 +398,14 @@ class _OwnerAddStadiumScreenState extends ConsumerState<OwnerAddStadiumScreen> {
               label: 'Stadium Name',
               hint: 'e.g. Green Arena',
               icon: Icons.stadium_rounded,
+            ),
+            const SizedBox(height: 12),
+            _InputField(
+              controller: _descriptionController,
+              label: 'About / Description',
+              hint: 'Short description for customers',
+              icon: Icons.subject_rounded,
+              maxLines: 3,
             ),
             const SizedBox(height: 12),
             _InputField(
@@ -480,10 +541,10 @@ class _OwnerAddStadiumScreenState extends ConsumerState<OwnerAddStadiumScreen> {
             const SizedBox(height: 12),
             const _FieldLabel(label: 'Stadium Images'),
             const SizedBox(height: 8),
-            _ImageGrid(
-              images: _stadiumImages,
-              onAddTap: () => _pickImages(forCourt: false),
-              onRemove: (i) => setState(() => _stadiumImages.removeAt(i)),
+            _SingleImagePicker(
+              imageFile: _stadiumImage,
+              onAddTap: _pickStadiumImage,
+              onRemove: () => setState(() => _stadiumImage = null),
             ),
             const SizedBox(height: 32),
             const _SectionHeader(title: 'Courts'),
@@ -496,6 +557,9 @@ class _OwnerAddStadiumScreenState extends ConsumerState<OwnerAddStadiumScreen> {
               itemBuilder: (context, index) => _CourtCard(
                 courtNumber: index + 1,
                 court: _courts[index],
+                onPickImage: () => _pickCourtImage(index),
+                onPickOpenTime: () => _pickCourtTime(index, true),
+                onPickCloseTime: () => _pickCourtTime(index, false),
                 onRemove: _courts.length > 1
                     ? () => setState(() => _courts.removeAt(index))
                     : null,
@@ -628,8 +692,7 @@ class _MapPickerScreenState extends State<_MapPickerScreen> {
             left: 16,
             right: 16,
             child: Container(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(AppConstants.radiusM),
@@ -679,93 +742,106 @@ class _MapPickerScreenState extends State<_MapPickerScreen> {
 
 // ── REUSABLE WIDGETS ──────────────────────────────────────────────────────────
 
-class _ImageGrid extends StatelessWidget {
-  final List<File> images;
+class _SingleImagePicker extends StatelessWidget {
+  final File? imageFile;
   final VoidCallback onAddTap;
-  final void Function(int index) onRemove;
+  final VoidCallback onRemove;
+  final bool compact;
 
-  const _ImageGrid({
-    required this.images,
+  const _SingleImagePicker({
+    required this.imageFile,
     required this.onAddTap,
     required this.onRemove,
+    this.compact = false,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Wrap(
-      spacing: 10,
-      runSpacing: 10,
-      children: [
-        ...images.asMap().entries.map(
-          (e) => _ImageThumb(file: e.value, onRemove: () => onRemove(e.key)),
+    final double height = compact ? 132 : 150;
+
+    return GestureDetector(
+      onTap: onAddTap,
+      child: Container(
+        height: height,
+        width: double.infinity,
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(AppConstants.radiusL),
+          border: Border.all(color: AppColors.divider),
         ),
-        GestureDetector(
-          onTap: onAddTap,
-          child: Container(
-            width: 90,
-            height: 90,
-            decoration: BoxDecoration(
-              color: AppColors.chipUnselected,
-              borderRadius: BorderRadius.circular(AppConstants.radiusM),
-              border: Border.all(color: AppColors.divider),
-            ),
-            child: const Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  Icons.camera_alt_outlined,
-                  size: 24,
-                  color: AppColors.textMuted,
-                ),
-                SizedBox(height: 4),
-                Text(
-                  'Add',
-                  style: TextStyle(
-                    fontFamily: 'Poppins',
-                    fontSize: 11,
+        child: imageFile == null
+            ? Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: const [
+                  Icon(
+                    Icons.add_a_photo_outlined,
+                    size: 30,
                     color: AppColors.textMuted,
                   ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _ImageThumb extends StatelessWidget {
-  final File file;
-  final VoidCallback onRemove;
-
-  const _ImageThumb({required this.file, required this.onRemove});
-
-  @override
-  Widget build(BuildContext context) {
-    return Stack(
-      children: [
-        ClipRRect(
-          borderRadius: BorderRadius.circular(AppConstants.radiusM),
-          child: Image.file(file, width: 90, height: 90, fit: BoxFit.cover),
-        ),
-        Positioned(
-          top: 4,
-          right: 4,
-          child: GestureDetector(
-            onTap: onRemove,
-            child: Container(
-              width: 22,
-              height: 22,
-              decoration: const BoxDecoration(
-                color: Colors.black54,
-                shape: BoxShape.circle,
+                  SizedBox(height: 8),
+                  Text(
+                    'Tap to add image',
+                    style: TextStyle(
+                      fontFamily: 'Poppins',
+                      fontSize: 12,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                ],
+              )
+            : Stack(
+                children: [
+                  Positioned.fill(
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(AppConstants.radiusL),
+                      child: Image.file(imageFile!, fit: BoxFit.cover),
+                    ),
+                  ),
+                  Positioned(
+                    top: 10,
+                    right: 10,
+                    child: GestureDetector(
+                      onTap: onRemove,
+                      child: Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: Colors.black.withValues(alpha: 0.45),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.close,
+                          size: 15,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ),
+                  Positioned(
+                    left: 12,
+                    bottom: 12,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 6,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.black.withValues(alpha: 0.45),
+                        borderRadius: BorderRadius.circular(999),
+                      ),
+                      child: const Text(
+                        'Change image',
+                        style: TextStyle(
+                          fontFamily: 'Poppins',
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
-              child: const Icon(Icons.close, size: 14, color: Colors.white),
-            ),
-          ),
-        ),
-      ],
+      ),
     );
   }
 }
@@ -815,11 +891,17 @@ class _ImageSourceTile extends StatelessWidget {
 class _CourtCard extends StatelessWidget {
   final int courtNumber;
   final _CourtFormEntry court;
+  final VoidCallback onPickImage;
+  final VoidCallback onPickOpenTime;
+  final VoidCallback onPickCloseTime;
   final VoidCallback? onRemove;
 
   const _CourtCard({
     required this.courtNumber,
     required this.court,
+    required this.onPickImage,
+    required this.onPickOpenTime,
+    required this.onPickCloseTime,
     required this.onRemove,
   });
 
@@ -925,13 +1007,102 @@ class _CourtCard extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 14),
+          TextField(
+            onChanged: (v) => court.description = v,
+            maxLines: 2,
+            style: const TextStyle(
+              fontFamily: 'Poppins',
+              color: AppColors.textPrimary,
+            ),
+            decoration: _inputDecoration(
+              'About / Description',
+              'Short note about this court',
+              Icons.subject_rounded,
+            ),
+          ),
+          const SizedBox(height: 14),
+          _SingleImagePicker(
+            imageFile: court.imageFile,
+            onAddTap: onPickImage,
+            onRemove: () => court.imageFile = null,
+            compact: true,
+          ),
+          const SizedBox(height: 14),
           const _FieldLabel(label: 'Hourly Rate (₹)'),
           const SizedBox(height: 10),
-          _RateRow(
-            label: 'Hourly',
-            onChanged: (v) => court.pricePerHour = v,
+          _RateRow(label: 'Hourly', onChanged: (v) => court.pricePerHour = v),
+          const SizedBox(height: 14),
+          Row(
+            children: [
+              Expanded(
+                child: _TimePickerButton(
+                  label: 'Start Time',
+                  value: court.openTime ?? const TimeOfDay(hour: 6, minute: 0),
+                  onTap: onPickOpenTime,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _TimePickerButton(
+                  label: 'End Time',
+                  value:
+                      court.closeTime ?? const TimeOfDay(hour: 22, minute: 0),
+                  onTap: onPickCloseTime,
+                ),
+              ),
+            ],
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _TimePickerButton extends StatelessWidget {
+  final String label;
+  final TimeOfDay value;
+  final VoidCallback onTap;
+
+  const _TimePickerButton({
+    required this.label,
+    required this.value,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        decoration: BoxDecoration(
+          color: AppColors.background,
+          borderRadius: BorderRadius.circular(AppConstants.radiusM),
+          border: Border.all(color: AppColors.divider),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              label,
+              style: const TextStyle(
+                fontFamily: 'Poppins',
+                fontSize: 11,
+                color: AppColors.textSecondary,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              value.format(context),
+              style: const TextStyle(
+                fontFamily: 'Poppins',
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: AppColors.textPrimary,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../../../app/constants/app_constants.dart';
 import '../../../app/theme/app_colors.dart';
+import 'package:turf_booking/features/owner/widgets/storage_media.dart';
+import 'package:turf_booking/features/owner/data/repositories/stadium_repository.dart';
 import '../data/models/court_model.dart';
 import 'sport_icon_mapper.dart';
 
@@ -24,7 +26,7 @@ class CourtCard extends StatelessWidget {
       onTap: onTap,
       child: Container(
         // THE FIX: Forces the entire card to stretch horizontally
-        width: double.infinity, 
+        width: double.infinity,
         margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
         decoration: BoxDecoration(
           color: AppColors.cardBg,
@@ -64,23 +66,16 @@ class _CourtImage extends StatelessWidget {
             top: Radius.circular(AppConstants.radiusL),
           ),
           child: hasImage
-              ? Image.network(
-                  court.imageUrl,
-                  height: AppConstants.cardImageHeight,
+              ? StorageImage(
+                  storagePath: court.imageUrl,
+                  bucketName: StadiumRepository.imageBucket,
                   width: double.infinity,
+                  height: AppConstants.cardImageHeight,
                   fit: BoxFit.cover,
-                  loadingBuilder: (ctx, child, progress) {
-                    if (progress == null) return child;
-                    return _buildPlaceholder();
-                  },
-                  errorBuilder: (_, _, _) => _buildPlaceholder(),
+                  borderRadius: BorderRadius.zero,
+                  placeholder: _buildPlaceholder(),
                 )
               : _buildPlaceholder(),
-        ),
-        Positioned(
-          top: 12,
-          right: 12,
-          child: _DistanceChip(distanceKm: court.distanceKm),
         ),
       ],
     );
@@ -103,43 +98,6 @@ class _CourtImage extends StatelessWidget {
   }
 }
 
-class _DistanceChip extends StatelessWidget {
-  final double distanceKm;
-
-  const _DistanceChip({required this.distanceKm});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
-      decoration: BoxDecoration(
-        color: AppColors.surface.withOpacity(0.94),
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: AppColors.divider, width: 1),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const Icon(
-            Icons.near_me_rounded,
-            color: AppColors.textSecondary,
-            size: 11,
-          ),
-          const SizedBox(width: 4),
-          Text(
-            '${distanceKm.toStringAsFixed(1)} km',
-            style: const TextStyle(
-              fontFamily: 'Poppins',
-              color: AppColors.textSecondary,
-              fontSize: 10.5,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
 
 class _CourtInfo extends StatelessWidget {
   final Court court;
