@@ -33,9 +33,12 @@ class AuthController extends _$AuthController {
 
   Future<void> signOut() async {
     state = const AsyncLoading();
-    state = await AsyncValue.guard(
+    final result = await AsyncValue.guard(
       () => ref.read(authRepositoryProvider).signOut(),
     );
+    if (ref.mounted) {
+      state = result;
+    }
   }
 
   // Future<void> signInWithGoogle() async {
