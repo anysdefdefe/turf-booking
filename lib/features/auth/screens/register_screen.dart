@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:turf_booking/app/theme/app_colors.dart';
 import 'package:turf_booking/features/auth/providers/auth_controller.dart';
+import 'package:turf_booking/features/auth/providers/auth_notifier.dart';
 import 'package:turf_booking/features/auth/widgets/auth_form_widgets.dart';
 import 'package:turf_booking/shared/widgets/fade_slide_transition.dart';
 
@@ -22,6 +23,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   final _confirmPasswordController = TextEditingController();
   bool _passwordVisible = false;
   bool _confirmVisible = false;
+  bool _googleLoading = false;
 
   @override
   void dispose() {
@@ -265,6 +267,31 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                                     ],
                                   ),
                                 ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          FadeSlideTransition(
+                            delay: Duration(milliseconds: 300),
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                              child: GoogleAuthButton(
+                                onPressed: _googleLoading
+                                    ? null
+                                    : () async {
+                                        setState(() => _googleLoading = true);
+                                        try {
+                                          await ref
+                                              .read(authProvider.notifier)
+                                              .signInWithGoogle();
+                                        } catch (e) {
+                                          ScaffoldMessenger.of(context).showSnackBar(
+                                            SnackBar(content: Text(e.toString())),
+                                          );
+                                        } finally {
+                                          if (mounted) setState(() => _googleLoading = false);
+                                        }
+                                      },
                               ),
                             ),
                           ),

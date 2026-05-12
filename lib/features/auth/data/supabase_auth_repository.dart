@@ -1,4 +1,7 @@
+import 'package:flutter/foundation.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:turf_booking/features/auth/providers/native_google_sign_in.dart';
 import 'package:turf_booking/shared/models/user_model.dart';
 import 'package:turf_booking/shared/repositories/auth_repository.dart';
 import 'package:turf_booking/shared/exceptions/app_exceptions.dart';
@@ -61,14 +64,32 @@ class SupabaseAuthRepository implements AuthRepository {
 
   @override
   Future<UserModel> signInWithGoogle() async {
-    await _client.auth.signInWithOAuth(
-      OAuthProvider.google,
-      redirectTo: 'io.supabase.turfbooking://login-callback',
-    );
+    try {
+      if (kIsWeb) {
+        await _client.auth.signInWithOAuth(
+          OAuthProvider.google,
+          redirectTo: dotenv.env['OAUTH_REDIRECT_URL'],
+        );
+        throw UnimplementedError(
+          'Web OAuth flow completes via redirect; handle via auth state changes.',
+        );
+      }
 
-    throw UnimplementedError(
-      'Google sign in completes via authStateChanges stream',
-    );
+      await nativeGoogleSignIn();
+
+      final user = _client.auth.currentUser;
+      if (user == null) throw Exception('Google sign in did not return a user');
+
+      return _waitForUserProfile(user.id);
+    } on UnimplementedError {
+      rethrow; 
+    } on AppAuthException {
+      rethrow; 
+    } on AuthException catch (e) {
+      throw AppAuthException(e.message, e.statusCode, e);
+    } catch (e) {
+      throw UnknownException('Google sign in failed: ${e.toString()}', e);
+    }
   }
 
   @override

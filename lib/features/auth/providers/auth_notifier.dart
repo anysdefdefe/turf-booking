@@ -52,6 +52,16 @@ class AuthNotifier extends _$AuthNotifier {
     }
   }
 
+  Future<void> signInWithGoogle() async {
+    state = const AsyncLoading();
+    try {
+      final user = await _repo.signInWithGoogle();
+      state = AsyncData(AuthState(user: user));
+    } catch (e) {
+      state = AsyncData(AuthState(error: e.toString()));
+    }
+  }
+
   Future<void> signUp({
     required String email,
     required String password,

@@ -20,6 +20,49 @@ class AuthFieldLabel extends StatelessWidget {
   }
 }
 
+class GoogleAuthButton extends StatelessWidget {
+  final VoidCallback? onPressed;
+
+  const GoogleAuthButton({super.key, this.onPressed});
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: double.infinity,
+      height: 52,
+      child: OutlinedButton(
+        onPressed: onPressed,
+        style: OutlinedButton.styleFrom(
+          backgroundColor: Colors.white,
+          foregroundColor: Colors.black87,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+          side: const BorderSide(color: Color(0xFFECECEC)),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Image.network(
+              'https://developers.google.com/identity/images/g-logo.png',
+              width: 20,
+              height: 20,
+            ),
+            const SizedBox(width: 12),
+            const Text(
+              'Continue with Google',
+              style: TextStyle(
+                fontFamily: 'Poppins',
+                fontSize: 15,
+                fontWeight: FontWeight.w600,
+                color: Colors.black87,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class AuthRingButton extends StatelessWidget {
   final String label;
   final bool isLoading;
