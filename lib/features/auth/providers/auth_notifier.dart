@@ -1,7 +1,7 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:turf_booking/shared/models/user_model.dart';
 import 'package:turf_booking/shared/repositories/auth_repository.dart';
-import 'auth_provider.dart';
+import 'auth_providers.dart';
 
 part 'auth_notifier.g.dart';
 
