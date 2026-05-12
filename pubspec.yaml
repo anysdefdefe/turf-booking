@@ -9,8 +9,8 @@ environment:
 
 dependencies:
   flutter:
-    sdk: flutter
-
+    sdk: flutter 
+  google_sign_in: ^7.2.0
   cupertino_icons: ^1.0.8
   supabase_flutter: ^2.12.2
   flutter_riverpod: ^3.3.1

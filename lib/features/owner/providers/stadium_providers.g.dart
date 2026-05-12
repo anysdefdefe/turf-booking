@@ -176,7 +176,7 @@ final class AddStadiumControllerProvider
 }
 
 String _$addStadiumControllerHash() =>
-    r'2cec4cb32c6db9e45e31ff13f777a90c5f259588';
+    r'2bcc816458edead798d556a073667f8172c9fd8c';
 
 /// AsyncNotifier that manages the Add Stadium form submission lifecycle.
 
@@ -227,7 +227,7 @@ final class AddCourtControllerProvider
 }
 
 String _$addCourtControllerHash() =>
-    r'76188f9fb5713400fe696274684c0ed7767fb90d';
+    r'31eab570a4bea4724b8c47e795129cb78a82cd0e';
 
 /// AsyncNotifier that handles adding a single court to an existing stadium.
 
