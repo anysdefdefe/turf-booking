@@ -91,10 +91,12 @@ class _AdminUsersScreenState extends ConsumerState<AdminUsersScreen> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text('Error: $e',
-                        style: const TextStyle(color: Colors.red)),
+                    Text(
+                      'Error: $e',
+                      style: const TextStyle(color: Colors.red),
+                    ),
                     ElevatedButton(
-                      onPressed: () => ref.refresh(allUsersProvider),
+                      onPressed: () => ref.invalidate(allUsersProvider),
                       child: const Text('Retry'),
                     ),
                   ],
@@ -104,7 +106,7 @@ class _AdminUsersScreenState extends ConsumerState<AdminUsersScreen> {
                 final filtered = _filterUsers(users);
                 return RefreshIndicator(
                   color: const Color(0xFF4CAF50),
-                  onRefresh: () async => ref.refresh(allUsersProvider),
+                  onRefresh: () async => ref.invalidate(allUsersProvider),
                   child: filtered.isEmpty
                       ? Center(
                           child: Text(
@@ -121,8 +123,7 @@ class _AdminUsersScreenState extends ConsumerState<AdminUsersScreen> {
                             final user = filtered[index];
                             return UserTile(
                               user: user,
-                              onBlock: () =>
-                                  _handleBlock(context, ref, user),
+                              onBlock: () => _handleBlock(context, ref, user),
                               onUnblock: () =>
                                   _handleUnblock(context, ref, user),
                             );
@@ -146,8 +147,7 @@ class _AdminUsersScreenState extends ConsumerState<AdminUsersScreen> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Block User'),
-        content: Text(
-            'Are you sure you want to block ${user['full_name']}?'),
+        content: Text('Are you sure you want to block ${user['full_name']}?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
@@ -170,7 +170,7 @@ class _AdminUsersScreenState extends ConsumerState<AdminUsersScreen> {
     try {
       final repo = ref.read(adminRepositoryProvider);
       await repo.blockUser(user['id']);
-      ref.refresh(allUsersProvider);
+      ref.invalidate(allUsersProvider);
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -182,8 +182,7 @@ class _AdminUsersScreenState extends ConsumerState<AdminUsersScreen> {
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e'),
-              backgroundColor: Colors.red),
+          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
         );
       }
     }
@@ -198,8 +197,7 @@ class _AdminUsersScreenState extends ConsumerState<AdminUsersScreen> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Unblock User'),
-        content: Text(
-            'Are you sure you want to unblock ${user['full_name']}?'),
+        content: Text('Are you sure you want to unblock ${user['full_name']}?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
@@ -222,7 +220,7 @@ class _AdminUsersScreenState extends ConsumerState<AdminUsersScreen> {
     try {
       final repo = ref.read(adminRepositoryProvider);
       await repo.unblockUser(user['id']);
-      ref.refresh(allUsersProvider);
+      ref.invalidate(allUsersProvider);
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -234,8 +232,7 @@ class _AdminUsersScreenState extends ConsumerState<AdminUsersScreen> {
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e'),
-              backgroundColor: Colors.red),
+          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
         );
       }
     }

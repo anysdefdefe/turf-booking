@@ -10,7 +10,6 @@ import '../data/models/court_model.dart';
 import '../data/repositories/customer_cart_repository.dart';
 import '../data/repositories/court_repository.dart';
 import '../widgets/detail_section_title.dart';
-import '../widgets/info_row_chip.dart';
 
 class CourtDetailScreen extends StatefulWidget {
   final Object? initialArgs;
@@ -243,7 +242,9 @@ class _CourtDetailScreenState extends State<CourtDetailScreen> {
                   child: Container(
                     decoration: const BoxDecoration(
                       color: AppColors.surface,
-                      borderRadius: BorderRadius.vertical(top: Radius.circular(40)),
+                      borderRadius: BorderRadius.vertical(
+                        top: Radius.circular(40),
+                      ),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -301,7 +302,10 @@ class _CourtDetailScreenState extends State<CourtDetailScreen> {
                 ),
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
                 decoration: BoxDecoration(
                   color: AppColors.divider.withValues(alpha: 0.5),
                   borderRadius: BorderRadius.circular(20),
@@ -354,9 +358,15 @@ class _CourtDetailScreenState extends State<CourtDetailScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
-              _buildSkeletalStat('Timing', '${court.openTime}-${court.closeTime}'),
+              _buildSkeletalStat(
+                'Timing',
+                '${court.openTime}-${court.closeTime}',
+              ),
               Container(height: 30, width: 1, color: AppColors.divider),
-              _buildSkeletalStat('Type', court.courtTypes.isNotEmpty ? court.courtTypes.first : 'N/A'),
+              _buildSkeletalStat(
+                'Type',
+                court.courtTypes.isNotEmpty ? court.courtTypes.first : 'N/A',
+              ),
               Container(height: 30, width: 1, color: AppColors.divider),
               _buildSkeletalStat('Size', court.teamSize),
             ],
@@ -826,7 +836,9 @@ class _CourtDetailScreenState extends State<CourtDetailScreen> {
                       if (existsInCart) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(
-                            content: Text('These exact slots are already in your cart.'),
+                            content: Text(
+                              'These exact slots are already in your cart.',
+                            ),
                           ),
                         );
                         return;
@@ -875,8 +887,8 @@ class _CourtDetailScreenState extends State<CourtDetailScreen> {
                   const Icon(Icons.add_shopping_cart_rounded, size: 18),
                   const SizedBox(width: 8),
                   Text(
-                    _canBook 
-                        ? 'Add to Cart  •  ₹${(court.pricePerHour * _selectedHours).toInt()}' 
+                    _canBook
+                        ? 'Add to Cart  •  ₹${(court.pricePerHour * _selectedHours).toInt()}'
                         : 'Select Date & Slots',
                     style: const TextStyle(
                       fontFamily: 'Poppins',
@@ -892,13 +904,6 @@ class _CourtDetailScreenState extends State<CourtDetailScreen> {
       ),
     );
   }
-
-  Widget _divider() => const Divider(
-    color: AppColors.divider,
-    height: 1,
-    indent: 20,
-    endIndent: 20,
-  );
 }
 
 class _SlotLegend extends StatelessWidget {
@@ -947,12 +952,8 @@ class _SlotLegend extends StatelessWidget {
 class _CircleBtn extends StatelessWidget {
   final IconData icon;
   final VoidCallback onTap;
-  final double iconSize;
-  const _CircleBtn({
-    required this.icon,
-    required this.onTap,
-    this.iconSize = 12,
-  });
+
+  const _CircleBtn({required this.icon, required this.onTap});
 
   @override
   Widget build(BuildContext context) => GestureDetector(

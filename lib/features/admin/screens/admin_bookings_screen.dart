@@ -35,7 +35,7 @@ class AdminBookingsScreen extends ConsumerWidget {
               Text('Error: $e',
                   style: const TextStyle(color: Colors.red)),
               ElevatedButton(
-                onPressed: () => ref.refresh(allBookingsProvider),
+                onPressed: () => ref.invalidate(allBookingsProvider),
                 child: const Text('Retry'),
               ),
             ],
@@ -43,7 +43,7 @@ class AdminBookingsScreen extends ConsumerWidget {
         ),
         data: (bookings) => RefreshIndicator(
           color: const Color(0xFF4CAF50),
-          onRefresh: () async => ref.refresh(allBookingsProvider),
+          onRefresh: () async => ref.invalidate(allBookingsProvider),
           child: bookings.isEmpty
               ? const Center(
                   child: Text(
