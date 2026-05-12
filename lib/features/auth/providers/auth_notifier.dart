@@ -46,9 +46,13 @@ class AuthNotifier extends _$AuthNotifier {
         password: password,
       );
 
-      state = AsyncData(AuthState(isLoading: false, user: user));
+      if (ref.mounted) {
+        state = AsyncData(AuthState(isLoading: false, user: user));
+      }
     } catch (e) {
-      state = AsyncData(AuthState(isLoading: false, error: e.toString()));
+      if (ref.mounted) {
+        state = AsyncData(AuthState(isLoading: false, error: e.toString()));
+      }
     }
   }
 
@@ -56,9 +60,13 @@ class AuthNotifier extends _$AuthNotifier {
     state = const AsyncLoading();
     try {
       final user = await _repo.signInWithGoogle();
-      state = AsyncData(AuthState(user: user));
+      if (ref.mounted) {
+        state = AsyncData(AuthState(user: user));
+      }
     } catch (e) {
-      state = AsyncData(AuthState(error: e.toString()));
+      if (ref.mounted) {
+        state = AsyncData(AuthState(error: e.toString()));
+      }
     }
   }
 
@@ -76,18 +84,26 @@ class AuthNotifier extends _$AuthNotifier {
         fullName: fullName,
       );
 
-      state = const AsyncData(AuthState());
+      if (ref.mounted) {
+        state = const AsyncData(AuthState());
+      }
     } catch (e) {
-      state = AsyncData(AuthState(isLoading: false, error: e.toString()));
+      if (ref.mounted) {
+        state = AsyncData(AuthState(isLoading: false, error: e.toString()));
+      }
     }
   }
 
   Future<void> signOut() async {
     try {
       await _repo.signOut();
-      state = const AsyncData(AuthState());
+      if (ref.mounted) {
+        state = const AsyncData(AuthState());
+      }
     } catch (e) {
-      state = AsyncData(AuthState(error: e.toString()));
+      if (ref.mounted) {
+        state = AsyncData(AuthState(error: e.toString()));
+      }
     }
   }
 }
