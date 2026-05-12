@@ -12,8 +12,6 @@ import '../widgets/court_search_bar.dart';
 import '../widgets/customer_bottom_nav_bar.dart';
 import 'package:turf_booking/features/owner/widgets/storage_media.dart';
 import 'package:turf_booking/features/owner/data/repositories/stadium_repository.dart';
-import 'package:turf_booking/features/auth/providers/auth_controller.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import '../widgets/sport_icon_mapper.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
@@ -342,9 +340,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   SliverToBoxAdapter _buildHeader(WidgetRef ref) {
-    final user = Supabase.instance.client.auth.currentUser;
-    final firstName = user?.userMetadata?['full_name']?.toString().split(' ').first ?? 'User';
-
     return SliverToBoxAdapter(
       child: Padding(
         padding: const EdgeInsets.fromLTRB(20, 18, 20, 8),
@@ -373,7 +368,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   onTap: _openLocationSheet,
                   isActive: _hasActiveFilters,
                 ),
-                
               ],
             ),
             Text(
@@ -420,7 +414,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               final sport = _allSports[index];
               final isSelected = _selectedSports.contains(sport);
               final icon = sportIconForName(sport);
-              
+
               return GestureDetector(
                 onTap: () {
                   setState(() {
@@ -438,15 +432,21 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       width: 56,
                       height: 56,
                       decoration: BoxDecoration(
-                        color: isSelected ? AppColors.primary : AppColors.surface,
+                        color: isSelected
+                            ? AppColors.primary
+                            : AppColors.surface,
                         shape: BoxShape.circle,
                         border: Border.all(
-                          color: isSelected ? AppColors.primary : AppColors.divider,
+                          color: isSelected
+                              ? AppColors.primary
+                              : AppColors.divider,
                         ),
                       ),
                       child: Icon(
                         icon,
-                        color: isSelected ? Colors.white : AppColors.textSecondary,
+                        color: isSelected
+                            ? Colors.white
+                            : AppColors.textSecondary,
                         size: 24,
                       ),
                     ),
@@ -456,8 +456,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       style: TextStyle(
                         fontFamily: 'Poppins',
                         fontSize: 11,
-                        fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-                        color: isSelected ? AppColors.primary : AppColors.textSecondary,
+                        fontWeight: isSelected
+                            ? FontWeight.w600
+                            : FontWeight.w500,
+                        color: isSelected
+                            ? AppColors.primary
+                            : AppColors.textSecondary,
                       ),
                     ),
                   ],
@@ -661,11 +665,17 @@ class _StadiumCard extends StatelessWidget {
                     top: 14,
                     right: 14,
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 6,
+                      ),
                       decoration: BoxDecoration(
                         color: AppColors.surface.withValues(alpha: 0.95),
                         borderRadius: BorderRadius.circular(20),
-                        border: Border.all(color: AppColors.divider, width: 0.5),
+                        border: Border.all(
+                          color: AppColors.divider,
+                          width: 0.5,
+                        ),
                         boxShadow: [
                           BoxShadow(
                             color: Colors.black.withValues(alpha: 0.05),
@@ -750,9 +760,15 @@ class _StadiumCard extends StatelessWidget {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      _buildStatChip(Icons.sports_tennis_rounded, '$courtCount Courts'),
+                      _buildStatChip(
+                        Icons.sports_tennis_rounded,
+                        '$courtCount Courts',
+                      ),
                       if (stadium.amenities.isNotEmpty)
-                        _buildStatChip(Icons.star_rounded, '${stadium.amenities.length} Amenities'),
+                        _buildStatChip(
+                          Icons.star_rounded,
+                          '${stadium.amenities.length} Amenities',
+                        ),
                     ],
                   ),
                 ],

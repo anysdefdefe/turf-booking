@@ -42,7 +42,7 @@ class AdminApprovalsScreen extends ConsumerWidget {
               ),
               const SizedBox(height: 12),
               ElevatedButton(
-                onPressed: () => ref.refresh(pendingApplicationsProvider),
+                onPressed: () => ref.invalidate(pendingApplicationsProvider),
                 child: const Text('Retry'),
               ),
             ],
@@ -54,8 +54,11 @@ class AdminApprovalsScreen extends ConsumerWidget {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.check_circle_outline,
-                      size: 64, color: Color(0xFF4CAF50)),
+                  Icon(
+                    Icons.check_circle_outline,
+                    size: 64,
+                    color: Color(0xFF4CAF50),
+                  ),
                   SizedBox(height: 16),
                   Text(
                     'All caught up!',
@@ -77,8 +80,7 @@ class AdminApprovalsScreen extends ConsumerWidget {
 
           return RefreshIndicator(
             color: const Color(0xFF4CAF50),
-            onRefresh: () async =>
-                ref.refresh(pendingApplicationsProvider),
+            onRefresh: () async => ref.invalidate(pendingApplicationsProvider),
             child: ListView.builder(
               padding: const EdgeInsets.all(20),
               itemCount: applications.length,
@@ -133,7 +135,7 @@ class AdminApprovalsScreen extends ConsumerWidget {
       final repo = ref.read(adminRepositoryProvider);
       await repo.approveOwner(application.id, application.userId);
 
-      ref.refresh(pendingApplicationsProvider);
+      ref.invalidate(pendingApplicationsProvider);
 
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -146,10 +148,7 @@ class AdminApprovalsScreen extends ConsumerWidget {
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error: $e'),
-            backgroundColor: Colors.red,
-          ),
+          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
         );
       }
     }
@@ -209,7 +208,7 @@ class AdminApprovalsScreen extends ConsumerWidget {
       final repo = ref.read(adminRepositoryProvider);
       await repo.rejectOwner(application.id, application.userId, reason);
 
-      ref.refresh(pendingApplicationsProvider);
+      ref.invalidate(pendingApplicationsProvider);
 
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -222,10 +221,7 @@ class AdminApprovalsScreen extends ConsumerWidget {
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error: $e'),
-            backgroundColor: Colors.red,
-          ),
+          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
         );
       }
     }

@@ -73,22 +73,18 @@ class _AdminVenuesScreenState extends ConsumerState<AdminVenuesScreen> {
                 // Search Bar
                 TextField(
                   controller: _searchController,
-                  onChanged: (value) =>
-                      setState(() => _searchQuery = value),
+                  onChanged: (value) => setState(() => _searchQuery = value),
                   decoration: InputDecoration(
                     hintText: 'Search by name or city...',
-                    hintStyle:
-                        TextStyle(color: Colors.grey[400], fontSize: 14),
-                    prefixIcon:
-                        const Icon(Icons.search, color: Colors.grey),
+                    hintStyle: TextStyle(color: Colors.grey[400], fontSize: 14),
+                    prefixIcon: const Icon(Icons.search, color: Colors.grey),
                     suffixIcon: _searchQuery.isNotEmpty
                         ? GestureDetector(
                             onTap: () {
                               _searchController.clear();
                               setState(() => _searchQuery = '');
                             },
-                            child: const Icon(Icons.close,
-                                color: Colors.grey),
+                            child: const Icon(Icons.close, color: Colors.grey),
                           )
                         : null,
                     filled: true,
@@ -97,8 +93,7 @@ class _AdminVenuesScreenState extends ConsumerState<AdminVenuesScreen> {
                       borderRadius: BorderRadius.circular(12),
                       borderSide: BorderSide.none,
                     ),
-                    contentPadding:
-                        const EdgeInsets.symmetric(vertical: 12),
+                    contentPadding: const EdgeInsets.symmetric(vertical: 12),
                   ),
                 ),
 
@@ -122,17 +117,18 @@ class _AdminVenuesScreenState extends ConsumerState<AdminVenuesScreen> {
           Expanded(
             child: venuesAsync.when(
               loading: () => const Center(
-                child: CircularProgressIndicator(
-                    color: Color(0xFF4CAF50)),
+                child: CircularProgressIndicator(color: Color(0xFF4CAF50)),
               ),
               error: (e, _) => Center(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text('Error: $e',
-                        style: const TextStyle(color: Colors.red)),
+                    Text(
+                      'Error: $e',
+                      style: const TextStyle(color: Colors.red),
+                    ),
                     ElevatedButton(
-                      onPressed: () => ref.refresh(allVenuesProvider),
+                      onPressed: () => ref.invalidate(allVenuesProvider),
                       child: const Text('Retry'),
                     ),
                   ],
@@ -142,15 +138,14 @@ class _AdminVenuesScreenState extends ConsumerState<AdminVenuesScreen> {
                 final filtered = _filterVenues(venues);
                 return RefreshIndicator(
                   color: const Color(0xFF4CAF50),
-                  onRefresh: () async => ref.refresh(allVenuesProvider),
+                  onRefresh: () async => ref.invalidate(allVenuesProvider),
                   child: filtered.isEmpty
                       ? Center(
                           child: Text(
                             _searchQuery.isEmpty
                                 ? 'No venues found'
                                 : 'No results for "$_searchQuery"',
-                            style:
-                                const TextStyle(color: Colors.grey),
+                            style: const TextStyle(color: Colors.grey),
                           ),
                         )
                       : ListView.builder(
@@ -181,12 +176,9 @@ class _AdminVenuesScreenState extends ConsumerState<AdminVenuesScreen> {
     return GestureDetector(
       onTap: () => setState(() => _filterStatus = value),
       child: Container(
-        padding:
-            const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
         decoration: BoxDecoration(
-          color: isSelected
-              ? const Color(0xFF4CAF50)
-              : const Color(0xFFF5F5F5),
+          color: isSelected ? const Color(0xFF4CAF50) : const Color(0xFFF5F5F5),
           borderRadius: BorderRadius.circular(20),
         ),
         child: Text(
@@ -235,7 +227,7 @@ class _AdminVenuesScreenState extends ConsumerState<AdminVenuesScreen> {
     try {
       final repo = ref.read(adminRepositoryProvider);
       await repo.suspendVenue(venue['id']);
-      ref.refresh(allVenuesProvider);
+      ref.invalidate(allVenuesProvider);
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -247,9 +239,7 @@ class _AdminVenuesScreenState extends ConsumerState<AdminVenuesScreen> {
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-              content: Text('Error: $e'),
-              backgroundColor: Colors.red),
+          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
         );
       }
     }
@@ -264,8 +254,7 @@ class _AdminVenuesScreenState extends ConsumerState<AdminVenuesScreen> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Activate Venue'),
-        content: Text(
-            'Are you sure you want to activate "${venue['name']}"?'),
+        content: Text('Are you sure you want to activate "${venue['name']}"?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
@@ -288,7 +277,7 @@ class _AdminVenuesScreenState extends ConsumerState<AdminVenuesScreen> {
     try {
       final repo = ref.read(adminRepositoryProvider);
       await repo.activateVenue(venue['id']);
-      ref.refresh(allVenuesProvider);
+      ref.invalidate(allVenuesProvider);
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -300,9 +289,7 @@ class _AdminVenuesScreenState extends ConsumerState<AdminVenuesScreen> {
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-              content: Text('Error: $e'),
-              backgroundColor: Colors.red),
+          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
         );
       }
     }
