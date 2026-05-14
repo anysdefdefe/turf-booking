@@ -14,11 +14,14 @@ class AppAuthException extends AppException {
 }
 
 class NetworkException extends AppException {
-  const NetworkException([String message = 'Please check your internet connection'])
-      : super(message, 'network_error');
+  const NetworkException([
+    String message = 'Please check your internet connection',
+  ]) : super(message, 'network_error');
 }
 
 class UnknownException extends AppException {
-  const UnknownException([String message = 'An unexpected error occurred. Please try again.', dynamic error])
-      : super(message, 'unknown_error', error);
+  const UnknownException([
+    String message = 'An unexpected error occurred. Please try again.',
+    dynamic error,
+  ]) : super(message, 'unknown_error', error);
 }

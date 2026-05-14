@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../../app/theme/app_colors.dart';
 
 class EmptyState extends StatelessWidget {
   final String title;
@@ -15,19 +14,20 @@ class EmptyState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(icon, size: 80, color: AppColors.textMuted),
+          Icon(icon, size: 80, color: cs.outline),
           const SizedBox(height: 20),
           Text(
             title,
-            style: const TextStyle(
+            style: TextStyle(
               fontFamily: 'Poppins',
               fontSize: 20,
               fontWeight: FontWeight.w700,
-              color: AppColors.textPrimary,
+              color: cs.onSurface,
             ),
             textAlign: TextAlign.center,
           ),
@@ -36,10 +36,10 @@ class EmptyState extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 24),
             child: Text(
               subtitle,
-              style: const TextStyle(
+              style: TextStyle(
                 fontFamily: 'Poppins',
                 fontSize: 14,
-                color: AppColors.textSecondary,
+                color: cs.onSurfaceVariant,
               ),
               textAlign: TextAlign.center,
             ),

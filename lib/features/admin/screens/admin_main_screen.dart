@@ -17,6 +17,7 @@ class _AdminMainScreenState extends State<AdminMainScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     final screens = [
       const AdminDashboardScreen(),
       const AdminApprovalsScreen(),
@@ -31,10 +32,10 @@ class _AdminMainScreenState extends State<AdminMainScreen> {
         currentIndex: _currentIndex,
         onTap: (index) => setState(() => _currentIndex = index),
         type: BottomNavigationBarType.fixed,
-        selectedItemColor: const Color(0xFF4CAF50),
-        unselectedItemColor: Colors.grey,
-        backgroundColor: Colors.white,
-        elevation: 10,
+        selectedItemColor: cs.primary,
+        unselectedItemColor: cs.onSurfaceVariant,
+        backgroundColor: cs.surface,
+        elevation: 0,
         selectedFontSize: 12,
         unselectedFontSize: 12,
         selectedIconTheme: const IconThemeData(size: 22),
@@ -49,17 +50,11 @@ class _AdminMainScreenState extends State<AdminMainScreen> {
             label: 'Approvals',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.book_online), 
+            icon: Icon(Icons.book_online),
             label: 'Bookings',
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.stadium),
-            label: 'Venues',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.people),
-            label: 'Users',
-          ),
+          BottomNavigationBarItem(icon: Icon(Icons.stadium), label: 'Venues'),
+          BottomNavigationBarItem(icon: Icon(Icons.people), label: 'Users'),
         ],
       ),
     );

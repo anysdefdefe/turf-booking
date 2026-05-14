@@ -24,7 +24,7 @@ class ApprovalCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.06),
+            color: Colors.black.withValues(alpha: 0.06),
             blurRadius: 10,
             offset: const Offset(0, 3),
           ),
@@ -37,7 +37,7 @@ class ApprovalCard extends StatelessWidget {
           Row(
             children: [
               CircleAvatar(
-                backgroundColor: const Color(0xFF4CAF50).withOpacity(0.15),
+                backgroundColor: const Color(0xFF4CAF50).withValues(alpha: 0.15),
                 child: Text(
                   application.ownerName?.isNotEmpty == true
                       ? application.ownerName![0].toUpperCase()
@@ -62,15 +62,13 @@ class ApprovalCard extends StatelessWidget {
                     ),
                     Text(
                       application.ownerEmail ?? '',
-                      style: TextStyle(
-                          fontSize: 12, color: Colors.grey[500]),
+                      style: TextStyle(fontSize: 12, color: Colors.grey[500]),
                     ),
                   ],
                 ),
               ),
               Container(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 8, vertical: 4),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
                   color: const Color(0xFFFFF3CD),
                   borderRadius: BorderRadius.circular(8),
@@ -102,58 +100,53 @@ class ApprovalCard extends StatelessWidget {
           if (application.documentUrl != null) ...[
             const SizedBox(height: 12),
             GestureDetector(
-            onTap: () async {
-                 if (application.documentUrl == null || 
-                application.documentUrl!.isEmpty) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('No document uploaded by owner'),
-                  backgroundColor: Colors.orange,
-                ),
-              );
-              return;
-            }
-
-            try {
-              final url = Uri.parse(application.documentUrl!);
-              if (await canLaunchUrl(url)) {
-                await launchUrl(
-                  url,
-                  mode: LaunchMode.externalApplication,
-                );
-              } else {
-                if (context.mounted) {
+              onTap: () async {
+                if (application.documentUrl == null ||
+                    application.documentUrl!.isEmpty) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
-                      content: Text('Cannot open document'),
-                      backgroundColor: Colors.red,
+                      content: Text('No document uploaded by owner'),
+                      backgroundColor: Colors.orange,
                     ),
                   );
+                  return;
                 }
-              }
-            } catch (e) {
-              if (context.mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text('Invalid document URL: $e'),
-                    backgroundColor: Colors.red,
-                  ),
-                );
-              }
-            }
-          },
+
+                try {
+                  final url = Uri.parse(application.documentUrl!);
+                  if (await canLaunchUrl(url)) {
+                    await launchUrl(url, mode: LaunchMode.externalApplication);
+                  } else {
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Cannot open document'),
+                          backgroundColor: Colors.red,
+                        ),
+                      );
+                    }
+                  }
+                } catch (e) {
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Invalid document URL: $e'),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                  }
+                }
+              },
               child: Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: Colors.blue.withOpacity(0.08),
+                  color: Colors.blue.withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(
-                      color: Colors.blue.withOpacity(0.3)),
+                  border: Border.all(color: Colors.blue.withValues(alpha: 0.3)),
                 ),
                 child: const Row(
                   children: [
-                    Icon(Icons.picture_as_pdf,
-                        color: Colors.blue, size: 20),
+                    Icon(Icons.picture_as_pdf, color: Colors.blue, size: 20),
                     SizedBox(width: 8),
                     Text(
                       'View Document',
@@ -164,8 +157,7 @@ class ApprovalCard extends StatelessWidget {
                       ),
                     ),
                     Spacer(),
-                    Icon(Icons.arrow_forward_ios,
-                        color: Colors.blue, size: 12),
+                    Icon(Icons.arrow_forward_ios, color: Colors.blue, size: 12),
                   ],
                 ),
               ),
@@ -224,8 +216,7 @@ class ApprovalCard extends StatelessWidget {
         Expanded(
           child: Text(
             value,
-            style: const TextStyle(
-                fontSize: 12, fontWeight: FontWeight.w600),
+            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
           ),
         ),
       ],

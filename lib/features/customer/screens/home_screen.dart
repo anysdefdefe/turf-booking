@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../app/constants/app_constants.dart';
-import '../../../app/theme/app_colors.dart';
 import '../../../shared/widgets/empty_state.dart';
 import '../data/models/court_model.dart';
 import '../data/models/stadium_model.dart';
@@ -12,8 +11,6 @@ import '../widgets/court_search_bar.dart';
 import '../widgets/customer_bottom_nav_bar.dart';
 import 'package:turf_booking/features/owner/widgets/storage_media.dart';
 import 'package:turf_booking/features/owner/data/repositories/stadium_repository.dart';
-import 'package:turf_booking/features/auth/providers/auth_controller.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import '../widgets/sport_icon_mapper.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
@@ -267,10 +264,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final catalogState = ref.watch(customerCatalogControllerProvider);
+    final cs = Theme.of(context).colorScheme;
 
     if (catalogState.hasError && _stadiums.isEmpty) {
       return Scaffold(
-        backgroundColor: AppColors.background,
+        backgroundColor: cs.surface,
         bottomNavigationBar: CustomerBottomNavBar(
           selectedIndex: 0,
           onTap: _onNavTap,
@@ -281,13 +279,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(Icons.wifi_off_rounded, size: 42),
+                Icon(
+                  Icons.wifi_off_rounded,
+                  size: 42,
+                  color: cs.onSurfaceVariant,
+                ),
                 const SizedBox(height: 12),
-                const Text(
+                Text(
                   'Failed to load venues.',
                   style: TextStyle(
                     fontFamily: 'Poppins',
-                    color: AppColors.textPrimary,
+                    color: cs.onSurface,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -302,8 +304,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         }
                       }),
                   style: FilledButton.styleFrom(
-                    backgroundColor: AppColors.textPrimary,
-                    foregroundColor: Colors.white,
+                    backgroundColor: cs.primary,
+                    foregroundColor: cs.onPrimary,
                   ),
                   child: const Text('Retry'),
                 ),
@@ -315,7 +317,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     }
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: cs.surface,
       bottomNavigationBar: CustomerBottomNavBar(
         selectedIndex: 0,
         onTap: _onNavTap,
@@ -329,9 +331,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 child: Center(child: CircularProgressIndicator()),
               )
             else ...[
-              _buildHeader(ref),
-              if (_hasActiveFilters) _buildFilterSummary(),
-              _buildResultsHeader(),
+              _buildHeader(ref, context),
+              if (_hasActiveFilters) _buildFilterSummary(context),
+              _buildResultsHeader(context),
               _buildVenuesSection(),
               const SliverToBoxAdapter(child: SizedBox(height: 24)),
             ],
@@ -341,9 +343,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
-  SliverToBoxAdapter _buildHeader(WidgetRef ref) {
-    final user = Supabase.instance.client.auth.currentUser;
-    final firstName = user?.userMetadata?['full_name']?.toString().split(' ').first ?? 'User';
+  SliverToBoxAdapter _buildHeader(WidgetRef ref, BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
 
     return SliverToBoxAdapter(
       child: Padding(
@@ -355,7 +356,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Expanded(
+                Expanded(
                   child: Text(
                     'Find Your\nVenue',
                     style: TextStyle(
@@ -364,7 +365,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       fontWeight: FontWeight.w800,
                       height: 1.1,
                       letterSpacing: -1.0,
-                      color: AppColors.textPrimary,
+                      color: cs.onSurface,
                     ),
                   ),
                 ),
@@ -373,40 +374,40 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   onTap: _openLocationSheet,
                   isActive: _hasActiveFilters,
                 ),
-                
               ],
             ),
             Text(
               "Your game starts here.",
-              style: const TextStyle(
+              style: TextStyle(
                 fontFamily: 'Poppins',
                 fontSize: 16,
                 fontWeight: FontWeight.w200,
-                color: AppColors.textPrimary,
+                color: cs.onSurface,
               ),
             ),
             const SizedBox(height: 18),
             CourtSearchBar(onChanged: _onSearch),
             const SizedBox(height: 24),
-            _buildCategories(),
+            _buildCategories(context),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildCategories() {
+  Widget _buildCategories(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           'Categories',
           style: TextStyle(
             fontFamily: 'Poppins',
             fontSize: 18,
             fontWeight: FontWeight.w800,
             letterSpacing: -0.5,
-            color: AppColors.textPrimary,
+            color: cs.onSurface,
           ),
         ),
         const SizedBox(height: 12),
@@ -420,7 +421,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               final sport = _allSports[index];
               final isSelected = _selectedSports.contains(sport);
               final icon = sportIconForName(sport);
-              
+
               return GestureDetector(
                 onTap: () {
                   setState(() {
@@ -438,15 +439,21 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       width: 56,
                       height: 56,
                       decoration: BoxDecoration(
-                        color: isSelected ? AppColors.primary : AppColors.surface,
+                        color: isSelected
+                            ? Theme.of(context).colorScheme.primary
+                            : Theme.of(context).colorScheme.surface,
                         shape: BoxShape.circle,
                         border: Border.all(
-                          color: isSelected ? AppColors.primary : AppColors.divider,
+                          color: isSelected
+                              ? Theme.of(context).colorScheme.primary
+                              : Theme.of(context).colorScheme.outlineVariant,
                         ),
                       ),
                       child: Icon(
                         icon,
-                        color: isSelected ? Colors.white : AppColors.textSecondary,
+                        color: isSelected
+                            ? Colors.white
+                            : Theme.of(context).colorScheme.onSurfaceVariant,
                         size: 24,
                       ),
                     ),
@@ -456,8 +463,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       style: TextStyle(
                         fontFamily: 'Poppins',
                         fontSize: 11,
-                        fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-                        color: isSelected ? AppColors.primary : AppColors.textSecondary,
+                        fontWeight: isSelected
+                            ? FontWeight.w600
+                            : FontWeight.w500,
+                        color: isSelected
+                            ? Theme.of(context).colorScheme.primary
+                            : Theme.of(context).colorScheme.onSurfaceVariant,
                       ),
                     ),
                   ],
@@ -470,7 +481,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
-  SliverToBoxAdapter _buildFilterSummary() {
+  SliverToBoxAdapter _buildFilterSummary(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     final tags = <String>[];
     if (_selectedCities.isNotEmpty) {
       tags.add('${_selectedCities.length} locations');
@@ -494,26 +506,22 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         padding: const EdgeInsets.fromLTRB(20, 8, 20, 4),
         child: Row(
           children: [
-            const Icon(
-              Icons.circle_outlined,
-              size: 14,
-              color: AppColors.primary,
-            ),
+            Icon(Icons.circle_outlined, size: 14, color: cs.primary),
             const SizedBox(width: 8),
             Expanded(
               child: Text(
                 label,
-                style: const TextStyle(
+                style: TextStyle(
                   fontFamily: 'Poppins',
                   fontSize: 12.5,
-                  color: AppColors.textSecondary,
+                  color: cs.onSurfaceVariant,
                 ),
               ),
             ),
             TextButton(
               onPressed: _clearFilters,
               style: TextButton.styleFrom(
-                foregroundColor: AppColors.textPrimary,
+                foregroundColor: cs.onSurface,
                 padding: const EdgeInsets.symmetric(
                   horizontal: 12,
                   vertical: 8,
@@ -538,7 +546,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
-  SliverToBoxAdapter _buildResultsHeader() {
+  SliverToBoxAdapter _buildResultsHeader(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     final visibleStadiums = _visibleStadiums;
     final title = _searchQuery.isEmpty
         ? 'Venues'
@@ -553,21 +562,21 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           children: [
             Text(
               title,
-              style: const TextStyle(
+              style: TextStyle(
                 fontFamily: 'Poppins',
                 fontSize: 18,
                 fontWeight: FontWeight.w800,
                 letterSpacing: -0.5,
-                color: AppColors.textPrimary,
+                color: cs.onSurface,
               ),
             ),
             const Spacer(),
             Text(
               actionLabel,
-              style: const TextStyle(
+              style: TextStyle(
                 fontFamily: 'Poppins',
                 fontSize: 12,
-                color: AppColors.textSecondary,
+                color: cs.onSurfaceVariant,
               ),
             ),
           ],
@@ -619,15 +628,20 @@ class _StadiumCard extends StatelessWidget {
   Widget build(BuildContext context) {
     // Deterministic check: bypass network request if string is empty
     final bool hasImage = stadium.imageUrl.isNotEmpty;
+    final cs = Theme.of(context).colorScheme;
 
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(24),
+      splashColor: Colors.transparent,
+      highlightColor: Colors.transparent,
+      hoverColor: Colors.transparent,
+      focusColor: Colors.transparent,
       child: Container(
         width: double.infinity,
         margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
         decoration: BoxDecoration(
-          color: AppColors.surface,
+          color: cs.surfaceContainer,
           borderRadius: BorderRadius.circular(24),
           boxShadow: [
             BoxShadow(
@@ -654,18 +668,21 @@ class _StadiumCard extends StatelessWidget {
                           height: 180,
                           fit: BoxFit.cover,
                           borderRadius: BorderRadius.zero,
-                          placeholder: _buildPlaceholder(),
+                          placeholder: _buildPlaceholder(context),
                         )
-                      : _buildPlaceholder(),
+                      : _buildPlaceholder(context),
                   Positioned(
                     top: 14,
                     right: 14,
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 6,
+                      ),
                       decoration: BoxDecoration(
-                        color: AppColors.surface.withValues(alpha: 0.95),
+                        color: cs.surfaceContainer.withValues(alpha: 0.95),
                         borderRadius: BorderRadius.circular(20),
-                        border: Border.all(color: AppColors.divider, width: 0.5),
+                        border: Border.all(color: cs.outline, width: 0.5),
                         boxShadow: [
                           BoxShadow(
                             color: Colors.black.withValues(alpha: 0.05),
@@ -676,17 +693,17 @@ class _StadiumCard extends StatelessWidget {
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          const Icon(
+                          Icon(
                             Icons.near_me_rounded,
-                            color: AppColors.primary,
+                            color: cs.primary,
                             size: 12,
                           ),
                           const SizedBox(width: 4),
                           Text(
                             '${stadium.distanceKm.toStringAsFixed(1)} km',
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontFamily: 'Poppins',
-                              color: AppColors.textPrimary,
+                              color: cs.onSurface,
                               fontSize: 11,
                               fontWeight: FontWeight.w700,
                             ),
@@ -709,12 +726,12 @@ class _StadiumCard extends StatelessWidget {
                       Expanded(
                         child: Text(
                           stadium.name,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontFamily: 'Poppins',
                             fontSize: 18,
                             fontWeight: FontWeight.w800,
                             letterSpacing: -0.4,
-                            color: AppColors.textPrimary,
+                            color: cs.onSurface,
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
@@ -725,20 +742,20 @@ class _StadiumCard extends StatelessWidget {
                   const SizedBox(height: 6),
                   Row(
                     children: [
-                      const Icon(
+                      Icon(
                         Icons.location_on_rounded,
                         size: 14,
-                        color: AppColors.textSecondary,
+                        color: cs.onSurfaceVariant,
                       ),
                       const SizedBox(width: 4),
                       Expanded(
                         child: Text(
                           '${stadium.address}, ${stadium.city}',
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontFamily: 'Poppins',
                             fontSize: 13,
                             fontWeight: FontWeight.w500,
-                            color: AppColors.textSecondary,
+                            color: cs.onSurfaceVariant,
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
@@ -750,9 +767,17 @@ class _StadiumCard extends StatelessWidget {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      _buildStatChip(Icons.sports_tennis_rounded, '$courtCount Courts'),
+                      _buildStatChip(
+                        Icons.sports_tennis_rounded,
+                        '$courtCount Courts',
+                        context,
+                      ),
                       if (stadium.amenities.isNotEmpty)
-                        _buildStatChip(Icons.star_rounded, '${stadium.amenities.length} Amenities'),
+                        _buildStatChip(
+                          Icons.star_rounded,
+                          '${stadium.amenities.length} Amenities',
+                          context,
+                        ),
                     ],
                   ),
                 ],
@@ -764,25 +789,26 @@ class _StadiumCard extends StatelessWidget {
     );
   }
 
-  Widget _buildStatChip(IconData icon, String label) {
+  Widget _buildStatChip(IconData icon, String label, BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
-        color: AppColors.background,
+        color: cs.surface,
         borderRadius: BorderRadius.circular(8),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 14, color: AppColors.primary),
+          Icon(icon, size: 14, color: cs.primary),
           const SizedBox(width: 6),
           Text(
             label,
-            style: const TextStyle(
+            style: TextStyle(
               fontFamily: 'Poppins',
               fontSize: 12,
               fontWeight: FontWeight.w600,
-              color: AppColors.textPrimary,
+              color: cs.onSurface,
             ),
           ),
         ],
@@ -791,16 +817,17 @@ class _StadiumCard extends StatelessWidget {
   }
 
   // Extracted to enforce layout constraints
-  Widget _buildPlaceholder() {
+  Widget _buildPlaceholder(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return Container(
       height: 180,
       width: double.infinity, // THE FIX: Forces the placeholder to expand
-      color: AppColors.divider.withValues(alpha: 0.5),
-      child: const Center(
+      color: cs.outline.withValues(alpha: 0.5),
+      child: Center(
         child: Icon(
           Icons.stadium_rounded,
           size: 40,
-          color: AppColors.textMuted,
+          color: cs.onSurfaceVariant,
         ),
       ),
     );
@@ -820,21 +847,26 @@ class _OutlineIconButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(14),
+      splashColor: Colors.transparent,
+      highlightColor: Colors.transparent,
+      hoverColor: Colors.transparent,
+      focusColor: Colors.transparent,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 180),
         width: 46,
         height: 46,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(16),
-          color: isActive ? AppColors.textPrimary : const Color(0xFFEFEFF0),
+          color: isActive ? cs.onSurface : cs.surfaceContainerHighest,
         ),
         child: Icon(
           icon,
           size: 20,
-          color: isActive ? Colors.white : AppColors.textPrimary,
+          color: isActive ? cs.onInverseSurface : cs.onSurface,
         ),
       ),
     );
@@ -876,14 +908,15 @@ class _AdvancedFilterSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
       child: Container(
         padding: const EdgeInsets.fromLTRB(20, 18, 20, 20),
         decoration: BoxDecoration(
-          color: AppColors.surface,
+          color: cs.surfaceContainer,
           borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: AppColors.divider, width: 1),
+          border: Border.all(color: cs.outline, width: 1),
         ),
         child: ConstrainedBox(
           constraints: BoxConstraints(
@@ -895,20 +928,22 @@ class _AdvancedFilterSheet extends StatelessWidget {
               children: [
                 Row(
                   children: [
-                    const Text(
+                    Text(
                       'Filters',
                       style: TextStyle(
                         fontFamily: 'Poppins',
                         fontSize: 14,
                         fontWeight: FontWeight.w700,
-                        color: AppColors.textPrimary,
+                        color: Theme.of(context).colorScheme.onSurface,
                       ),
                     ),
                     const Spacer(),
                     TextButton(
                       onPressed: onClear,
                       style: TextButton.styleFrom(
-                        foregroundColor: AppColors.textSecondary,
+                        foregroundColor: Theme.of(
+                          context,
+                        ).colorScheme.onSurfaceVariant,
                         padding: const EdgeInsets.symmetric(
                           horizontal: 12,
                           vertical: 8,
@@ -929,13 +964,13 @@ class _AdvancedFilterSheet extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 18),
-                const Text(
+                Text(
                   'Sports',
                   style: TextStyle(
                     fontFamily: 'Poppins',
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
-                    color: AppColors.textSecondary,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
                 ),
                 const SizedBox(height: 12),
@@ -955,11 +990,11 @@ class _AdvancedFilterSheet extends StatelessWidget {
                 const SizedBox(height: 18),
                 Text(
                   'Distance (${distanceRange.start.toStringAsFixed(1)} - ${distanceRange.end.toStringAsFixed(1)} km)',
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontFamily: 'Poppins',
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
-                    color: AppColors.textSecondary,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
                 ),
                 RangeSlider(
@@ -976,11 +1011,11 @@ class _AdvancedFilterSheet extends StatelessWidget {
                 const SizedBox(height: 8),
                 Text(
                   'Price (₹${priceRange.start.toInt()} - ₹${priceRange.end.toInt()})',
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontFamily: 'Poppins',
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
-                    color: AppColors.textSecondary,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
                 ),
                 RangeSlider(
@@ -995,13 +1030,13 @@ class _AdvancedFilterSheet extends StatelessWidget {
                   onChanged: onPriceChanged,
                 ),
                 const SizedBox(height: 8),
-                const Text(
+                Text(
                   'Team Size',
                   style: TextStyle(
                     fontFamily: 'Poppins',
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
-                    color: AppColors.textSecondary,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
                 ),
                 const SizedBox(height: 12),
@@ -1019,13 +1054,13 @@ class _AdvancedFilterSheet extends StatelessWidget {
                       .toList(),
                 ),
                 const SizedBox(height: 18),
-                const Text(
+                Text(
                   'Location',
                   style: TextStyle(
                     fontFamily: 'Poppins',
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
-                    color: AppColors.textSecondary,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
                 ),
                 const SizedBox(height: 12),
@@ -1090,14 +1125,20 @@ class _FilterChipPill extends StatelessWidget {
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(20),
+      splashColor: Colors.transparent,
+      highlightColor: Colors.transparent,
+      hoverColor: Colors.transparent,
+      focusColor: Colors.transparent,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 180),
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
         decoration: BoxDecoration(
-          color: AppColors.surface,
+          color: Theme.of(context).colorScheme.surface,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: isSelected ? AppColors.primary : AppColors.divider,
+            color: isSelected
+                ? Theme.of(context).colorScheme.primary
+                : Theme.of(context).colorScheme.outlineVariant,
             width: isSelected ? 1.4 : 1,
           ),
         ),
@@ -1107,7 +1148,9 @@ class _FilterChipPill extends StatelessWidget {
             fontFamily: 'Poppins',
             fontSize: 12.5,
             fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-            color: isSelected ? AppColors.textPrimary : AppColors.textSecondary,
+            color: isSelected
+                ? Theme.of(context).colorScheme.onSurface
+                : Theme.of(context).colorScheme.onSurfaceVariant,
           ),
         ),
       ),

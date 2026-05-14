@@ -1,23 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../auth/providers/auth_controller.dart';
 import '../../auth/providers/auth_providers.dart';
 import '../../../app/constants/app_constants.dart';
 import '../providers/admin_provider.dart';
-import '../widgets/stat_card.dart';
+import 'package:turf_booking/app/theme/theme_mode_selector.dart';
 
 class AdminDashboardScreen extends ConsumerStatefulWidget {
   const AdminDashboardScreen({super.key});
 
   @override
-  ConsumerState<AdminDashboardScreen> createState() => _AdminDashboardScreenState();
+  ConsumerState<AdminDashboardScreen> createState() =>
+      _AdminDashboardScreenState();
 }
 
 class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
   String _range = '24h'; // '24h', '7d', or 'all'
-
   /// Format a [DateTime] to a readable 12-hour time string (e.g. "9:00 AM").
   String _formatDateTime(DateTime dt) {
     final h = dt.hour % 12 == 0 ? 12 : dt.hour % 12;
@@ -76,7 +75,9 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
   List<double> _computeSeries(List<Map<String, dynamic>> bookings) {
     if (_range == '24h') {
       final last = bookings.take(24).toList();
-      return last.reversed.map<double>((b) => (b['total_amount'] ?? 0).toDouble()).toList();
+      return last.reversed
+          .map<double>((b) => (b['total_amount'] ?? 0).toDouble())
+          .toList();
     } else if (_range == '7d') {
       final now = DateTime.now();
       final List<double> buckets = List.filled(7, 0.0);
@@ -112,15 +113,19 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
   Widget build(BuildContext context) {
     final statsAsync = ref.watch(dashboardStatsProvider);
     final bookingsAsync = ref.watch(allBookingsProvider);
+    final cs = Theme.of(context).colorScheme;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F5F5),
+      backgroundColor: cs.surface,
       body: SafeArea(
         child: RefreshIndicator(
-          color: const Color(0xFF4CAF50),
+          color: cs.primary,
           onRefresh: () async {
-            ref.refresh(dashboardStatsProvider);
-            ref.refresh(allBookingsProvider);
+            // Refresh the data providers
+            // ignore: unawaited_futures
+            ref.refresh(dashboardStatsProvider.future);
+            // ignore: unawaited_futures
+            ref.refresh(allBookingsProvider.future);
           },
           child: SingleChildScrollView(
             physics: const AlwaysScrollableScrollPhysics(),
@@ -134,51 +139,75 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
                   children: [
                     Expanded(
                       child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          'Admin dashboard',
-                          style: TextStyle(
-                            fontSize: 22,
-                            fontWeight: FontWeight.bold,
-                            color: Color(0xFF1A1A1A),
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Admin dashboard',
+                            style: TextStyle(
+                              fontSize: 22,
+                              fontWeight: FontWeight.bold,
+                              color: cs.onSurface,
+                            ),
                           ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          "Here's your system overview",
-                          style: TextStyle(
-                            fontSize: 13,
-                            color: Colors.grey[500],
+                          const SizedBox(height: 4),
+                          Text(
+                            "Here's your system overview",
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: cs.onSurfaceVariant,
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
                       ),
                     ),
                     // Profile menu (enhanced bottom sheet)
-                    Builder(builder: (context) {
-                      final userAsync = ref.watch(authStateProvider);
-                      return userAsync.when(
-                        data: (user) {
-                          final avatar = user?.avatarUrl;
-                          final display = user?.fullName ?? user?.email ?? 'Admin';
-                          return InkWell(
-                            borderRadius: BorderRadius.circular(30),
-                            onTap: () => _showProfileMenu(context, ref, user),
-                            child: CircleAvatar(
-                              radius: 20,
-                              backgroundColor: const Color(0xFF4CAF50),
-                              backgroundImage: avatar != null && avatar.isNotEmpty ? NetworkImage(avatar) : null,
-                              child: avatar == null || avatar.isEmpty
-                                  ? Text(display.isNotEmpty ? display[0].toUpperCase() : 'A', style: const TextStyle(color: Colors.white))
-                                  : null,
+                    Builder(
+                      builder: (context) {
+                        final userAsync = ref.watch(authStateProvider);
+                        return userAsync.when(
+                          data: (user) {
+                            final avatar = user?.avatarUrl;
+                            final display =
+                                user?.fullName ?? user?.email ?? 'Admin';
+                            return InkWell(
+                              borderRadius: BorderRadius.circular(30),
+                              onTap: () => _showProfileMenu(context, ref, user),
+                              child: CircleAvatar(
+                                radius: 20,
+                                backgroundColor: cs.primary,
+                                backgroundImage:
+                                    avatar != null && avatar.isNotEmpty
+                                    ? NetworkImage(avatar)
+                                    : null,
+                                child: avatar == null || avatar.isEmpty
+                                    ? Text(
+                                        display.isNotEmpty
+                                            ? display[0].toUpperCase()
+                                            : 'A',
+                                        style: TextStyle(color: cs.onPrimary),
+                                      )
+                                    : null,
+                              ),
+                            );
+                          },
+                          loading: () => CircleAvatar(
+                            backgroundColor: cs.primary,
+                            child: SizedBox(
+                              width: 16,
+                              height: 16,
+                              child: CircularProgressIndicator(
+                                color: cs.onPrimary,
+                                strokeWidth: 2,
+                              ),
                             ),
-                          );
-                        },
-                        loading: () => const CircleAvatar(backgroundColor: Color(0xFF4CAF50), child: SizedBox(width: 16, height: 16, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))),
-                        error: (_, __) => const CircleAvatar(backgroundColor: Color(0xFF4CAF50), child: Icon(Icons.person, color: Colors.white)),
-                      );
-                    }),
+                          ),
+                          error: (_, _) => CircleAvatar(
+                            backgroundColor: cs.primary,
+                            child: Icon(Icons.person, color: cs.onPrimary),
+                          ),
+                        );
+                      },
+                    ),
                   ],
                 ),
 
@@ -186,13 +215,16 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
 
                 // Stats Row (horizontally scrollable)
                 statsAsync.when(
-                  loading: () => const Center(
-                    child: CircularProgressIndicator(color: Color(0xFF4CAF50)),
+                  loading: () => Center(
+                    child: CircularProgressIndicator(color: cs.primary),
                   ),
                   error: (e, _) => Center(
                     child: Column(
                       children: [
-                        Text('Error: $e', style: const TextStyle(color: Colors.red)),
+                        Text(
+                          'Error: $e',
+                          style: const TextStyle(color: Colors.red),
+                        ),
                         ElevatedButton(
                           onPressed: () => ref.refresh(dashboardStatsProvider),
                           child: const Text('Retry'),
@@ -210,7 +242,7 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
                           height: 110,
                           child: RawScrollbar(
                             controller: controller,
-                            thumbColor: const Color(0xFF4CAF50).withOpacity(0.6),
+                            thumbColor: cs.primary.withValues(alpha: 0.6),
                             radius: const Radius.circular(6),
                             thickness: 4,
                             child: SingleChildScrollView(
@@ -224,7 +256,8 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
                                     width: 240,
                                     height: 96,
                                     title: 'Total Revenue',
-                                    value: '₹${stats['totalRevenue'].toStringAsFixed(0)}',
+                                    value:
+                                        '₹${stats['totalRevenue'].toStringAsFixed(0)}',
                                     icon: Icons.attach_money_rounded,
                                     iconColor: const Color(0xFFEF5350),
                                   ),
@@ -270,16 +303,26 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
                             decoration: BoxDecoration(
                               color: const Color(0xFFFFF3CD),
                               borderRadius: BorderRadius.circular(12),
-                              border: Border.all(color: const Color(0xFFFFE69C)),
+                              border: Border.all(
+                                color: const Color(0xFFFFE69C),
+                              ),
                             ),
                             child: Row(
                               children: [
-                                const Icon(Icons.pending_actions, color: Color(0xFF856404), size: 22),
+                                const Icon(
+                                  Icons.pending_actions,
+                                  color: Color(0xFF856404),
+                                  size: 22,
+                                ),
                                 const SizedBox(width: 10),
                                 Expanded(
                                   child: Text(
                                     '${stats['pendingApprovals']} owner application(s) waiting for your approval!',
-                                    style: const TextStyle(color: Color(0xFF856404), fontWeight: FontWeight.w600, fontSize: 13),
+                                    style: const TextStyle(
+                                      color: Color(0xFF856404),
+                                      fontWeight: FontWeight.w600,
+                                      fontSize: 13,
+                                    ),
                                   ),
                                 ),
                               ],
@@ -293,58 +336,124 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
                 const SizedBox(height: 20),
 
                 // Revenue Chart + Range Toggle
-                const Text('Revenue', style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold, color: Color(0xFF1A1A1A))),
+                Text(
+                  'Revenue',
+                  style: TextStyle(
+                    fontSize: 17,
+                    fontWeight: FontWeight.bold,
+                    color: cs.onSurface,
+                  ),
+                ),
                 const SizedBox(height: 10),
                 SingleChildScrollView(
                   scrollDirection: Axis.horizontal,
                   child: Row(
                     children: [
-                      _CustomChoiceChip(label: 'Last 24 hours', selected: _range == '24h', onSelected: (v) => setState(() => _range = '24h')),
+                      _CustomChoiceChip(
+                        label: 'Last 24 hours',
+                        selected: _range == '24h',
+                        onSelected: (v) => setState(() => _range = '24h'),
+                      ),
                       const SizedBox(width: 8),
-                      _CustomChoiceChip(label: 'Last 7 days', selected: _range == '7d', onSelected: (v) => setState(() => _range = '7d')),
+                      _CustomChoiceChip(
+                        label: 'Last 7 days',
+                        selected: _range == '7d',
+                        onSelected: (v) => setState(() => _range = '7d'),
+                      ),
                       const SizedBox(width: 8),
-                      _CustomChoiceChip(label: 'All time', selected: _range == 'all', onSelected: (v) => setState(() => _range = 'all')),
+                      _CustomChoiceChip(
+                        label: 'All time',
+                        selected: _range == 'all',
+                        onSelected: (v) => setState(() => _range = 'all'),
+                      ),
                     ],
                   ),
                 ),
                 const SizedBox(height: 12),
 
                 bookingsAsync.when(
-                  loading: () => const SizedBox(height: 140, child: Center(child: CircularProgressIndicator(color: Color(0xFF4CAF50)))),
-                  error: (e, _) => Text('Could not load bookings', style: TextStyle(color: Colors.grey[500])),
+                  loading: () => SizedBox(
+                    height: 140,
+                    child: Center(
+                      child: CircularProgressIndicator(color: cs.primary),
+                    ),
+                  ),
+                  error: (e, _) => Text(
+                    'Could not load bookings',
+                    style: TextStyle(color: cs.onSurfaceVariant),
+                  ),
                   data: (bookings) {
-                    final series = _computeSeries(bookings.cast<Map<String, dynamic>>());
+                    final series = _computeSeries(
+                      bookings.cast<Map<String, dynamic>>(),
+                    );
                     return Container(
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: cs.surfaceContainer,
                         borderRadius: BorderRadius.circular(14),
                         boxShadow: [
-                          BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 8, offset: const Offset(0, 2)),
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.05),
+                            blurRadius: 8,
+                            offset: const Offset(0, 2),
+                          ),
                         ],
                       ),
                       child: Column(
                         children: [
-                          SizedBox(height: 140, child: _EnhancedSparklineChart(data: series)),
+                          SizedBox(
+                            height: 140,
+                            child: _EnhancedSparklineChart(data: series),
+                          ),
                           const SizedBox(height: 12),
-                          LayoutBuilder(builder: (context, constraints) {
-                            final left = Text(
-                              _range == '24h' ? 'Last 24 hours' : _range == '7d' ? 'Last 7 days' : 'All time',
-                              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: Color(0xFF666666)),
-                            );
-                            final right = Text(
-                              'Total: ₹${bookings.fold<double>(0, (p, e) => p + ((e['total_amount'] ?? 0).toDouble())).toStringAsFixed(0)}',
-                              textAlign: TextAlign.right,
-                              overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14, color: Color(0xFF4CAF50)),
-                            );
+                          LayoutBuilder(
+                            builder: (context, constraints) {
+                              final left = Text(
+                                _range == '24h'
+                                    ? 'Last 24 hours'
+                                    : _range == '7d'
+                                    ? 'Last 7 days'
+                                    : 'All time',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w500,
+                                  color: cs.onSurfaceVariant,
+                                ),
+                              );
+                              final right = Text(
+                                'Total: ₹${bookings.fold<double>(0, (p, e) => p + ((e['total_amount'] ?? 0).toDouble())).toStringAsFixed(0)}',
+                                textAlign: TextAlign.right,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 14,
+                                  color: cs.primary,
+                                ),
+                              );
 
-                            if (constraints.maxWidth < 220) {
-                              return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [left, const SizedBox(height: 6), Align(alignment: Alignment.centerRight, child: right)]);
-                            }
+                              if (constraints.maxWidth < 220) {
+                                return Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    left,
+                                    const SizedBox(height: 6),
+                                    Align(
+                                      alignment: Alignment.centerRight,
+                                      child: right,
+                                    ),
+                                  ],
+                                );
+                              }
 
-                            return Row(children: [Expanded(child: left), const SizedBox(width: 8), Flexible(fit: FlexFit.tight, child: right)]);
-                          }),
+                              return Row(
+                                children: [
+                                  Expanded(child: left),
+                                  const SizedBox(width: 8),
+                                  Flexible(fit: FlexFit.tight, child: right),
+                                ],
+                              );
+                            },
+                          ),
                         ],
                       ),
                     );
@@ -354,18 +463,38 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
                 const SizedBox(height: 20),
 
                 // Recent Bookings Section
-                const Text('Recent Bookings', style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold, color: Color(0xFF1A1A1A))),
+                Text(
+                  'Recent Bookings',
+                  style: TextStyle(
+                    fontSize: 17,
+                    fontWeight: FontWeight.bold,
+                    color: cs.onSurface,
+                  ),
+                ),
                 const SizedBox(height: 12),
 
                 bookingsAsync.when(
-                  loading: () => const Center(child: CircularProgressIndicator(color: Color(0xFF4CAF50))),
-                  error: (e, _) => Text('Could not load bookings', style: TextStyle(color: Colors.grey[500])),
+                  loading: () => Center(
+                    child: CircularProgressIndicator(color: cs.primary),
+                  ),
+                  error: (e, _) => Text(
+                    'Could not load bookings',
+                    style: TextStyle(color: cs.onSurfaceVariant),
+                  ),
                   data: (bookings) {
                     if (bookings.isEmpty) {
                       return Container(
                         padding: const EdgeInsets.all(20),
-                        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12)),
-                        child: const Center(child: Text('No bookings yet', style: TextStyle(color: Colors.grey))),
+                        decoration: BoxDecoration(
+                          color: cs.surfaceContainer,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Center(
+                          child: Text(
+                            'No bookings yet',
+                            style: TextStyle(color: cs.onSurfaceVariant),
+                          ),
+                        ),
                       );
                     }
 
@@ -374,8 +503,10 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
                     return Column(
                       children: recent.map((booking) {
                         final status = booking['status'] ?? 'unknown';
-                        final paymentStatus = booking['payment_status'] ?? 'unknown';
-                        final userName = booking['users']?['full_name'] ?? 'Unknown User';
+                        final paymentStatus =
+                            booking['payment_status'] ?? 'unknown';
+                        final userName =
+                            booking['users']?['full_name'] ?? 'Unknown User';
                         final totalHours = _calculateTotalHours(booking);
 
                         Color statusColor;
@@ -393,9 +524,17 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
                         return Container(
                           margin: const EdgeInsets.only(bottom: 10),
                           padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12), boxShadow: [
-                            BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 6, offset: const Offset(0, 2)),
-                          ]),
+                          decoration: BoxDecoration(
+                            color: cs.surfaceContainer,
+                            borderRadius: BorderRadius.circular(12),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.04),
+                                blurRadius: 6,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
@@ -403,99 +542,193 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
                                 children: [
                                   Container(
                                     padding: const EdgeInsets.all(8),
-                                    decoration: BoxDecoration(color: statusColor.withOpacity(0.1), borderRadius: BorderRadius.circular(8)),
-                                    child: Icon(Icons.book_online, color: statusColor, size: 18),
+                                    decoration: BoxDecoration(
+                                      color: statusColor.withValues(alpha: 0.1),
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: Icon(
+                                      Icons.book_online,
+                                      color: statusColor,
+                                      size: 18,
+                                    ),
                                   ),
                                   const SizedBox(width: 10),
                                   Expanded(
-                                    child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                                      Text(userName, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
-                                      Text('${booking['booking_date']} • ₹${booking['total_amount']}', style: TextStyle(fontSize: 11, color: Colors.grey[500])),
-                                    ]),
-                                  ),
-                                  Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
-                                      decoration: BoxDecoration(color: statusColor.withOpacity(0.1), borderRadius: BorderRadius.circular(6)),
-                                      child: Text(status.toUpperCase(), style: TextStyle(color: statusColor, fontSize: 9, fontWeight: FontWeight.bold)),
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          userName,
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.w600,
+                                            fontSize: 13,
+                                            color: cs.onSurface,
+                                          ),
+                                        ),
+                                        Text(
+                                          '${booking['booking_date']} • ₹${booking['total_amount']}',
+                                          style: TextStyle(
+                                            fontSize: 11,
+                                            color: cs.onSurfaceVariant,
+                                          ),
+                                        ),
+                                      ],
                                     ),
-                                    const SizedBox(height: 4),
-                                    Text(paymentStatus, style: TextStyle(fontSize: 10, color: Colors.grey[400])),
-                                  ]),
+                                  ),
+                                  Column(
+                                    crossAxisAlignment: CrossAxisAlignment.end,
+                                    children: [
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 6,
+                                          vertical: 3,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: statusColor.withValues(alpha: 0.1),
+                                          borderRadius: BorderRadius.circular(
+                                            6,
+                                          ),
+                                        ),
+                                        child: Text(
+                                          status.toUpperCase(),
+                                          style: TextStyle(
+                                            color: statusColor,
+                                            fontSize: 9,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        paymentStatus,
+                                        style: TextStyle(
+                                          fontSize: 10,
+                                          color: Colors.grey[400],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
                                 ],
                               ),
                               const SizedBox(height: 8),
                               // Slots display - show each individual slot
-                              Builder(builder: (_) {
-                                final slots = booking['slots'];
-                                if (slots is List && slots.isNotEmpty) {
-                                  return Wrap(
-                                    spacing: 6,
-                                    runSpacing: 4,
-                                    children: slots.map<Widget>((s) {
-                                      // Use ONLY slot times, not booking times
-                                      final st = s['start_time']?.toString() ?? '';
-                                      final et = s['end_time']?.toString() ?? '';
-                                      if (st.isEmpty || et.isEmpty) return const SizedBox.shrink();
-                                      
-                                      return Container(
-                                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                        decoration: BoxDecoration(
-                                          color: const Color(0xFFF0FFF4),
-                                          borderRadius: BorderRadius.circular(20),
-                                          border: Border.all(color: const Color(0xFF4CAF50).withOpacity(0.2)),
-                                        ),
-                                        child: Row(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            const Icon(Icons.access_time_outlined, size: 12, color: Color(0xFF4CAF50)),
-                                            const SizedBox(width: 6),
-                                            Text(
-                                              '${_formatTimeStr(st)} – ${_formatTimeStr(et)}',
-                                              style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xFF2E7D32)),
-                                            ),
-                                          ],
-                                        ),
-                                      );
-                                    }).toList(),
-                                  );
-                                }
+                              Builder(
+                                builder: (_) {
+                                  final slots = booking['slots'];
+                                  if (slots is List && slots.isNotEmpty) {
+                                    return Wrap(
+                                      spacing: 6,
+                                      runSpacing: 4,
+                                      children: slots.map<Widget>((s) {
+                                        // Use ONLY slot times, not booking times
+                                        final st =
+                                            s['start_time']?.toString() ?? '';
+                                        final et =
+                                            s['end_time']?.toString() ?? '';
+                                        if (st.isEmpty || et.isEmpty) {
+                                          return const SizedBox.shrink();
+                                        }
 
-                                // Fallback: if no slots, show single booking range
-                                final st = booking['start_time']?.toString() ?? '';
-                                final et = booking['end_time']?.toString() ?? '';
-                                if (st.isNotEmpty && et.isNotEmpty) {
-                                  return Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                    decoration: BoxDecoration(
-                                      color: const Color(0xFFF0FFF4),
-                                      borderRadius: BorderRadius.circular(20),
-                                      border: Border.all(color: const Color(0xFF4CAF50).withOpacity(0.2)),
-                                    ),
-                                    child: Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        const Icon(Icons.access_time_outlined, size: 12, color: Color(0xFF4CAF50)),
-                                        const SizedBox(width: 6),
-                                        Text(
-                                          '${_formatTimeStr(st)} – ${_formatTimeStr(et)}',
-                                          style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xFF2E7D32)),
+                                        return Container(
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 8,
+                                            vertical: 4,
+                                          ),
+                                          decoration: BoxDecoration(
+                                            color: cs.primary.withValues(alpha: 0.1),
+                                            borderRadius: BorderRadius.circular(
+                                              20,
+                                            ),
+                                            border: Border.all(
+                                              color: cs.primary.withValues(
+                                                alpha: 0.2,
+                                              ),
+                                            ),
+                                          ),
+                                          child: Row(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              Icon(
+                                                Icons.access_time_outlined,
+                                                size: 12,
+                                                color: cs.primary,
+                                              ),
+                                              const SizedBox(width: 6),
+                                              Text(
+                                                '${_formatTimeStr(st)} – ${_formatTimeStr(et)}',
+                                                style: TextStyle(
+                                                  fontSize: 11,
+                                                  fontWeight: FontWeight.w600,
+                                                  color: cs.primary,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        );
+                                      }).toList(),
+                                    );
+                                  }
+
+                                  // Fallback: if no slots, show single booking range
+                                  final st =
+                                      booking['start_time']?.toString() ?? '';
+                                  final et =
+                                      booking['end_time']?.toString() ?? '';
+                                  if (st.isNotEmpty && et.isNotEmpty) {
+                                    return Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 8,
+                                        vertical: 4,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: cs.primary.withValues(alpha: 0.1),
+                                        borderRadius: BorderRadius.circular(20),
+                                        border: Border.all(
+                                          color: cs.primary.withValues(alpha: 0.2),
                                         ),
-                                      ],
-                                    ),
-                                  );
-                                }
-                                return const SizedBox.shrink();
-                              }),
+                                      ),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Icon(
+                                            Icons.access_time_outlined,
+                                            size: 12,
+                                            color: cs.primary,
+                                          ),
+                                          const SizedBox(width: 6),
+                                          Text(
+                                            '${_formatTimeStr(st)} – ${_formatTimeStr(et)}',
+                                            style: TextStyle(
+                                              fontSize: 11,
+                                              fontWeight: FontWeight.w600,
+                                              color: cs.primary,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    );
+                                  }
+                                  return const SizedBox.shrink();
+                                },
+                              ),
                               const SizedBox(height: 8),
                               // Total hours
                               Row(
                                 children: [
-                                  Icon(Icons.schedule, size: 13, color: Colors.grey[600]),
+                                  Icon(
+                                    Icons.schedule,
+                                    size: 13,
+                                    color: cs.onSurfaceVariant,
+                                  ),
                                   const SizedBox(width: 4),
                                   Text(
                                     'Total: $totalHours hour${totalHours != 1 ? 's' : ''}',
-                                    style: TextStyle(fontSize: 10, color: Colors.grey[600], fontWeight: FontWeight.w500),
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      color: cs.onSurfaceVariant,
+                                      fontWeight: FontWeight.w500,
+                                    ),
                                   ),
                                 ],
                               ),
@@ -513,11 +746,13 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
       ),
     );
   }
+
   void _showProfileMenu(BuildContext context, WidgetRef ref, dynamic user) {
     final name = user?.fullName ?? user?.email ?? 'Admin';
     final avatar = user?.avatarUrl as String?;
     showModalBottomSheet(
       context: context,
+      useSafeArea: true,
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
       builder: (_) => _ProfileMenu(
@@ -553,13 +788,18 @@ class _StatBox extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: cs.surfaceContainer,
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
-          BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 8, offset: const Offset(0, 2)),
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
         ],
       ),
       child: Column(
@@ -569,7 +809,10 @@ class _StatBox extends StatelessWidget {
             children: [
               Container(
                 padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(color: iconColor.withValues(alpha: 0.15), shape: BoxShape.circle),
+                decoration: BoxDecoration(
+                  color: iconColor.withValues(alpha: 0.15),
+                  shape: BoxShape.circle,
+                ),
                 child: Icon(icon, color: iconColor, size: 24),
               ),
             ],
@@ -577,12 +820,20 @@ class _StatBox extends StatelessWidget {
           const SizedBox(height: 12),
           Text(
             title,
-            style: const TextStyle(fontSize: 12, color: Color(0xFF999999), fontWeight: FontWeight.w500),
+            style: TextStyle(
+              fontSize: 12,
+              color: cs.onSurfaceVariant,
+              fontWeight: FontWeight.w500,
+            ),
           ),
           const SizedBox(height: 6),
           Text(
             value,
-            style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: Color(0xFF1A1A1A)),
+            style: TextStyle(
+              fontSize: 22,
+              fontWeight: FontWeight.w700,
+              color: cs.onSurface,
+            ),
           ),
         ],
       ),
@@ -607,13 +858,20 @@ class _ProfileMenu extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return Container(
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.only(topLeft: Radius.circular(20), topRight: Radius.circular(20)),
+      decoration: BoxDecoration(
+        color: cs.surfaceContainer,
+        borderRadius: const BorderRadius.only(
+          topLeft: Radius.circular(20),
+          topRight: Radius.circular(20),
+        ),
       ),
       child: Padding(
-        padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.of(context).viewInsets.bottom +
+              MediaQuery.of(context).padding.bottom,
+        ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -622,7 +880,10 @@ class _ProfileMenu extends StatelessWidget {
               margin: const EdgeInsets.only(top: 12),
               width: 40,
               height: 4,
-              decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(2)),
+              decoration: BoxDecoration(
+                color: cs.outlineVariant,
+                borderRadius: BorderRadius.circular(2),
+              ),
             ),
             const SizedBox(height: 16),
             // Avatar + name
@@ -632,18 +893,44 @@ class _ProfileMenu extends StatelessWidget {
                 children: [
                   CircleAvatar(
                     radius: 36,
-                    backgroundColor: const Color(0xFF4CAF50),
-                    backgroundImage: avatarUrl != null && avatarUrl!.isNotEmpty ? NetworkImage(avatarUrl!) : null,
-                    child: avatarUrl == null || avatarUrl!.isEmpty ? Text(name.isNotEmpty ? name[0].toUpperCase() : 'A', style: const TextStyle(color: Colors.white, fontSize: 26, fontWeight: FontWeight.w700)) : null,
+                    backgroundColor: cs.primary,
+                    backgroundImage: avatarUrl != null && avatarUrl!.isNotEmpty
+                        ? NetworkImage(avatarUrl!)
+                        : null,
+                    child: avatarUrl == null || avatarUrl!.isEmpty
+                        ? Text(
+                            name.isNotEmpty ? name[0].toUpperCase() : 'A',
+                            style: TextStyle(
+                              color: cs.onPrimary,
+                              fontSize: 26,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          )
+                        : null,
                   ),
                   const SizedBox(height: 12),
-                  Text(name, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: Color(0xFF1A1A1A))),
+                  Text(
+                    name,
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      color: cs.onSurface,
+                    ),
+                  ),
                   const SizedBox(height: 4),
-                  Text(email, style: const TextStyle(fontSize: 13, color: Color(0xFF666666))),
+                  Text(
+                    email,
+                    style: TextStyle(fontSize: 13, color: cs.onSurfaceVariant),
+                  ),
                 ],
               ),
             ),
             const SizedBox(height: 18),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: ThemeModeSelector(title: 'Appearance'),
+            ),
+            const SizedBox(height: 16),
             // Actions
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -653,14 +940,22 @@ class _ProfileMenu extends StatelessWidget {
                     width: double.infinity,
                     child: OutlinedButton.icon(
                       style: OutlinedButton.styleFrom(
-                        backgroundColor: Colors.white,
-                        side: const BorderSide(color: Color(0xFF4CAF50)),
+                        backgroundColor: cs.surface,
+                        side: BorderSide(color: cs.primary),
                         padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
                       ),
                       onPressed: onSwitch,
-                      icon: const Icon(Icons.swap_horiz, color: Color(0xFF4CAF50)),
-                      label: const Text('Switch Role', style: TextStyle(color: Color(0xFF4CAF50), fontWeight: FontWeight.w700)),
+                      icon: Icon(Icons.swap_horiz, color: cs.primary),
+                      label: Text(
+                        'Switch Role',
+                        style: TextStyle(
+                          color: cs.primary,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
                     ),
                   ),
                   const SizedBox(height: 12),
@@ -668,14 +963,22 @@ class _ProfileMenu extends StatelessWidget {
                     width: double.infinity,
                     child: OutlinedButton.icon(
                       style: OutlinedButton.styleFrom(
-                        backgroundColor: Colors.white,
+                        backgroundColor: cs.surface,
                         side: const BorderSide(color: Colors.red),
                         padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
                       ),
                       onPressed: onLogout,
                       icon: const Icon(Icons.logout_rounded, color: Colors.red),
-                      label: const Text('Logout', style: TextStyle(color: Colors.red, fontWeight: FontWeight.w700)),
+                      label: const Text(
+                        'Logout',
+                        style: TextStyle(
+                          color: Colors.red,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
                     ),
                   ),
                 ],
@@ -704,7 +1007,8 @@ class _MenuItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = isDestructive ? Colors.red : const Color(0xFF4CAF50);
+    final cs = Theme.of(context).colorScheme;
+    final color = isDestructive ? Colors.red : cs.primary;
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -717,10 +1021,14 @@ class _MenuItem extends StatelessWidget {
               const SizedBox(width: 14),
               Text(
                 label,
-                style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: color),
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w600,
+                  color: color,
+                ),
               ),
               const Spacer(),
-              Icon(Icons.chevron_right, color: Colors.grey[400], size: 22),
+              Icon(Icons.chevron_right, color: cs.outlineVariant, size: 22),
             ],
           ),
         ),
@@ -754,7 +1062,11 @@ class _EnhancedStatCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: color.withValues(alpha: 0.15), width: 1),
         boxShadow: [
-          BoxShadow(color: color.withValues(alpha: 0.08), blurRadius: 10, offset: const Offset(0, 4)),
+          BoxShadow(
+            color: color.withValues(alpha: 0.08),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
         ],
       ),
       child: Column(
@@ -762,20 +1074,31 @@ class _EnhancedStatCard extends StatelessWidget {
         children: [
           Container(
             padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(color: color.withValues(alpha: 0.12), shape: BoxShape.circle),
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.12),
+              shape: BoxShape.circle,
+            ),
             child: Icon(icon, color: color, size: 22),
           ),
           const SizedBox(height: 10),
           Text(
             value,
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: color),
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w700,
+              color: color,
+            ),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
           ),
           const SizedBox(height: 4),
           Text(
             label,
-            style: TextStyle(fontSize: 11, color: Colors.grey[600], fontWeight: FontWeight.w500),
+            style: TextStyle(
+              fontSize: 11,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+              fontWeight: FontWeight.w500,
+            ),
             textAlign: TextAlign.center,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
@@ -805,16 +1128,21 @@ class _StatCardLarge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return Container(
       width: width,
       height: height,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: cs.surfaceContainer,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey[200]!),
+        border: Border.all(color: cs.outlineVariant),
         boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 8, offset: const Offset(0, 3)),
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.03),
+            blurRadius: 8,
+            offset: const Offset(0, 3),
+          ),
         ],
       ),
       child: Row(
@@ -822,7 +1150,10 @@ class _StatCardLarge extends StatelessWidget {
         children: [
           Container(
             padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(color: iconColor.withOpacity(0.12), shape: BoxShape.circle),
+            decoration: BoxDecoration(
+              color: iconColor.withValues(alpha: 0.12),
+              shape: BoxShape.circle,
+            ),
             child: Icon(icon, color: iconColor, size: 22),
           ),
           const SizedBox(width: 12),
@@ -831,21 +1162,51 @@ class _StatCardLarge extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Text(title, style: const TextStyle(fontSize: 12, color: Color(0xFF888888), fontWeight: FontWeight.w600)),
+                Text(
+                  title,
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: cs.onSurfaceVariant,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
                 const SizedBox(height: 6),
                 Row(
                   children: [
-                    Expanded(child: Text(value, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: Color(0xFF1A1A1A)))),
+                    Expanded(
+                      child: Text(
+                        value,
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w800,
+                          color: cs.onSurface,
+                        ),
+                      ),
+                    ),
                     const SizedBox(width: 6),
                     // placeholder percent change
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-                      decoration: BoxDecoration(color: Colors.green.withOpacity(0.08), borderRadius: BorderRadius.circular(8), border: Border.all(color: Colors.green.withOpacity(0.12))),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 6,
+                      ),
+                      decoration: BoxDecoration(
+                        color: cs.surfaceContainerHighest,
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: cs.outlineVariant),
+                      ),
                       child: Row(
-                        children: const [
-                          Icon(Icons.trending_up, size: 12, color: Color(0xFF2E7D32)),
-                          SizedBox(width: 4),
-                          Text('16%', style: TextStyle(color: Color(0xFF2E7D32), fontSize: 12, fontWeight: FontWeight.w700)),
+                        children: [
+                          Icon(Icons.trending_up, size: 12, color: cs.primary),
+                          const SizedBox(width: 4),
+                          Text(
+                            '16%',
+                            style: TextStyle(
+                              color: cs.primary,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
                         ],
                       ),
                     ),
@@ -873,24 +1234,40 @@ class _CustomChoiceChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return GestureDetector(
       onTap: () => onSelected(true),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: cs.surface,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: selected ? const Color(0xFF4CAF50) : Colors.grey[300]!, width: 1.5),
+          border: Border.all(
+            color: selected ? cs.primary : cs.outline,
+            width: 1.5,
+          ),
           boxShadow: selected
-              ? [BoxShadow(color: const Color(0xFF4CAF50).withValues(alpha: 0.15), blurRadius: 6, offset: const Offset(0, 2))]
-              : [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 4, offset: const Offset(0, 1))],
+              ? [
+                  BoxShadow(
+                    color: cs.primary.withValues(alpha: 0.15),
+                    blurRadius: 6,
+                    offset: const Offset(0, 2),
+                  ),
+                ]
+              : [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.04),
+                    blurRadius: 4,
+                    offset: const Offset(0, 1),
+                  ),
+                ],
         ),
         child: Text(
           label,
           style: TextStyle(
             fontSize: 13,
             fontWeight: FontWeight.w600,
-            color: selected ? const Color(0xFF4CAF50) : const Color(0xFF666666),
+            color: selected ? cs.primary : cs.onSurfaceVariant,
           ),
         ),
       ),
@@ -905,8 +1282,9 @@ class _EnhancedSparklineChart extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final line = Theme.of(context).colorScheme.primary;
     return CustomPaint(
-      painter: _EnhancedSparklinePainter(data, const Color(0xFF2196F3)),
+      painter: _EnhancedSparklinePainter(data, line),
       size: const Size(double.infinity, double.infinity),
     );
   }
@@ -961,8 +1339,11 @@ class _EnhancedSparklinePainter extends CustomPainter {
     for (var i = 0; i < data.length; i++) {
       final x = stepX * i;
       final y = size.height - ((data[i] - min) / range) * size.height;
-      if (i == 0) path.moveTo(x, y);
-      else path.lineTo(x, y);
+      if (i == 0) {
+        path.moveTo(x, y);
+      } else {
+        path.lineTo(x, y);
+      }
     }
     canvas.drawPath(path, linePaint);
 
@@ -1032,8 +1413,11 @@ class _SparklinePainter extends CustomPainter {
     for (var i = 0; i < data.length; i++) {
       final x = stepX * i;
       final y = size.height - ((data[i] - min) / range) * size.height;
-      if (i == 0) path.moveTo(x, y);
-      else path.lineTo(x, y);
+      if (i == 0) {
+        path.moveTo(x, y);
+      } else {
+        path.lineTo(x, y);
+      }
     }
     canvas.drawPath(path, paint);
   }

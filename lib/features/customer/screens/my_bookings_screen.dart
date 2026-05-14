@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../../../app/theme/app_colors.dart';
 import '../../../shared/widgets/empty_state.dart';
 import '../data/models/customer_booking.dart';
 import '../data/repositories/customer_booking_repository.dart';
@@ -72,28 +71,34 @@ class _MyBookingsScreenState extends ConsumerState<MyBookingsScreen> {
           TextButton(
             onPressed: () => Navigator.pop(context, false),
             style: TextButton.styleFrom(
-              foregroundColor: AppColors.textPrimary,
+              foregroundColor: Theme.of(context).colorScheme.onSurface,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(30),
               ),
             ),
             child: const Text(
               'Keep booking',
-              style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w600),
+              style: TextStyle(
+                fontFamily: 'Poppins',
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(context, true),
             style: FilledButton.styleFrom(
-              backgroundColor: AppColors.textPrimary,
-              foregroundColor: Colors.white,
+              backgroundColor: Theme.of(context).colorScheme.primary,
+              foregroundColor: Theme.of(context).colorScheme.onPrimary,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(30),
               ),
             ),
             child: const Text(
               'Cancel booking',
-              style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w600),
+              style: TextStyle(
+                fontFamily: 'Poppins',
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ),
         ],
@@ -128,15 +133,18 @@ class _MyBookingsScreenState extends ConsumerState<MyBookingsScreen> {
           FilledButton(
             onPressed: () => Navigator.pop(context),
             style: FilledButton.styleFrom(
-              backgroundColor: AppColors.textPrimary,
-              foregroundColor: Colors.white,
+              backgroundColor: Theme.of(context).colorScheme.primary,
+              foregroundColor: Theme.of(context).colorScheme.onPrimary,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(30),
               ),
             ),
             child: const Text(
               'Close',
-              style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w600),
+              style: TextStyle(
+                fontFamily: 'Poppins',
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ),
         ],
@@ -164,23 +172,23 @@ class _MyBookingsScreenState extends ConsumerState<MyBookingsScreen> {
     final bookingState = ref.watch(customerBookingsControllerProvider);
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: Theme.of(context).colorScheme.surface,
       bottomNavigationBar: CustomerBottomNavBar(
         selectedIndex: 2,
         onTap: _onNavTap,
       ),
       appBar: AppBar(
-        backgroundColor: AppColors.background,
+        backgroundColor: Theme.of(context).colorScheme.surface,
         elevation: 0,
         centerTitle: false,
-        title: const Text(
+        title: Text(
           'My Bookings',
           style: TextStyle(
             fontFamily: 'Poppins',
             fontSize: 22,
             fontWeight: FontWeight.w700,
             letterSpacing: -0.3,
-            color: AppColors.textPrimary,
+            color: Theme.of(context).colorScheme.onSurface,
           ),
         ),
       ),
@@ -241,10 +249,14 @@ class _MyBookingsScreenState extends ConsumerState<MyBookingsScreen> {
               duration: const Duration(milliseconds: 180),
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
               decoration: BoxDecoration(
-                color: AppColors.surface,
+                color: selected
+                    ? Theme.of(context).colorScheme.primary
+                    : Theme.of(context).colorScheme.surface,
                 borderRadius: BorderRadius.circular(999),
                 border: Border.all(
-                  color: selected ? AppColors.primary : AppColors.divider,
+                  color: selected
+                      ? Theme.of(context).colorScheme.primary
+                      : Theme.of(context).colorScheme.outlineVariant,
                   width: selected ? 1.4 : 1,
                 ),
               ),
@@ -256,8 +268,8 @@ class _MyBookingsScreenState extends ConsumerState<MyBookingsScreen> {
                   fontSize: 12.5,
                   fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
                   color: selected
-                      ? AppColors.textPrimary
-                      : AppColors.textSecondary,
+                      ? Theme.of(context).colorScheme.onPrimary
+                      : Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
               ),
             ),

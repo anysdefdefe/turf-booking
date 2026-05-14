@@ -2,12 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:turf_booking/app/theme/app_colors.dart';
 import 'package:turf_booking/features/auth/providers/auth_controller.dart';
 import 'package:turf_booking/features/auth/providers/auth_providers.dart';
+import 'package:turf_booking/app/theme/theme_controller.dart';
 import 'package:turf_booking/shared/widgets/fade_slide_transition.dart';
 
-const String _kHeroImageUrl = 'https://plus.unsplash.com/premium_photo-1677404692469-a4ddcc1267a5?w=400&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTd8fEJhc2ViYWxsfGVufDB8fDB8fHww';
+const String _kHeroImageUrl =
+    'https://plus.unsplash.com/premium_photo-1677404692469-a4ddcc1267a5?w=400&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTd8fEJhc2ViYWxsfGVufDB8fDB8fHww';
 
 class _Accent {
   final Color icon;
@@ -86,20 +87,14 @@ class _ModeSelectionScreenState extends ConsumerState<ModeSelectionScreen>
         subtitle: 'Book venues and manage your games',
         icon: Icons.sports_soccer_rounded,
         route: '/customer/home',
-        accent: _Accent(
-          icon: cs.primary,
-          iconBg: cs.primaryContainer,
-        ),
+        accent: _Accent(icon: cs.primary, iconBg: cs.primaryContainer),
       ),
       _CardData(
         title: 'Owner',
         subtitle: 'Venues, bookings & payouts',
         icon: Icons.storefront_rounded,
         route: '/owner/gateway',
-        accent: _Accent(
-          icon: cs.tertiary,
-          iconBg: cs.tertiaryContainer,
-        ),
+        accent: _Accent(icon: cs.tertiary, iconBg: cs.tertiaryContainer),
       ),
       if (user != null && user.isAdmin)
         _CardData(
@@ -107,23 +102,27 @@ class _ModeSelectionScreenState extends ConsumerState<ModeSelectionScreen>
           subtitle: 'Platform overview and controls',
           icon: Icons.admin_panel_settings_rounded,
           route: '/admin',
-          accent: _Accent(
-            icon: cs.secondary,
-            iconBg: cs.secondaryContainer,
-          ),
+          accent: _Accent(icon: cs.secondary, iconBg: cs.secondaryContainer),
         ),
     ];
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: const SystemUiOverlayStyle(
+      value: SystemUiOverlayStyle(
         statusBarColor: Colors.transparent,
-        statusBarIconBrightness: Brightness.light,
-        statusBarBrightness: Brightness.dark,
-        systemNavigationBarColor: Colors.white,
-        systemNavigationBarIconBrightness: Brightness.dark,
+        statusBarIconBrightness: Theme.of(context).brightness == Brightness.dark
+            ? Brightness.light
+            : Brightness.dark,
+        statusBarBrightness: Theme.of(context).brightness == Brightness.dark
+            ? Brightness.dark
+            : Brightness.light,
+        systemNavigationBarColor: cs.surface,
+        systemNavigationBarIconBrightness:
+            Theme.of(context).brightness == Brightness.dark
+            ? Brightness.light
+            : Brightness.dark,
       ),
       child: Scaffold(
-        backgroundColor: Colors.white,
+        backgroundColor: cs.surface,
         body: Stack(
           clipBehavior: Clip.none,
           children: [
@@ -132,11 +131,7 @@ class _ModeSelectionScreenState extends ConsumerState<ModeSelectionScreen>
               left: 0,
               right: 0,
               height: heroHeight + sheetPeek,
-              child: _HeroImage(
-                topPad: topPad,
-                authState: authState,
-                ref: ref,
-              ),
+              child: _HeroImage(topPad: topPad, authState: authState, ref: ref),
             ),
 
             Positioned(
@@ -149,14 +144,14 @@ class _ModeSelectionScreenState extends ConsumerState<ModeSelectionScreen>
                 child: SlideTransition(
                   position: _sheetSlide,
                   child: Container(
-                    decoration: const BoxDecoration(
-                      color: Colors.white,
+                    decoration: BoxDecoration(
+                      color: cs.surface,
                       borderRadius: BorderRadius.vertical(
                         top: Radius.circular(sheetRadius),
                       ),
                       boxShadow: [
                         BoxShadow(
-                          color: Color(0x14000000),
+                          color: cs.shadow.withValues(alpha: 0.08),
                           blurRadius: 30,
                           offset: Offset(0, -6),
                         ),
@@ -172,7 +167,7 @@ class _ModeSelectionScreenState extends ConsumerState<ModeSelectionScreen>
                             width: 40,
                             height: 4,
                             decoration: BoxDecoration(
-                              color: const Color(0xFFDDDDE3),
+                              color: cs.outlineVariant,
                               borderRadius: BorderRadius.circular(100),
                             ),
                           ),
@@ -188,10 +183,10 @@ class _ModeSelectionScreenState extends ConsumerState<ModeSelectionScreen>
                               Text(
                                 'Choose your role',
                                 style: TextStyle(
-                                  fontFamily: 'SF Pro Display',
+                                  fontFamily: 'Poppins',
                                   fontSize: 22,
                                   fontWeight: FontWeight.w700,
-                                  color: const Color(0xFF0A0A0F),
+                                  color: cs.onSurface,
                                   letterSpacing: -0.6,
                                   height: 1.1,
                                 ),
@@ -201,7 +196,7 @@ class _ModeSelectionScreenState extends ConsumerState<ModeSelectionScreen>
                                 'Pick the experience that fits your role.',
                                 style: TextStyle(
                                   fontSize: 15,
-                                  color: const Color(0xFF8E8E9A),
+                                  color: cs.onSurfaceVariant,
                                   letterSpacing: -0.1,
                                   height: 1.45,
                                 ),
@@ -223,7 +218,7 @@ class _ModeSelectionScreenState extends ConsumerState<ModeSelectionScreen>
                             ),
                             physics: const BouncingScrollPhysics(),
                             itemCount: cards.length,
-                            separatorBuilder: (_, __) =>
+                            separatorBuilder: (_, _) =>
                                 const SizedBox(height: 12),
                             itemBuilder: (context, i) {
                               final card = cards[i];
@@ -274,71 +269,84 @@ class _HeroImage extends StatelessWidget {
           filterQuality: FilterQuality.high,
           loadingBuilder: (_, child, progress) =>
               progress == null ? child : const _HeroFallback(),
-          errorBuilder: (_, __, ___) => const _HeroFallback(),
+          errorBuilder: (_, _, _) => const _HeroFallback(),
         ),
 
         ColoredBox(color: Colors.black.withValues(alpha: 0.38)),
 
         Positioned(
-          top: topPad + 10,
-          right: 16,
-          child: authState.isLoading
-              ? const SizedBox(
-                  width: 28,
-                  height: 25,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    color: Colors.white60,
-                  ),
-                )
-              : _GlassButton(
-                  label: 'Log out',
-                  icon: Icons.logout_rounded,
-                  onTap: () =>
-                      ref.read(authControllerProvider.notifier).signOut(),
-                ),
+          top: topPad + 16,
+          right: 20,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+            decoration: BoxDecoration(
+              color: Colors.black.withValues(alpha: 0.34),
+              borderRadius: BorderRadius.circular(100),
+              border: Border.all(
+                color: Colors.white.withValues(alpha: 0.22),
+                width: 1,
+              ),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                const _ThemeCycleButton(),
+                const SizedBox(width: 8),
+                authState.isLoading
+                    ? const SizedBox(
+                        width: 28,
+                        height: 28,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white60,
+                        ),
+                      )
+                    : _HeroIconButton(
+                      tooltip: 'Log out',
+                        icon: Icons.logout_rounded,
+                        onTap: () =>
+                            ref.read(authControllerProvider.notifier).signOut(),
+                      ),
+              ],
+            ),
+          ),
         ),
 
         Positioned(
           left: 24,
           right: 24,
-          bottom: 52, 
+          bottom: 52,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
               Container(
                 padding: const EdgeInsets.symmetric(
-                  horizontal: 11,
-                  vertical: 6,
+                  horizontal: 1,
+                  vertical: 5,
                 ),
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.18),
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(
-                    color: Colors.white.withValues(alpha: 0.28),
-                    width: 1,
-                  ),
-                ),
+                
                 child: Text(
-                  'TURF BOOKING',
+                  'Discipline beats motivation. Show up and play.',
                   style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 10,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: 2.8,
+                    color: Colors.white.withValues(alpha: 0.94),
+                    fontSize: 18,
+                    fontWeight: FontWeight.w300,
+                    letterSpacing: -0.1,
                   ),
                 ),
               ),
-              const SizedBox(height: 14),
+
+              const SizedBox(height: 12),
 
               // Headline
               Text(
                 'Your game,\nyour ground.',
                 style: TextStyle(
                   color: Colors.white,
-                  fontSize: 36,
-                  fontWeight: FontWeight.w800,
+                  fontSize: 45,
+                  fontWeight: FontWeight.w600,
                   height: 1.0,
                   letterSpacing: -1.1,
                   shadows: [
@@ -351,7 +359,7 @@ class _HeroImage extends StatelessWidget {
                 ),
               ),
 
-              const SizedBox(height: 25),
+              const SizedBox(height: 30),
 
               // Sub-line
             ],
@@ -362,50 +370,73 @@ class _HeroImage extends StatelessWidget {
   }
 }
 
-// ─── Glass button ─────────────────────────────────────────────────────────────
-
-class _GlassButton extends StatelessWidget {
-  final String label;
+class _HeroIconButton extends StatelessWidget {
+  final String tooltip;
   final IconData icon;
   final VoidCallback onTap;
 
-  const _GlassButton({
-    required this.label,
+  const _HeroIconButton({
+    required this.tooltip,
     required this.icon,
     required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
-        decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.15),
-          borderRadius: BorderRadius.circular(100),
-          border: Border.all(
-            color: Colors.white.withValues(alpha: 0.35),
-            width: 1,
-          ),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, size: 16, color: Colors.white),
-            const SizedBox(width: 7),
-            Text(
-              label,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-                letterSpacing: -0.2,
+    return Tooltip(
+      message: tooltip,
+      child: Material(
+        color: Colors.white.withValues(alpha: 0.16),
+        shape: const CircleBorder(),
+        child: InkWell(
+          onTap: onTap,
+          customBorder: const CircleBorder(),
+          splashColor: Colors.white.withValues(alpha: 0.22),
+          highlightColor: Colors.white.withValues(alpha: 0.12),
+          child: Container(
+            width: 38,
+            height: 38,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              border: Border.all(
+                color: Colors.white.withValues(alpha: 0.42),
+                width: 1,
               ),
             ),
-          ],
+            child: Icon(icon, size: 19, color: Colors.white),
+          ),
         ),
       ),
+    );
+  }
+}
+
+class _ThemeCycleButton extends StatelessWidget {
+  const _ThemeCycleButton();
+
+  @override
+  Widget build(BuildContext context) {
+    return ValueListenableBuilder<ThemeMode>(
+      valueListenable: ThemeController.instance,
+      builder: (context, mode, _) {
+        final nextMode = switch (mode) {
+          ThemeMode.system => ThemeMode.light,
+          ThemeMode.light => ThemeMode.dark,
+          ThemeMode.dark => ThemeMode.system,
+        };
+
+        final (icon, tooltip) = switch (mode) {
+          ThemeMode.system => (Icons.brightness_auto_rounded, 'Theme: System'),
+          ThemeMode.light => (Icons.light_mode_rounded, 'Theme: Light'),
+          ThemeMode.dark => (Icons.dark_mode_rounded, 'Theme: Dark'),
+        };
+
+        return _HeroIconButton(
+          tooltip: tooltip,
+          icon: icon,
+          onTap: () => ThemeController.instance.setThemeMode(nextMode),
+        );
+      },
     );
   }
 }
@@ -437,9 +468,10 @@ class _RoleCardState extends State<_RoleCard>
       lowerBound: 0.0,
       upperBound: 1.0,
     );
-    _scale = Tween<double>(begin: 1.0, end: 0.97).animate(
-      CurvedAnimation(parent: _press, curve: Curves.easeIn),
-    );
+    _scale = Tween<double>(
+      begin: 1.0,
+      end: 0.97,
+    ).animate(CurvedAnimation(parent: _press, curve: Curves.easeIn));
   }
 
   @override
@@ -451,6 +483,7 @@ class _RoleCardState extends State<_RoleCard>
   @override
   Widget build(BuildContext context) {
     final d = widget.data;
+    final cs = Theme.of(context).colorScheme;
 
     return GestureDetector(
       onTapDown: (_) => _press.forward(),
@@ -464,17 +497,14 @@ class _RoleCardState extends State<_RoleCard>
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 17),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: cs.surface,
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(
-              color: const Color(0xFFEAEAEF),
-              width: 1,
-            ),
-            boxShadow: const [
+            border: Border.all(color: cs.outlineVariant, width: 1),
+            boxShadow: [
               BoxShadow(
-                color: Color(0x08000000),
+                color: cs.shadow.withValues(alpha: 0.05),
                 blurRadius: 12,
-                offset: Offset(0, 3),
+                offset: const Offset(0, 3),
               ),
             ],
           ),
@@ -500,10 +530,10 @@ class _RoleCardState extends State<_RoleCard>
                   children: [
                     Text(
                       d.title,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w700,
-                        color: Color(0xFF0A0A0F),
+                        color: cs.onSurface,
                         letterSpacing: -0.4,
                         height: 1.2,
                       ),
@@ -511,9 +541,9 @@ class _RoleCardState extends State<_RoleCard>
                     const SizedBox(height: 4),
                     Text(
                       d.subtitle,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 13,
-                        color: Color(0xFF8E8E9A),
+                        color: cs.onSurfaceVariant,
                         height: 1.45,
                         letterSpacing: -0.1,
                       ),
@@ -529,13 +559,13 @@ class _RoleCardState extends State<_RoleCard>
                 width: 30,
                 height: 30,
                 decoration: BoxDecoration(
-                  color: const Color(0xFFF2F2F7),
+                  color: cs.surfaceContainerHighest,
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(
+                child: Icon(
                   Icons.chevron_right_rounded,
                   size: 20,
-                  color: Color(0xFFC7C7CC),
+                  color: cs.onSurfaceVariant,
                 ),
               ),
             ],
@@ -545,7 +575,6 @@ class _RoleCardState extends State<_RoleCard>
     );
   }
 }
-
 
 class _HeroFallback extends StatelessWidget {
   const _HeroFallback();

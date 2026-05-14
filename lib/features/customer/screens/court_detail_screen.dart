@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../../app/constants/app_constants.dart';
-import '../../../app/theme/app_colors.dart';
 import 'package:turf_booking/features/owner/widgets/storage_media.dart';
 import 'package:turf_booking/features/owner/data/repositories/stadium_repository.dart';
 import '../data/models/booking_cart_item.dart';
@@ -10,7 +9,6 @@ import '../data/models/court_model.dart';
 import '../data/repositories/customer_cart_repository.dart';
 import '../data/repositories/court_repository.dart';
 import '../widgets/detail_section_title.dart';
-import '../widgets/info_row_chip.dart';
 
 class CourtDetailScreen extends StatefulWidget {
   final Object? initialArgs;
@@ -173,20 +171,20 @@ class _CourtDetailScreenState extends State<CourtDetailScreen> {
   Widget build(BuildContext context) {
     if (!_initialized || _court == null) {
       return Scaffold(
-        backgroundColor: AppColors.background,
+        backgroundColor: Theme.of(context).colorScheme.surface,
         appBar: AppBar(
           title: const Text('Court Details'),
-          backgroundColor: AppColors.surface,
-          foregroundColor: AppColors.textPrimary,
+          backgroundColor: Theme.of(context).colorScheme.surface,
+          foregroundColor: Theme.of(context).colorScheme.onSurface,
           elevation: 0,
         ),
-        body: const Center(
+        body: Center(
           child: Text(
             'Court details are unavailable.',
             style: TextStyle(
               fontFamily: 'Poppins',
               fontSize: 14,
-              color: AppColors.textSecondary,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
             ),
           ),
         ),
@@ -195,7 +193,7 @@ class _CourtDetailScreenState extends State<CourtDetailScreen> {
 
     final court = _court!;
     return Scaffold(
-      backgroundColor: AppColors.surface,
+      backgroundColor: Theme.of(context).colorScheme.surface,
       body: Stack(
         children: [
           Positioned(
@@ -214,11 +212,13 @@ class _CourtDetailScreenState extends State<CourtDetailScreen> {
                   fit: BoxFit.cover,
                   borderRadius: BorderRadius.zero,
                   placeholder: Container(
-                    color: AppColors.divider,
-                    child: const Icon(
+                    color: Theme.of(context).colorScheme.outlineVariant,
+                    child: Icon(
                       Icons.sports_tennis_rounded,
                       size: 72,
-                      color: AppColors.textMuted,
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.onSurface.withValues(alpha: 0.3),
                     ),
                   ),
                 ),
@@ -241,9 +241,11 @@ class _CourtDetailScreenState extends State<CourtDetailScreen> {
                 const SliverToBoxAdapter(child: SizedBox(height: 290)),
                 SliverToBoxAdapter(
                   child: Container(
-                    decoration: const BoxDecoration(
-                      color: AppColors.surface,
-                      borderRadius: BorderRadius.vertical(top: Radius.circular(40)),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).colorScheme.surface,
+                      borderRadius: BorderRadius.vertical(
+                        top: Radius.circular(40),
+                      ),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -290,36 +292,41 @@ class _CourtDetailScreenState extends State<CourtDetailScreen> {
               Expanded(
                 child: Text(
                   court.name,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontFamily: 'Poppins',
                     fontSize: 26,
                     fontWeight: FontWeight.w800,
-                    color: AppColors.textPrimary,
+                    color: Theme.of(context).colorScheme.onSurface,
                     height: 1.1,
                     letterSpacing: -0.5,
                   ),
                 ),
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
                 decoration: BoxDecoration(
-                  color: AppColors.divider.withValues(alpha: 0.5),
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.outlineVariant.withValues(alpha: 0.5),
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Row(
                   children: [
-                    const Icon(
+                    Icon(
                       Icons.currency_rupee_rounded,
                       size: 14,
-                      color: AppColors.textPrimary,
+                      color: Theme.of(context).colorScheme.onSurface,
                     ),
                     Text(
                       '${court.pricePerHour.toInt()}',
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontFamily: 'Poppins',
                         fontSize: 14,
                         fontWeight: FontWeight.w700,
-                        color: AppColors.textPrimary,
+                        color: Theme.of(context).colorScheme.onSurface,
                       ),
                     ),
                   ],
@@ -330,20 +337,20 @@ class _CourtDetailScreenState extends State<CourtDetailScreen> {
           const SizedBox(height: 12),
           Row(
             children: [
-              const Icon(
+              Icon(
                 Icons.stadium_rounded,
                 size: 16,
-                color: AppColors.textSecondary,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
               ),
               const SizedBox(width: 4),
               Expanded(
                 child: Text(
                   court.stadiumName,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontFamily: 'Poppins',
                     fontSize: 13,
                     fontWeight: FontWeight.w500,
-                    color: AppColors.textSecondary,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -354,10 +361,24 @@ class _CourtDetailScreenState extends State<CourtDetailScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
-              _buildSkeletalStat('Timing', '${court.openTime}-${court.closeTime}'),
-              Container(height: 30, width: 1, color: AppColors.divider),
-              _buildSkeletalStat('Type', court.courtTypes.isNotEmpty ? court.courtTypes.first : 'N/A'),
-              Container(height: 30, width: 1, color: AppColors.divider),
+              _buildSkeletalStat(
+                'Timing',
+                '${court.openTime}-${court.closeTime}',
+              ),
+              Container(
+                height: 30,
+                width: 1,
+                color: Theme.of(context).colorScheme.outlineVariant,
+              ),
+              _buildSkeletalStat(
+                'Type',
+                court.courtTypes.isNotEmpty ? court.courtTypes.first : 'N/A',
+              ),
+              Container(
+                height: 30,
+                width: 1,
+                color: Theme.of(context).colorScheme.outlineVariant,
+              ),
               _buildSkeletalStat('Size', court.teamSize),
             ],
           ),
@@ -371,21 +392,21 @@ class _CourtDetailScreenState extends State<CourtDetailScreen> {
       children: [
         Text(
           label,
-          style: const TextStyle(
+          style: TextStyle(
             fontFamily: 'Poppins',
             fontSize: 12,
-            color: AppColors.textSecondary,
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
             fontWeight: FontWeight.w500,
           ),
         ),
         const SizedBox(height: 4),
         Text(
           value,
-          style: const TextStyle(
+          style: TextStyle(
             fontFamily: 'Poppins',
             fontSize: 14,
             fontWeight: FontWeight.w700,
-            color: AppColors.textPrimary,
+            color: Theme.of(context).colorScheme.onSurface,
           ),
         ),
       ],
@@ -404,10 +425,10 @@ class _CourtDetailScreenState extends State<CourtDetailScreen> {
           const SizedBox(height: 10),
           Text(
             court.description,
-            style: const TextStyle(
+            style: TextStyle(
               fontFamily: 'Poppins',
               fontSize: 13.5,
-              color: AppColors.textSecondary,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
               height: 1.7,
             ),
           ),
@@ -445,12 +466,12 @@ class _CourtDetailScreenState extends State<CourtDetailScreen> {
           const DetailSectionTitle(title: 'Equipments'),
           const SizedBox(height: 12),
           if (court.equipments.isEmpty)
-            const Text(
+            Text(
               'No equipments listed.',
               style: TextStyle(
                 fontFamily: 'Poppins',
                 fontSize: 13,
-                color: AppColors.textSecondary,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
               ),
             )
           else
@@ -462,17 +483,17 @@ class _CourtDetailScreenState extends State<CourtDetailScreen> {
                     Expanded(
                       child: Text(
                         equipment,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontFamily: 'Poppins',
                           fontSize: 14,
-                          color: AppColors.textPrimary,
+                          color: Theme.of(context).colorScheme.onSurface,
                         ),
                       ),
                     ),
                     Icon(
                       iconForEquipment(equipment),
                       size: 17,
-                      color: AppColors.textSecondary,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
                   ],
                 ),
@@ -507,11 +528,11 @@ class _CourtDetailScreenState extends State<CourtDetailScreen> {
               const Spacer(),
               Text(
                 monthLabel,
-                style: const TextStyle(
+                style: TextStyle(
                   fontFamily: 'Poppins',
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
-                  color: AppColors.textPrimary,
+                  color: Theme.of(context).colorScheme.onSurface,
                 ),
               ),
               const Spacer(),
@@ -548,10 +569,14 @@ class _CourtDetailScreenState extends State<CourtDetailScreen> {
                     duration: const Duration(milliseconds: 180),
                     width: 52,
                     decoration: BoxDecoration(
-                      color: selected ? AppColors.primary : AppColors.surface,
+                      color: selected
+                          ? Colors.white
+                          : Theme.of(context).colorScheme.surface,
                       borderRadius: BorderRadius.circular(8),
                       border: Border.all(
-                        color: selected ? AppColors.primary : AppColors.divider,
+                        color: selected
+                            ? Colors.white
+                            : Theme.of(context).colorScheme.outlineVariant,
                       ),
                     ),
                     child: Column(
@@ -564,8 +589,8 @@ class _CourtDetailScreenState extends State<CourtDetailScreen> {
                             fontSize: 10,
                             fontWeight: FontWeight.w500,
                             color: selected
-                                ? Colors.white.withValues(alpha: 0.9)
-                                : AppColors.textSecondary,
+                                ? Colors.black
+                                : Theme.of(context).colorScheme.onSurfaceVariant,
                           ),
                         ),
                         const SizedBox(height: 6),
@@ -577,8 +602,8 @@ class _CourtDetailScreenState extends State<CourtDetailScreen> {
                             fontWeight: FontWeight.w700,
                             height: 0.9,
                             color: selected
-                                ? Colors.white
-                                : AppColors.textPrimary,
+                                ? Colors.black
+                                : Theme.of(context).colorScheme.onSurface,
                           ),
                         ),
                       ],
@@ -594,7 +619,7 @@ class _CourtDetailScreenState extends State<CourtDetailScreen> {
   }
 
   String _monthName(int month) {
-    const names = [
+    const names = <String>[
       'January',
       'February',
       'March',
@@ -641,7 +666,7 @@ class _CourtDetailScreenState extends State<CourtDetailScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
-            children: const [
+            children: [
               DetailSectionTitle(title: 'Select Time Slots'),
               Spacer(),
               Text(
@@ -649,21 +674,24 @@ class _CourtDetailScreenState extends State<CourtDetailScreen> {
                 style: TextStyle(
                   fontFamily: 'Poppins',
                   fontSize: 12,
-                  color: AppColors.textSecondary,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
               ),
             ],
           ),
           const SizedBox(height: 12),
-          const Row(
+          Row(
             children: [
               _SlotLegend(
                 label: 'Available',
-                color: AppColors.surface,
+                color: Theme.of(context).colorScheme.surface,
                 outlined: true,
               ),
               SizedBox(width: 12),
-              _SlotLegend(label: 'Selected', color: AppColors.primary),
+              _SlotLegend(
+                label: 'Selected',
+                color: Theme.of(context).colorScheme.primary,
+              ),
               SizedBox(width: 12),
               _SlotLegend(label: 'Booked', color: Color(0xFFE7E8EC)),
             ],
@@ -723,16 +751,20 @@ class _CourtDetailScreenState extends State<CourtDetailScreen> {
       children: [
         Row(
           children: [
-            Icon(icon, size: 14, color: AppColors.textSecondary),
+            Icon(
+              icon,
+              size: 14,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
             const SizedBox(width: 6),
             Text(
               title,
-              style: const TextStyle(
+              style: TextStyle(
                 fontFamily: 'Poppins',
                 fontSize: 12,
                 fontWeight: FontWeight.w700,
                 letterSpacing: 0.8,
-                color: AppColors.textSecondary,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
               ),
             ),
           ],
@@ -762,18 +794,18 @@ class _CourtDetailScreenState extends State<CourtDetailScreen> {
     final booked = _isBooked(slot);
     final selected = _selectedSlots.contains(slot);
     final background = selected
-        ? AppColors.primary
-        : booked
-        ? const Color(0xFFE7E8EC)
-        : AppColors.surface;
-    final borderColor = selected || !booked
-        ? AppColors.primary
-        : const Color(0xFFE7E8EC);
-    final textColor = selected
         ? Colors.white
         : booked
+        ? const Color(0xFFE7E8EC)
+        : Theme.of(context).colorScheme.surface;
+    final borderColor = selected || !booked
+        ? Colors.white
+        : const Color(0xFFE7E8EC);
+    final textColor = selected
+      ? Colors.black
+        : booked
         ? const Color(0xFF8F93A3)
-        : AppColors.primaryDark;
+        : Theme.of(context).colorScheme.primary;
 
     return GestureDetector(
       onTap: booked ? null : () => _toggleSlot(slot),
@@ -805,7 +837,7 @@ class _CourtDetailScreenState extends State<CourtDetailScreen> {
 
   Widget _buildBottomBar(BuildContext context, Court court) {
     return Container(
-      color: AppColors.surface,
+      color: Theme.of(context).colorScheme.surface,
       width: double.infinity,
       child: Padding(
         padding: const EdgeInsets.fromLTRB(20, 10, 20, 20),
@@ -826,7 +858,9 @@ class _CourtDetailScreenState extends State<CourtDetailScreen> {
                       if (existsInCart) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(
-                            content: Text('These exact slots are already in your cart.'),
+                            content: Text(
+                              'These exact slots are already in your cart.',
+                            ),
                           ),
                         );
                         return;
@@ -861,9 +895,11 @@ class _CourtDetailScreenState extends State<CourtDetailScreen> {
                     }
                   : null,
               style: FilledButton.styleFrom(
-                backgroundColor: AppColors.textPrimary,
-                foregroundColor: Colors.white,
-                disabledBackgroundColor: AppColors.divider,
+                backgroundColor: Theme.of(context).colorScheme.primary,
+                foregroundColor: Theme.of(context).colorScheme.onPrimary,
+                disabledBackgroundColor: Theme.of(
+                  context,
+                ).colorScheme.outlineVariant,
                 padding: const EdgeInsets.symmetric(vertical: 20),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(30),
@@ -875,8 +911,8 @@ class _CourtDetailScreenState extends State<CourtDetailScreen> {
                   const Icon(Icons.add_shopping_cart_rounded, size: 18),
                   const SizedBox(width: 8),
                   Text(
-                    _canBook 
-                        ? 'Add to Cart  •  ₹${(court.pricePerHour * _selectedHours).toInt()}' 
+                    _canBook
+                        ? 'Add to Cart  •  ₹${(court.pricePerHour * _selectedHours).toInt()}'
                         : 'Select Date & Slots',
                     style: const TextStyle(
                       fontFamily: 'Poppins',
@@ -893,12 +929,7 @@ class _CourtDetailScreenState extends State<CourtDetailScreen> {
     );
   }
 
-  Widget _divider() => const Divider(
-    color: AppColors.divider,
-    height: 1,
-    indent: 20,
-    endIndent: 20,
-  );
+
 }
 
 class _SlotLegend extends StatelessWidget {
@@ -924,17 +955,20 @@ class _SlotLegend extends StatelessWidget {
             color: color,
             borderRadius: BorderRadius.circular(2),
             border: outlined
-                ? Border.all(color: AppColors.primary, width: 1)
+                ? Border.all(
+                    color: Theme.of(context).colorScheme.primary,
+                    width: 1,
+                  )
                 : null,
           ),
         ),
         const SizedBox(width: 5),
         Text(
           label,
-          style: const TextStyle(
+          style: TextStyle(
             fontFamily: 'Poppins',
             fontSize: 11,
-            color: AppColors.textSecondary,
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
           ),
         ),
       ],
@@ -947,11 +981,9 @@ class _SlotLegend extends StatelessWidget {
 class _CircleBtn extends StatelessWidget {
   final IconData icon;
   final VoidCallback onTap;
-  final double iconSize;
   const _CircleBtn({
     required this.icon,
     required this.onTap,
-    this.iconSize = 12,
   });
 
   @override
@@ -961,10 +993,14 @@ class _CircleBtn extends StatelessWidget {
       width: 42,
       height: 42,
       decoration: BoxDecoration(
-        color: AppColors.surface.withValues(alpha: 0.9),
+        color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.9),
         shape: BoxShape.circle,
       ),
-      child: Icon(icon, size: 18, color: AppColors.textPrimary),
+      child: Icon(
+        icon,
+        size: 18,
+        color: Theme.of(context).colorScheme.onSurface,
+      ),
     ),
   );
 }
