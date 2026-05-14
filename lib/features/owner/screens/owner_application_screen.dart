@@ -141,18 +141,26 @@ class _OwnerApplicationScreenState
         return Scaffold(
           backgroundColor: Theme.of(context).colorScheme.surface,
           appBar: AppBar(
+            leading: IconButton(
+              icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 18),
+              onPressed: () => context.go('/mode-selection'),
+            ),
             title: const Text('Partner Application'),
             backgroundColor: Theme.of(context).colorScheme.surface,
             elevation: 0,
           ),
-          body: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
-            child: Form(
-              key: _formKey,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Text(
+          body: SafeArea(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 900),
+                  child: Form(
+                    key: _formKey,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Text(
                     'Join Courtly',
                     style: TextStyle(
                       fontFamily: 'Poppins',
@@ -209,15 +217,16 @@ class _OwnerApplicationScreenState
 
                   // PDF Upload Section
                   Container(
-                    padding: const EdgeInsets.all(20),
+                    padding: const EdgeInsets.all(18),
                     decoration: BoxDecoration(
-                      color: Theme.of(context).colorScheme.surface,
-                      borderRadius: BorderRadius.circular(16),
+                      color: Theme.of(context).colorScheme.surfaceContainerLowest,
+                      borderRadius: BorderRadius.circular(14),
                       border: Border.all(
                         color: Theme.of(context).colorScheme.outlineVariant,
                       ),
                     ),
                     child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
                         Icon(
                           Icons.picture_as_pdf_rounded,
@@ -255,39 +264,60 @@ class _OwnerApplicationScreenState
                           ),
                         ),
                         const SizedBox(height: 16),
-                        OutlinedButton.icon(
-                          onPressed: isLoading ? null : _pickPdf,
-                          icon: const Icon(Icons.upload_file),
-                          label: Text(
-                            _selectedFileBytes != null
-                                ? 'Change Document'
-                                : 'Select File',
+                        SizedBox(
+                          width: double.infinity,
+                          child: OutlinedButton.icon(
+                            onPressed: isLoading ? null : _pickPdf,
+                            icon: const Icon(Icons.upload_file),
+                            label: Text(
+                              _selectedFileBytes != null
+                                  ? 'Change Document'
+                                  : 'Select File',
+                            ),
+                            style: OutlinedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
                           ),
                         ),
                       ],
                     ),
                   ),
                   const SizedBox(height: 48),
-
-                  FilledButton(
-                    onPressed: isLoading ? null : _submit,
-                    child: isLoading
-                        ? SizedBox(
-                            height: 20,
-                            width: 20,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: Theme.of(context).colorScheme.surface,
-                            ),
-                          )
-                        : const Text('Submit Application'),
+                  SizedBox(
+                    width: double.infinity,
+                    child: FilledButton(
+                      onPressed: isLoading ? null : _submit,
+                      style: FilledButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        minimumSize: const Size.fromHeight(48),
+                      ),
+                      child: isLoading
+                          ? SizedBox(
+                              height: 20,
+                              width: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Theme.of(context).colorScheme.surface,
+                              ),
+                            )
+                          : const Text('Submit Application'),
+                    ),
                   ),
-                ],
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
               ),
             ),
-          ),
-        );
-      },
-    );
+          );
+        },
+      );
   }
 }

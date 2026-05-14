@@ -157,12 +157,12 @@ class CourtCompactCard extends StatelessWidget {
                         foregroundColor: Colors.red.shade700,
                         side: BorderSide(color: Colors.red.shade200),
                         padding: const EdgeInsets.symmetric(
-                          horizontal: 14,
-                          vertical: 10,
+                          horizontal: 18,
+                          vertical: 12,
                         ),
-                        minimumSize: const Size(0, 40),
+                        minimumSize: const Size(100, 44),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
+                          borderRadius: BorderRadius.circular(12),
                         ),
                       ),
                     ),

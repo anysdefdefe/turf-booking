@@ -320,7 +320,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                             delay: Duration(milliseconds: 300),
                             child: Padding(
                               padding: const EdgeInsets.symmetric(
-                                horizontal: 8.0,
+                                horizontal: 0.0,
                               ),
                               child: GoogleAuthButton(
                                 onPressed: _googleLoading
