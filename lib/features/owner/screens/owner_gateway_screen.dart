@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:turf_booking/app/theme/app_colors.dart';
 import 'package:turf_booking/features/owner/providers/stadium_providers.dart';
 
 /// A dedicated routing gateway for approved owners.
@@ -19,47 +20,43 @@ class OwnerGatewayScreen extends ConsumerWidget {
     final stadiumAsync = ref.watch(currentStadiumProvider);
 
     return stadiumAsync.when(
-      loading: () => Scaffold(
-        backgroundColor: Theme.of(context).colorScheme.surface,
+      loading: () => const Scaffold(
+        backgroundColor: AppColors.background,
         body: Center(
-          child: CircularProgressIndicator(
-            color: Theme.of(context).colorScheme.primary,
-          ),
+          child: CircularProgressIndicator(color: AppColors.primary),
         ),
       ),
       error: (error, _) => Scaffold(
-        backgroundColor: Theme.of(context).colorScheme.surface,
+        backgroundColor: AppColors.background,
         body: Center(
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 32),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(
+                const Icon(
                   Icons.error_outline_rounded,
                   size: 48,
-                  color: Theme.of(
-                    context,
-                  ).colorScheme.onSurface.withValues(alpha: 0.3),
+                  color: AppColors.textMuted,
                 ),
                 const SizedBox(height: 16),
                 Text(
                   'Something went wrong',
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontFamily: 'Poppins',
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
-                    color: Theme.of(context).colorScheme.onSurface,
+                    color: AppColors.textPrimary,
                   ),
                 ),
                 const SizedBox(height: 8),
                 Text(
                   error.toString(),
                   textAlign: TextAlign.center,
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontFamily: 'Poppins',
                     fontSize: 13,
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    color: AppColors.textSecondary,
                   ),
                 ),
                 const SizedBox(height: 24),
@@ -68,7 +65,7 @@ class OwnerGatewayScreen extends ConsumerWidget {
                   icon: const Icon(Icons.refresh_rounded),
                   label: const Text('Retry'),
                   style: FilledButton.styleFrom(
-                    backgroundColor: Theme.of(context).colorScheme.primary,
+                    backgroundColor: AppColors.primary,
                     foregroundColor: Colors.white,
                     textStyle: const TextStyle(
                       fontFamily: 'Poppins',
@@ -94,9 +91,7 @@ class OwnerGatewayScreen extends ConsumerWidget {
         });
 
         // Return an empty scaffold while the post-frame callback fires.
-        return Scaffold(
-          backgroundColor: Theme.of(context).colorScheme.surface,
-        );
+        return const Scaffold(backgroundColor: AppColors.background);
       },
     );
   }

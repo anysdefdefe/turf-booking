@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../app/constants/app_constants.dart';
+import '../../../app/theme/app_colors.dart';
 import '../../../shared/widgets/empty_state.dart';
 import '../data/models/booking_args.dart';
 import '../data/models/booking_cart_item.dart';
@@ -54,22 +55,21 @@ class _CartScreenState extends State<CartScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
     return Scaffold(
-      backgroundColor: cs.surface,
+      backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: Text(
+        title: const Text(
           'Booking Cart',
           style: TextStyle(
             fontFamily: 'Poppins',
             fontSize: 22,
             fontWeight: FontWeight.w700,
             letterSpacing: -0.3,
-            color: cs.onSurface,
+            color: AppColors.textPrimary,
           ),
         ),
         centerTitle: false,
-        backgroundColor: cs.surface,
+        backgroundColor: AppColors.background,
         elevation: 0,
       ),
       bottomNavigationBar: CustomerBottomNavBar(
@@ -107,7 +107,6 @@ class _CartScreenState extends State<CartScreen> {
                     return _CartItemCard(
                       item: item,
                       onRemove: () => _removeItem(item),
-                      context: context,
                     );
                   },
                 ),
@@ -119,9 +118,11 @@ class _CartScreenState extends State<CartScreen> {
                   20,
                   MediaQuery.of(context).padding.bottom + 16,
                 ),
-                decoration: BoxDecoration(
-                  color: cs.surfaceContainer,
-                  border: Border(top: BorderSide(color: cs.outline)),
+                decoration: const BoxDecoration(
+                  color: AppColors.surface,
+                  border: Border(
+                    top: BorderSide(color: AppColors.divider),
+                  ),
                 ),
                 child: Column(
                   children: [
@@ -129,20 +130,20 @@ class _CartScreenState extends State<CartScreen> {
                       children: [
                         Text(
                           '$totalSlots slot${totalSlots == 1 ? '' : 's'}',
-                          style: TextStyle(
+                          style: const TextStyle(
                             fontFamily: 'Poppins',
                             fontSize: 12,
-                            color: cs.onSurfaceVariant,
+                            color: AppColors.textSecondary,
                           ),
                         ),
                         const Spacer(),
                         Text(
                           '₹${totalAmount.toInt()}',
-                          style: TextStyle(
+                          style: const TextStyle(
                             fontFamily: 'Poppins',
                             fontSize: 21,
                             fontWeight: FontWeight.w800,
-                            color: cs.onSurface,
+                            color: AppColors.textPrimary,
                           ),
                         ),
                       ],
@@ -153,17 +154,14 @@ class _CartScreenState extends State<CartScreen> {
                       child: FilledButton.icon(
                         onPressed: () => _proceedToBooking(items),
                         style: FilledButton.styleFrom(
-                          backgroundColor: cs.primary,
-                          foregroundColor: cs.onPrimary,
+                          backgroundColor: AppColors.textPrimary,
+                          foregroundColor: Colors.white,
                           padding: const EdgeInsets.symmetric(vertical: 20),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(30),
                           ),
                         ),
-                        icon: const Icon(
-                          Icons.event_available_rounded,
-                          size: 18,
-                        ),
+                        icon: const Icon(Icons.event_available_rounded, size: 18),
                         label: const Text(
                           'Proceed to Booking',
                           style: TextStyle(
@@ -188,26 +186,20 @@ class _CartScreenState extends State<CartScreen> {
 class _CartItemCard extends StatelessWidget {
   final BookingCartItem item;
   final VoidCallback onRemove;
-  final BuildContext context;
 
-  const _CartItemCard({
-    required this.item,
-    required this.onRemove,
-    required this.context,
-  });
+  const _CartItemCard({required this.item, required this.onRemove});
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
     final dateText = _formatDate(item.date);
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: cs.surfaceContainer,
+        color: AppColors.surface,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: cs.outline),
+        border: Border.all(color: AppColors.divider),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -217,11 +209,11 @@ class _CartItemCard extends StatelessWidget {
               Expanded(
                 child: Text(
                   item.court.name,
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontFamily: 'Poppins',
                     fontSize: 15,
                     fontWeight: FontWeight.w700,
-                    color: cs.onSurface,
+                    color: AppColors.textPrimary,
                   ),
                 ),
               ),
@@ -229,45 +221,45 @@ class _CartItemCard extends StatelessWidget {
                 onPressed: onRemove,
                 icon: const Icon(Icons.delete_outline_rounded),
                 tooltip: 'Remove',
-                color: cs.onSurfaceVariant,
+                color: AppColors.textSecondary,
               ),
             ],
           ),
           Text(
             item.court.stadiumName,
-            style: TextStyle(
+            style: const TextStyle(
               fontFamily: 'Poppins',
               fontSize: 12.5,
               fontWeight: FontWeight.w600,
-              color: cs.onSurface,
+              color: AppColors.textPrimary,
             ),
           ),
           const SizedBox(height: 4),
           Text(
             '${item.court.place}, ${item.court.city}',
-            style: TextStyle(
+            style: const TextStyle(
               fontFamily: 'Poppins',
               fontSize: 12,
-              color: cs.onSurfaceVariant,
+              color: AppColors.textSecondary,
             ),
           ),
           const SizedBox(height: 8),
           Text(
             '$dateText • ${item.durationHours} slot${item.durationHours == 1 ? '' : 's'}',
-            style: TextStyle(
+            style: const TextStyle(
               fontFamily: 'Poppins',
               fontSize: 12,
               fontWeight: FontWeight.w600,
-              color: cs.onSurfaceVariant,
+              color: AppColors.textSecondary,
             ),
           ),
           const SizedBox(height: 6),
           Text(
             'Sports: ${item.sportsLabel}',
-            style: TextStyle(
+            style: const TextStyle(
               fontFamily: 'Poppins',
               fontSize: 12,
-              color: cs.onSurfaceVariant,
+              color: AppColors.textSecondary,
             ),
           ),
           const SizedBox(height: 8),
@@ -282,16 +274,16 @@ class _CartItemCard extends StatelessWidget {
                       vertical: 4,
                     ),
                     decoration: BoxDecoration(
-                      color: cs.surface,
+                      color: AppColors.background,
                       borderRadius: BorderRadius.circular(10),
-                      border: Border.all(color: cs.outline),
+                      border: Border.all(color: AppColors.divider),
                     ),
                     child: Text(
                       slot,
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontFamily: 'Poppins',
                         fontSize: 11,
-                        color: cs.onSurfaceVariant,
+                        color: AppColors.textSecondary,
                       ),
                     ),
                   ),

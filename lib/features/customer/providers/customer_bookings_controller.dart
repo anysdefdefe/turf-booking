@@ -22,8 +22,7 @@ class CustomerBookingsController extends _$CustomerBookingsController {
   Future<void> cancelBooking(CustomerBooking booking) async {
     state = const AsyncLoading();
     state = await AsyncValue.guard(
-      () =>
-          ref.read(customerBookingRepositoryProvider).cancelBooking(booking.id),
+      () => ref.read(customerBookingRepositoryProvider).cancelBooking(booking.id),
     );
   }
 }

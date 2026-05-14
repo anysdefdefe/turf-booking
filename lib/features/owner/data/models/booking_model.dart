@@ -27,8 +27,8 @@ class BookingModel {
   final String courtId;
   final String customerId;
   final String bookingDate; // YYYY-MM-DD
-  final String startTime; // HH:mm:ss  (overall booking range start)
-  final String endTime; // HH:mm:ss  (overall booking range end)
+  final String startTime;   // HH:mm:ss  (overall booking range start)
+  final String endTime;     // HH:mm:ss  (overall booking range end)
   final int durationHours;
   final double totalAmount;
   final String status;
@@ -76,8 +76,7 @@ class BookingModel {
     String? stadiumName;
     if (json['courts'] != null && json['courts'] is Map) {
       courtName = json['courts']['name'] as String?;
-      if (json['courts']['stadium'] != null &&
-          json['courts']['stadium'] is Map) {
+      if (json['courts']['stadium'] != null && json['courts']['stadium'] is Map) {
         stadiumName = json['courts']['stadium']['name'] as String?;
       }
     }
@@ -85,12 +84,11 @@ class BookingModel {
     // Parse the nested slots rows (may be absent or empty).
     List<SlotModel> slots = [];
     if (json['slots'] != null && json['slots'] is List) {
-      slots =
-          (json['slots'] as List<dynamic>)
-              .whereType<Map<String, dynamic>>()
-              .map(SlotModel.fromJson)
-              .toList()
-            ..sort((a, b) => a.startTime.compareTo(b.startTime));
+      slots = (json['slots'] as List<dynamic>)
+          .whereType<Map<String, dynamic>>()
+          .map(SlotModel.fromJson)
+          .toList()
+        ..sort((a, b) => a.startTime.compareTo(b.startTime));
     }
 
     return BookingModel(

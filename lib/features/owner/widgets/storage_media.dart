@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:turf_booking/app/theme/app_colors.dart';
 
 class StorageImage extends StatefulWidget {
   final String? storagePath;
@@ -73,7 +74,7 @@ class _StorageImageState extends State<StorageImage> {
                 width: widget.width,
                 height: widget.height,
                 fit: widget.fit,
-                errorBuilder: (_, _, _) => widget.placeholder,
+                errorBuilder: (_, __, ___) => widget.placeholder,
               );
 
         return ClipRRect(
@@ -94,7 +95,7 @@ class StorageAvatar extends StatefulWidget {
   final String bucketName;
   final String displayName;
   final double radius;
-  final Color? backgroundColor;
+  final Color backgroundColor;
 
   const StorageAvatar({
     super.key,
@@ -102,7 +103,7 @@ class StorageAvatar extends StatefulWidget {
     required this.bucketName,
     required this.displayName,
     required this.radius,
-    this.backgroundColor,
+    this.backgroundColor = const Color(0xFFF3F4F6),
   });
 
   @override
@@ -155,11 +156,10 @@ class _StorageAvatarState extends State<StorageAvatar> {
   }
 
   /// Always returns the app's primary green to match the brand.
-  Color _avatarColor(String _) => Theme.of(context).colorScheme.primary;
+  Color _avatarColor(String _) => AppColors.primary;
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
     final initials = _initials(widget.displayName);
     final color = _avatarColor(widget.displayName);
 
@@ -169,11 +169,11 @@ class _StorageAvatarState extends State<StorageAvatar> {
         // Absolute fallback: person icon
         return CircleAvatar(
           radius: widget.radius,
-          backgroundColor: widget.backgroundColor ?? cs.surfaceContainer,
+          backgroundColor: const Color(0xFFF4F4F5),
           child: Icon(
             Icons.person_rounded,
             size: widget.radius * 0.95,
-            color: cs.onSurfaceVariant,
+            color: const Color(0xFF71717A),
           ),
         );
       }
@@ -186,7 +186,7 @@ class _StorageAvatarState extends State<StorageAvatar> {
             fontFamily: 'Poppins',
             fontSize: widget.radius * 0.75,
             fontWeight: FontWeight.w700,
-            color: Theme.of(context).colorScheme.onPrimary,
+            color: Colors.white,
             letterSpacing: 0.5,
           ),
         ),
@@ -208,17 +208,17 @@ class _StorageAvatarState extends State<StorageAvatar> {
 
         return CircleAvatar(
           radius: widget.radius,
-          backgroundColor: widget.backgroundColor ?? cs.surfaceContainer,
+          backgroundColor: widget.backgroundColor,
           backgroundImage: NetworkImage(url),
           // If the network image fails to load, show initials
-          onBackgroundImageError: (_, _) {},
+          onBackgroundImageError: (_, __) {},
           child: ClipOval(
             child: Image.network(
               url,
               width: widget.radius * 2,
               height: widget.radius * 2,
               fit: BoxFit.cover,
-              errorBuilder: (_, _, _) => initialsAvatar(),
+              errorBuilder: (_, __, ___) => initialsAvatar(),
             ),
           ),
         );

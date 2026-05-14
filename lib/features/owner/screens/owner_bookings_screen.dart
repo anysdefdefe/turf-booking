@@ -1,6 +1,7 @@
 // owner_bookings_screen.dart
 
 import 'package:flutter/material.dart';
+import 'package:turf_booking/app/theme/app_colors.dart';
 import 'package:turf_booking/app/constants/app_constants.dart';
 import '../widgets/owner_bottom_nav_bar.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -13,8 +14,7 @@ class OwnerBookingsScreen extends ConsumerStatefulWidget {
   const OwnerBookingsScreen({super.key});
 
   @override
-  ConsumerState<OwnerBookingsScreen> createState() =>
-      _OwnerBookingsScreenState();
+  ConsumerState<OwnerBookingsScreen> createState() => _OwnerBookingsScreenState();
 }
 
 class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen>
@@ -58,16 +58,10 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen>
           final s = today.toIso8601String().substring(0, 10);
           result = result.where((b) => b.bookingDate == s).toList();
         case 'Tomorrow':
-          final s = today
-              .add(const Duration(days: 1))
-              .toIso8601String()
-              .substring(0, 10);
+          final s = today.add(const Duration(days: 1)).toIso8601String().substring(0, 10);
           result = result.where((b) => b.bookingDate == s).toList();
         case 'Yesterday':
-          final s = today
-              .subtract(const Duration(days: 1))
-              .toIso8601String()
-              .substring(0, 10);
+          final s = today.subtract(const Duration(days: 1)).toIso8601String().substring(0, 10);
           result = result.where((b) => b.bookingDate == s).toList();
         case 'This Week':
           // Monday-based week
@@ -99,16 +93,21 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen>
     return result;
   }
 
+
   bool get _hasActiveFilters => _dateFilter != null || _courtFilter != null;
 
+  
+
+  
+
   /// Groups every booking by courtName → { count, revenue, stadiumName }.
+  
 
   // ── ACTIONS ─────────────────────────────────────────────────────────────────
 
   void _showFilterSheet() async {
     final result = await showModalBottomSheet<Map<String, String?>>(
       context: context,
-      useSafeArea: true,
       backgroundColor: Colors.transparent,
       builder: (_) =>
           _FilterSheet(selectedDate: _dateFilter, selectedCourt: _courtFilter),
@@ -132,29 +131,29 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen>
   Widget build(BuildContext context) {
     final bookingsAsync = ref.watch(ownerBookingsProvider);
     return Scaffold(
-      backgroundColor: Theme.of(context).colorScheme.surface,
+      backgroundColor: AppColors.background,
       bottomNavigationBar: const OwnerBottomNavBar(selectedIndex: 2),
       appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.surface,
+        backgroundColor: AppColors.surface,
         elevation: 0,
-        title: Text(
+        title: const Text(
           'Bookings',
           style: TextStyle(
             fontFamily: 'Poppins',
             fontWeight: FontWeight.w700,
             fontSize: 20,
-            color: Theme.of(context).colorScheme.onSurface,
+            color: AppColors.textPrimary,
           ),
         ),
         actions: [
           if (_hasActiveFilters)
             TextButton(
               onPressed: _clearFilters,
-              child: Text(
+              child: const Text(
                 'Clear',
                 style: TextStyle(
                   fontFamily: 'Poppins',
-                  color: Theme.of(context).colorScheme.primary,
+                  color: AppColors.primary,
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
                 ),
@@ -173,29 +172,20 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen>
             fontFamily: 'Poppins',
             fontSize: 13,
           ),
-          labelColor: Theme.of(context).colorScheme.primary,
-          unselectedLabelColor: Theme.of(context).colorScheme.onSurfaceVariant,
-          indicatorColor: Theme.of(context).colorScheme.primary,
+          labelColor: AppColors.primary,
+          unselectedLabelColor: AppColors.textSecondary,
+          indicatorColor: AppColors.primary,
           indicatorWeight: 2.5,
           tabs: _tabs.map((t) => Tab(text: t)).toList(),
         ),
       ),
       body: bookingsAsync.when(
-        loading: () => Center(
-          child: CircularProgressIndicator(
-            color: Theme.of(context).colorScheme.primary,
-          ),
-        ),
-        error: (err, _) => Center(
-          child: Text(
-            'Error: $err',
-            style: TextStyle(color: Theme.of(context).colorScheme.error),
-          ),
-        ),
+        loading: () => const Center(child: CircularProgressIndicator(color: AppColors.primary)),
+        error: (err, _) => Center(child: Text('Error: $err', style: const TextStyle(color: AppColors.error))),
         data: (bookings) {
           final stats = bookings.courtStats;
           final filtered = _getFilteredBookings(bookings);
-
+          
           return Column(
             children: [
               _buildSummaryStrip(bookings.todayRevenue, bookings.todayBookings),
@@ -209,7 +199,7 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen>
                     : ListView.separated(
                         padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
                         itemCount: filtered.length,
-                        separatorBuilder: (_, _) => const SizedBox(height: 10),
+                        separatorBuilder: (_, __) => const SizedBox(height: 10),
                         itemBuilder: (_, i) =>
                             _BookingCard(booking: filtered[i]),
                       ),
@@ -228,11 +218,9 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen>
       margin: const EdgeInsets.fromLTRB(16, 16, 16, 0),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.secondaryContainer,
+        color: AppColors.badgeBg,
         borderRadius: BorderRadius.circular(AppConstants.radiusM),
-        border: Border.all(
-          color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.2),
-        ),
+        border: Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
       ),
       child: Row(
         children: [
@@ -244,7 +232,7 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen>
           Container(
             width: 1,
             height: 32,
-            color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.2),
+            color: AppColors.primary.withValues(alpha: 0.2),
             margin: const EdgeInsets.symmetric(horizontal: 16),
           ),
           _SummaryItem(
@@ -266,31 +254,27 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen>
             child: Container(
               height: 46,
               decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.surface,
+                color: AppColors.surface,
                 borderRadius: BorderRadius.circular(AppConstants.radiusM),
-                border: Border.all(
-                  color: Theme.of(context).colorScheme.outlineVariant,
-                ),
+                border: Border.all(color: AppColors.divider),
               ),
               child: TextField(
                 onChanged: (v) => setState(() => _searchQuery = v),
-                style: TextStyle(
+                style: const TextStyle(
                   fontFamily: 'Poppins',
                   fontSize: 14,
-                  color: Theme.of(context).colorScheme.onSurface,
+                  color: AppColors.textPrimary,
                 ),
-                decoration: InputDecoration(
+                decoration: const InputDecoration(
                   hintText: 'Search by name, court, stadium...',
                   hintStyle: TextStyle(
                     fontFamily: 'Poppins',
                     fontSize: 13,
-                    color: Theme.of(
-                      context,
-                    ).colorScheme.onSurface.withValues(alpha: 0.3),
+                    color: AppColors.textMuted,
                   ),
                   prefixIcon: Icon(
                     Icons.search_rounded,
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    color: AppColors.textSecondary,
                     size: 20,
                   ),
                   border: InputBorder.none,
@@ -309,20 +293,20 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen>
                   height: 46,
                   decoration: BoxDecoration(
                     color: _hasActiveFilters
-                        ? Theme.of(context).colorScheme.secondaryContainer
-                        : Theme.of(context).colorScheme.surface,
+                        ? AppColors.badgeBg
+                        : AppColors.surface,
                     borderRadius: BorderRadius.circular(AppConstants.radiusM),
                     border: Border.all(
                       color: _hasActiveFilters
-                          ? Theme.of(context).colorScheme.primary
-                          : Theme.of(context).colorScheme.outlineVariant,
+                          ? AppColors.primary
+                          : AppColors.divider,
                     ),
                   ),
                   child: Icon(
                     Icons.tune_rounded,
                     color: _hasActiveFilters
-                        ? Theme.of(context).colorScheme.primary
-                        : Theme.of(context).colorScheme.onSurfaceVariant,
+                        ? AppColors.primary
+                        : AppColors.textSecondary,
                     size: 20,
                   ),
                 ),
@@ -333,8 +317,8 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen>
                     child: Container(
                       width: 8,
                       height: 8,
-                      decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.primary,
+                      decoration: const BoxDecoration(
+                        color: AppColors.primary,
                         shape: BoxShape.circle,
                       ),
                     ),
@@ -377,29 +361,25 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen>
           Icon(
             Icons.book_online_outlined,
             size: 64,
-            color: Theme.of(
-              context,
-            ).colorScheme.onSurface.withValues(alpha: 0.3),
+            color: AppColors.textMuted,
           ),
           const SizedBox(height: 16),
-          Text(
+          const Text(
             'No bookings found',
             style: TextStyle(
               fontFamily: 'Poppins',
               fontSize: 16,
               fontWeight: FontWeight.w600,
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
+              color: AppColors.textSecondary,
             ),
           ),
           const SizedBox(height: 8),
-          Text(
+          const Text(
             'Try adjusting your search or filter',
             style: TextStyle(
               fontFamily: 'Poppins',
               fontSize: 13,
-              color: Theme.of(
-                context,
-              ).colorScheme.onSurface.withValues(alpha: 0.3),
+              color: AppColors.textMuted,
             ),
           ),
         ],
@@ -428,11 +408,9 @@ class _CourtBreakdownState extends State<_CourtBreakdown> {
       padding: const EdgeInsets.fromLTRB(16, 0, 16, 0),
       child: Container(
         decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.surface,
+          color: AppColors.surface,
           borderRadius: BorderRadius.circular(AppConstants.radiusM),
-          border: Border.all(
-            color: Theme.of(context).colorScheme.outlineVariant,
-          ),
+          border: Border.all(color: AppColors.divider),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -448,37 +426,37 @@ class _CourtBreakdownState extends State<_CourtBreakdown> {
                 ),
                 child: Row(
                   children: [
-                    Icon(
+                    const Icon(
                       Icons.bar_chart_rounded,
-                      color: Theme.of(context).colorScheme.primary,
+                      color: AppColors.primary,
                       size: 18,
                     ),
                     const SizedBox(width: 8),
-                    Text(
+                    const Text(
                       'Court Breakdown',
                       style: TextStyle(
                         fontFamily: 'Poppins',
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
-                        color: Theme.of(context).colorScheme.onSurface,
+                        color: AppColors.textPrimary,
                       ),
                     ),
                     const Spacer(),
                     Text(
                       _expanded ? 'Hide' : 'Show',
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontFamily: 'Poppins',
                         fontSize: 12,
-                        color: Theme.of(context).colorScheme.primary,
+                        color: AppColors.primary,
                       ),
                     ),
                     const SizedBox(width: 4),
                     AnimatedRotation(
                       turns: _expanded ? 0.5 : 0,
                       duration: const Duration(milliseconds: 200),
-                      child: Icon(
+                      child: const Icon(
                         Icons.keyboard_arrow_down_rounded,
-                        color: Theme.of(context).colorScheme.primary,
+                        color: AppColors.primary,
                         size: 18,
                       ),
                     ),
@@ -489,10 +467,7 @@ class _CourtBreakdownState extends State<_CourtBreakdown> {
 
             // ── ROWS (visible only when expanded) ───────────────
             if (_expanded) ...[
-              Divider(
-                color: Theme.of(context).colorScheme.outlineVariant,
-                height: 1,
-              ),
+              const Divider(color: AppColors.divider, height: 1),
               ...widget.courtStats.entries.map((entry) {
                 final court = entry.key;
                 final stadium = entry.value['stadiumName'] as String;
@@ -500,11 +475,9 @@ class _CourtBreakdownState extends State<_CourtBreakdown> {
                 final revenue = entry.value['revenue'] as double;
 
                 return Container(
-                  decoration: BoxDecoration(
+                  decoration: const BoxDecoration(
                     border: Border(
-                      bottom: BorderSide(
-                        color: Theme.of(context).colorScheme.outlineVariant,
-                      ),
+                      bottom: BorderSide(color: AppColors.divider),
                     ),
                   ),
                   padding: const EdgeInsets.symmetric(
@@ -519,21 +492,19 @@ class _CourtBreakdownState extends State<_CourtBreakdown> {
                           children: [
                             Text(
                               court,
-                              style: TextStyle(
+                              style: const TextStyle(
                                 fontFamily: 'Poppins',
                                 fontSize: 13,
                                 fontWeight: FontWeight.w600,
-                                color: Theme.of(context).colorScheme.onSurface,
+                                color: AppColors.textPrimary,
                               ),
                             ),
                             Text(
                               stadium,
-                              style: TextStyle(
+                              style: const TextStyle(
                                 fontFamily: 'Poppins',
                                 fontSize: 11,
-                                color: Theme.of(
-                                  context,
-                                ).colorScheme.onSurfaceVariant,
+                                color: AppColors.textSecondary,
                               ),
                             ),
                           ],
@@ -571,14 +542,10 @@ class _StatPill extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
-        color: isAccent
-            ? Theme.of(context).colorScheme.secondaryContainer
-            : Theme.of(context).colorScheme.surfaceContainerHighest,
+        color: isAccent ? AppColors.badgeBg : AppColors.chipUnselected,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: isAccent
-              ? Theme.of(context).colorScheme.primary
-              : Theme.of(context).colorScheme.outlineVariant,
+          color: isAccent ? AppColors.primary : AppColors.divider,
         ),
       ),
       child: Text(
@@ -587,9 +554,7 @@ class _StatPill extends StatelessWidget {
           fontFamily: 'Poppins',
           fontSize: 11,
           fontWeight: FontWeight.w500,
-          color: isAccent
-              ? Theme.of(context).colorScheme.primary
-              : Theme.of(context).colorScheme.onSurfaceVariant,
+          color: isAccent ? AppColors.primary : AppColors.textSecondary,
         ),
       ),
     );
@@ -614,26 +579,26 @@ class _SummaryItem extends StatelessWidget {
     return Expanded(
       child: Row(
         children: [
-          Icon(icon, color: Theme.of(context).colorScheme.primary, size: 18),
+          Icon(icon, color: AppColors.primary, size: 18),
           const SizedBox(width: 8),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
                 value,
-                style: TextStyle(
+                style: const TextStyle(
                   fontFamily: 'Poppins',
                   fontSize: 15,
                   fontWeight: FontWeight.w700,
-                  color: Theme.of(context).colorScheme.primary,
+                  color: AppColors.primary,
                 ),
               ),
               Text(
                 label,
-                style: TextStyle(
+                style: const TextStyle(
                   fontFamily: 'Poppins',
                   fontSize: 10,
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  color: AppColors.textSecondary,
                 ),
               ),
             ],
@@ -657,30 +622,26 @@ class _ActiveFilterChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.secondaryContainer,
+        color: AppColors.badgeBg,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Theme.of(context).colorScheme.primary),
+        border: Border.all(color: AppColors.primary),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           Text(
             label,
-            style: TextStyle(
+            style: const TextStyle(
               fontFamily: 'Poppins',
               fontSize: 12,
               fontWeight: FontWeight.w500,
-              color: Theme.of(context).colorScheme.primary,
+              color: AppColors.primary,
             ),
           ),
           const SizedBox(width: 4),
           GestureDetector(
             onTap: onRemove,
-            child: Icon(
-              Icons.close,
-              size: 14,
-              color: Theme.of(context).colorScheme.primary,
-            ),
+            child: const Icon(Icons.close, size: 14, color: AppColors.primary),
           ),
         ],
       ),
@@ -700,20 +661,7 @@ class _BookingCard extends StatelessWidget {
   String get _formattedDate {
     final dt = DateTime.tryParse(booking.bookingDate);
     if (dt == null) return booking.bookingDate;
-    const months = [
-      'Jan',
-      'Feb',
-      'Mar',
-      'Apr',
-      'May',
-      'Jun',
-      'Jul',
-      'Aug',
-      'Sep',
-      'Oct',
-      'Nov',
-      'Dec',
-    ];
+    const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
     return '${months[dt.month - 1]} ${dt.day}, ${dt.year}';
   }
 
@@ -740,25 +688,21 @@ class _BookingCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final Color statusColor = _isCancelled
         ? Colors.redAccent
-        : Theme.of(context).colorScheme.primary;
+        : AppColors.primary;
     final Color statusBg = _isCancelled
         ? const Color(0xFFFFEBEB)
-        : Theme.of(context).colorScheme.secondaryContainer;
+        : AppColors.badgeBg;
 
     final bool isPaid = booking.paymentStatus.toLowerCase() == 'paid';
-    final Color paymentColor = isPaid
-        ? const Color(0xFF2E7D32)
-        : Colors.orange.shade800;
-    final Color paymentBg = isPaid
-        ? const Color(0xFFE8F5E9)
-        : const Color(0xFFFFF3E0);
+    final Color paymentColor = isPaid ? const Color(0xFF2E7D32) : Colors.orange.shade800;
+    final Color paymentBg = isPaid ? const Color(0xFFE8F5E9) : const Color(0xFFFFF3E0);
 
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
+        color: AppColors.surface,
         borderRadius: BorderRadius.circular(AppConstants.radiusM),
-        border: Border.all(color: Theme.of(context).colorScheme.outlineVariant),
+        border: Border.all(color: AppColors.divider),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -770,12 +714,12 @@ class _BookingCard extends StatelessWidget {
                 width: 38,
                 height: 38,
                 decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.secondaryContainer,
+                  color: AppColors.badgeBg,
                   borderRadius: BorderRadius.circular(AppConstants.radiusS),
                 ),
-                child: Icon(
+                child: const Icon(
                   Icons.person_outline_rounded,
-                  color: Theme.of(context).colorScheme.primary,
+                  color: AppColors.primary,
                   size: 20,
                 ),
               ),
@@ -786,43 +730,34 @@ class _BookingCard extends StatelessWidget {
                   children: [
                     Text(
                       (booking.customerName ?? 'Unknown'),
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontFamily: 'Poppins',
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
-                        color: Theme.of(context).colorScheme.onSurface,
+                        color: AppColors.textPrimary,
                       ),
                     ),
-                    if (booking.customerPhone != null &&
-                        booking.customerPhone!.isNotEmpty)
+                    if (booking.customerPhone != null && booking.customerPhone!.isNotEmpty)
                       Row(
                         children: [
-                          Icon(
-                            Icons.phone_outlined,
-                            size: 12,
-                            color: Theme.of(
-                              context,
-                            ).colorScheme.onSurface.withValues(alpha: 0.3),
-                          ),
+                          const Icon(Icons.phone_outlined, size: 12, color: AppColors.textMuted),
                           const SizedBox(width: 4),
                           Text(
                             booking.customerPhone!,
-                            style: TextStyle(
+                            style: const TextStyle(
                               fontFamily: 'Poppins',
                               fontSize: 12,
-                              color: Theme.of(
-                                context,
-                              ).colorScheme.onSurfaceVariant,
+                              color: AppColors.textSecondary,
                             ),
                           ),
                         ],
                       ),
                     Text(
                       '${(booking.courtName ?? 'Unknown')} — ${(booking.stadiumName ?? 'Unknown')}',
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontFamily: 'Poppins',
                         fontSize: 12,
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        color: AppColors.textSecondary,
                       ),
                     ),
                   ],
@@ -847,21 +782,15 @@ class _BookingCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 10),
-          Divider(
-            color: Theme.of(context).colorScheme.outlineVariant,
-            height: 1,
-          ),
+          const Divider(color: AppColors.divider, height: 1),
           const SizedBox(height: 10),
 
           // ── DATE & TIME BADGE ──
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.surfaceContainer,
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(
-                color: Theme.of(context).colorScheme.outlineVariant,
-              ),
+              color: const Color(0xFFF5F5F5),
+              borderRadius: BorderRadius.circular(8),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -869,19 +798,15 @@ class _BookingCard extends StatelessWidget {
                 // Date row
                 Row(
                   children: [
-                    Icon(
-                      Icons.calendar_today_rounded,
-                      size: 14,
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
+                    const Icon(Icons.calendar_today_rounded, size: 14, color: AppColors.textSecondary),
                     const SizedBox(width: 6),
                     Text(
                       _formattedDate,
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontFamily: 'Poppins',
                         fontSize: 13,
                         fontWeight: FontWeight.w500,
-                        color: Theme.of(context).colorScheme.onSurface,
+                        color: AppColors.textPrimary,
                       ),
                     ),
                   ],
@@ -892,19 +817,15 @@ class _BookingCard extends StatelessWidget {
                 if (booking.slots.isEmpty)
                   Row(
                     children: [
-                      Icon(
-                        Icons.access_time_rounded,
-                        size: 14,
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
-                      ),
+                      const Icon(Icons.access_time_rounded, size: 14, color: AppColors.textSecondary),
                       const SizedBox(width: 4),
                       Text(
                         '${_formatTimeStr(booking.startTime)} – ${_formatTimeStr(booking.endTime)}',
-                        style: TextStyle(
+                        style: const TextStyle(
                           fontFamily: 'Poppins',
                           fontSize: 13,
                           fontWeight: FontWeight.w500,
-                          color: Theme.of(context).colorScheme.onSurface,
+                          color: AppColors.textPrimary,
                         ),
                       ),
                     ],
@@ -915,35 +836,30 @@ class _BookingCard extends StatelessWidget {
                     runSpacing: 4,
                     children: booking.slots.map((slot) {
                       return Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 3,
-                        ),
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                         decoration: BoxDecoration(
-                          color: Theme.of(context)
-                              .colorScheme
-                              .surfaceContainerHighest,
+                          color: AppColors.badgeBg,
                           borderRadius: BorderRadius.circular(20),
                           border: Border.all(
-                            color: Theme.of(context).colorScheme.outlineVariant,
+                            color: AppColors.primary.withValues(alpha: 0.3),
                           ),
                         ),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(
+                            const Icon(
                               Icons.access_time_rounded,
                               size: 12,
-                              color: Theme.of(context).colorScheme.onSurface,
+                              color: AppColors.primary,
                             ),
                             const SizedBox(width: 4),
                             Text(
                               '${_formatDateTime(slot.startTime)} – ${_formatDateTime(slot.endTime)}',
-                              style: TextStyle(
+                              style: const TextStyle(
                                 fontFamily: 'Poppins',
                                 fontSize: 12,
                                 fontWeight: FontWeight.w500,
-                                color: Theme.of(context).colorScheme.onSurface,
+                                color: AppColors.primary,
                               ),
                             ),
                           ],
@@ -960,31 +876,23 @@ class _BookingCard extends StatelessWidget {
           Row(
             children: [
               Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 4,
-                ),
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
                   color: paymentBg,
                   borderRadius: BorderRadius.circular(20),
-                  border: Border.all(
-                    color: paymentColor.withValues(alpha: 0.3),
-                  ),
+                  border: Border.all(color: paymentColor.withValues(alpha: 0.3)),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Icon(
-                      isPaid
-                          ? Icons.check_circle_outline
-                          : Icons.pending_outlined,
+                      isPaid ? Icons.check_circle_outline : Icons.pending_outlined,
                       size: 13,
                       color: paymentColor,
                     ),
                     const SizedBox(width: 4),
                     Text(
-                      booking.paymentStatus[0].toUpperCase() +
-                          booking.paymentStatus.substring(1),
+                      booking.paymentStatus[0].toUpperCase() + booking.paymentStatus.substring(1),
                       style: TextStyle(
                         fontFamily: 'Poppins',
                         fontSize: 11,
@@ -998,11 +906,11 @@ class _BookingCard extends StatelessWidget {
               const Spacer(),
               Text(
                 '₹${booking.totalAmount.toStringAsFixed(0)}',
-                style: TextStyle(
+                style: const TextStyle(
                   fontFamily: 'Poppins',
                   fontSize: 16,
                   fontWeight: FontWeight.w700,
-                  color: Theme.of(context).colorScheme.onSurface,
+                  color: AppColors.textPrimary,
                 ),
               ),
             ],
@@ -1042,14 +950,10 @@ class _FilterSheetState extends ConsumerState<_FilterSheet> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
         decoration: BoxDecoration(
-          color: isSelected
-              ? Theme.of(context).colorScheme.secondaryContainer
-              : Theme.of(context).colorScheme.surfaceContainerHighest,
+          color: isSelected ? AppColors.badgeBg : AppColors.chipUnselected,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: isSelected
-                ? Theme.of(context).colorScheme.primary
-                : Theme.of(context).colorScheme.outlineVariant,
+            color: isSelected ? AppColors.primary : AppColors.divider,
           ),
         ),
         child: Text(
@@ -1058,9 +962,7 @@ class _FilterSheetState extends ConsumerState<_FilterSheet> {
             fontFamily: 'Poppins',
             fontSize: 12,
             fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-            color: isSelected
-                ? Theme.of(context).colorScheme.primary
-                : Theme.of(context).colorScheme.onSurfaceVariant,
+            color: isSelected ? AppColors.primary : AppColors.textSecondary,
           ),
         ),
       ),
@@ -1069,18 +971,14 @@ class _FilterSheetState extends ConsumerState<_FilterSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final bottomPadding = MediaQuery.of(context).padding.bottom;
-
     return Padding(
-      padding: EdgeInsets.fromLTRB(16, 0, 16, 16 + bottomPadding),
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
       child: Container(
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.surface,
+          color: AppColors.surface,
           borderRadius: BorderRadius.circular(AppConstants.radiusL),
-          border: Border.all(
-            color: Theme.of(context).colorScheme.outlineVariant,
-          ),
+          border: Border.all(color: AppColors.divider),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -1089,13 +987,13 @@ class _FilterSheetState extends ConsumerState<_FilterSheet> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
+                const Text(
                   'Filter Bookings',
                   style: TextStyle(
                     fontFamily: 'Poppins',
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
-                    color: Theme.of(context).colorScheme.onSurface,
+                    color: AppColors.textPrimary,
                   ),
                 ),
                 if (_date != null || _court != null)
@@ -1104,25 +1002,25 @@ class _FilterSheetState extends ConsumerState<_FilterSheet> {
                       _date = null;
                       _court = null;
                     }),
-                    child: Text(
+                    child: const Text(
                       'Reset',
                       style: TextStyle(
                         fontFamily: 'Poppins',
                         fontSize: 13,
-                        color: Theme.of(context).colorScheme.primary,
+                        color: AppColors.primary,
                       ),
                     ),
                   ),
               ],
             ),
             const SizedBox(height: 16),
-            Text(
+            const Text(
               'Date',
               style: TextStyle(
                 fontFamily: 'Poppins',
                 fontSize: 13,
                 fontWeight: FontWeight.w500,
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                color: AppColors.textSecondary,
               ),
             ),
             const SizedBox(height: 8),
@@ -1140,13 +1038,13 @@ class _FilterSheetState extends ConsumerState<_FilterSheet> {
                   .toList(),
             ),
             const SizedBox(height: 16),
-            Text(
+            const Text(
               'Court',
               style: TextStyle(
                 fontFamily: 'Poppins',
                 fontSize: 13,
                 fontWeight: FontWeight.w500,
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                color: AppColors.textSecondary,
               ),
             ),
             const SizedBox(height: 8),
@@ -1156,17 +1054,14 @@ class _FilterSheetState extends ConsumerState<_FilterSheet> {
               children: (() {
                 // Derive real court names from actual bookings
                 final bookingsAsync = ref.watch(ownerBookingsProvider);
-                final courtNames =
-                    bookingsAsync.whenOrNull(
-                      data: (bookings) =>
-                          bookings
-                              .map((b) => b.courtName)
-                              .whereType<String>()
-                              .toSet()
-                              .toList()
-                            ..sort(),
-                    ) ??
-                    [];
+                final courtNames = bookingsAsync.whenOrNull(
+                  data: (bookings) => bookings
+                      .map((b) => b.courtName)
+                      .whereType<String>()
+                      .toSet()
+                      .toList()
+                    ..sort(),
+                ) ?? [];
                 return courtNames
                     .map(
                       (l) => _chip(
@@ -1185,7 +1080,7 @@ class _FilterSheetState extends ConsumerState<_FilterSheet> {
                 onPressed: () =>
                     Navigator.pop(context, {'date': _date, 'court': _court}),
                 style: TextButton.styleFrom(
-                  backgroundColor: Theme.of(context).colorScheme.primary,
+                  backgroundColor: AppColors.primary,
                   foregroundColor: Colors.white,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(AppConstants.radiusM),

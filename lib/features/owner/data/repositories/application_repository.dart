@@ -1,4 +1,5 @@
 import 'dart:typed_data';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:turf_booking/shared/exceptions/app_exceptions.dart';
@@ -20,31 +21,27 @@ class ApplicationRepository {
     try {
       final user = _client.auth.currentUser;
       if (user == null) {
-        throw const AppAuthException(
-          'User must be logged in to submit an application.',
-        );
+        throw const AppAuthException('User must be logged in to submit an application.');
       }
 
       final userId = user.id;
       final bucketName = 'proof_of_ownership';
       final fileName = 'proof_${DateTime.now().millisecondsSinceEpoch}.pdf';
-
+      
       // Path conforms to RLS policy: folder name must equal user id
       final filePath = '$userId/$fileName';
 
       // 1. Upload to Supabase Storage
-      await _client.storage
-          .from(bucketName)
-          .uploadBinary(
-            filePath,
-            documentBytes,
-            fileOptions: const FileOptions(
-              upsert: true,
-              contentType: 'application/pdf',
-            ),
-          );
+      await _client.storage.from(bucketName).uploadBinary(
+        filePath,
+        documentBytes,
+        fileOptions: const FileOptions(
+          upsert: true,
+          contentType: 'application/pdf', 
+        ),
+      );
 
-      // 2. We store the specific storage path in the database.
+      // 2. We store the specific storage path in the database. 
       // Because the bucket is private (public = false), we do not generate a getPublicUrl.
       // The admin UI will use this path to generate a `createSignedUrl` when reviewing the application.
       final String documentUrl = filePath;
@@ -57,15 +54,13 @@ class ApplicationRepository {
         'message': message,
         'document_url': documentUrl,
       });
+
     } on StorageException catch (e) {
       throw UnknownException('Document upload failed: ${e.message}', e);
     } on PostgrestException catch (e) {
       throw UnknownException('Application submission failed: ${e.message}', e);
     } catch (e) {
-      throw UnknownException(
-        'An unexpected error occurred during submission.',
-        e,
-      );
+      throw UnknownException('An unexpected error occurred during submission.', e);
     }
   }
 
@@ -73,7 +68,7 @@ class ApplicationRepository {
   Future<bool> hasPendingApplication() async {
     final user = _client.auth.currentUser;
     if (user == null) return false;
-
+    
     try {
       final response = await _client
           .from('owner_applications')

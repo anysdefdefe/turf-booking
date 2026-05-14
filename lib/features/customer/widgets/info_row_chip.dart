@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../app/theme/app_colors.dart';
 
 /// A reusable widget for displaying info with an icon, label, and color.
 class InfoRowChip extends StatelessWidget {
@@ -23,11 +24,11 @@ class InfoRowChip extends StatelessWidget {
         Flexible(
           child: Text(
             label,
-            style: TextStyle(
+            style: const TextStyle(
               fontFamily: 'Poppins',
               fontSize: 13,
               fontWeight: FontWeight.w500,
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
+              color: AppColors.textSecondary,
             ),
             overflow: TextOverflow.ellipsis,
           ),

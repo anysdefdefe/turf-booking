@@ -33,34 +33,45 @@ class _AdminUsersScreenState extends ConsumerState<AdminUsersScreen> {
   @override
   Widget build(BuildContext context) {
     final usersAsync = ref.watch(allUsersProvider);
-    final cs = Theme.of(context).colorScheme;
 
     return Scaffold(
-      backgroundColor: cs.surface,
-      appBar: AppBar(title: const Text('Manage Users')),
+      backgroundColor: const Color(0xFFF5F5F5),
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        elevation: 0,
+        automaticallyImplyLeading: false,
+        title: const Text(
+          'Manage Users',
+          style: TextStyle(
+            color: Color(0xFF1A1A1A),
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ),
       body: Column(
         children: [
+          // Search Bar
           Container(
-            color: cs.surface,
+            color: Colors.white,
             padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
             child: TextField(
               controller: _searchController,
               onChanged: (value) => setState(() => _searchQuery = value),
               decoration: InputDecoration(
                 hintText: 'Search by name or email...',
-                hintStyle: TextStyle(color: cs.onSurfaceVariant, fontSize: 14),
-                prefixIcon: Icon(Icons.search, color: cs.onSurfaceVariant),
+                hintStyle: TextStyle(color: Colors.grey[400], fontSize: 14),
+                prefixIcon: const Icon(Icons.search, color: Colors.grey),
                 suffixIcon: _searchQuery.isNotEmpty
                     ? GestureDetector(
                         onTap: () {
                           _searchController.clear();
                           setState(() => _searchQuery = '');
                         },
-                        child: Icon(Icons.close, color: cs.onSurfaceVariant),
+                        child: const Icon(Icons.close, color: Colors.grey),
                       )
                     : null,
                 filled: true,
-                fillColor: cs.surfaceContainerHighest,
+                fillColor: const Color(0xFFF5F5F5),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                   borderSide: BorderSide.none,
@@ -73,14 +84,18 @@ class _AdminUsersScreenState extends ConsumerState<AdminUsersScreen> {
           // Users List
           Expanded(
             child: usersAsync.when(
-              loading: () =>
-                  Center(child: CircularProgressIndicator(color: cs.primary)),
+              loading: () => const Center(
+                child: CircularProgressIndicator(color: Color(0xFF4CAF50)),
+              ),
               error: (e, _) => Center(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text('Error: $e', style: TextStyle(color: cs.error)),
-                    FilledButton(
+                    Text(
+                      'Error: $e',
+                      style: const TextStyle(color: Colors.red),
+                    ),
+                    ElevatedButton(
                       onPressed: () => ref.invalidate(allUsersProvider),
                       child: const Text('Retry'),
                     ),
@@ -89,19 +104,16 @@ class _AdminUsersScreenState extends ConsumerState<AdminUsersScreen> {
               ),
               data: (users) {
                 final filtered = _filterUsers(users);
-                final cs = Theme.of(context).colorScheme;
                 return RefreshIndicator(
-                  color: cs.primary,
-                  onRefresh: () async {
-                    ref.invalidate(allUsersProvider);
-                  },
+                  color: const Color(0xFF4CAF50),
+                  onRefresh: () async => ref.invalidate(allUsersProvider),
                   child: filtered.isEmpty
                       ? Center(
                           child: Text(
                             _searchQuery.isEmpty
                                 ? 'No users found'
                                 : 'No results for "$_searchQuery"',
-                            style: TextStyle(color: cs.onSurfaceVariant),
+                            style: const TextStyle(color: Colors.grey),
                           ),
                         )
                       : ListView.builder(
@@ -141,10 +153,10 @@ class _AdminUsersScreenState extends ConsumerState<AdminUsersScreen> {
             onPressed: () => Navigator.pop(context, false),
             child: const Text('Cancel'),
           ),
-          FilledButton(
-            style: FilledButton.styleFrom(
-              backgroundColor: Theme.of(context).colorScheme.error,
-              foregroundColor: Theme.of(context).colorScheme.onError,
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
             ),
             onPressed: () => Navigator.pop(context, true),
             child: const Text('Block'),
@@ -160,15 +172,18 @@ class _AdminUsersScreenState extends ConsumerState<AdminUsersScreen> {
       await repo.blockUser(user['id']);
       ref.invalidate(allUsersProvider);
       if (context.mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('${user['full_name']} blocked')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('${user['full_name']} blocked ❌'),
+            backgroundColor: Colors.red,
+          ),
+        );
       }
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Error: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
+        );
       }
     }
   }
@@ -188,10 +203,10 @@ class _AdminUsersScreenState extends ConsumerState<AdminUsersScreen> {
             onPressed: () => Navigator.pop(context, false),
             child: const Text('Cancel'),
           ),
-          FilledButton(
-            style: FilledButton.styleFrom(
-              backgroundColor: Theme.of(context).colorScheme.primary,
-              foregroundColor: Theme.of(context).colorScheme.onPrimary,
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF4CAF50),
+              foregroundColor: Colors.white,
             ),
             onPressed: () => Navigator.pop(context, true),
             child: const Text('Unblock'),
@@ -208,14 +223,17 @@ class _AdminUsersScreenState extends ConsumerState<AdminUsersScreen> {
       ref.invalidate(allUsersProvider);
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('${user['full_name']} unblocked')),
+          SnackBar(
+            content: Text('${user['full_name']} unblocked ✅'),
+            backgroundColor: const Color(0xFF4CAF50),
+          ),
         );
       }
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Error: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
+        );
       }
     }
   }

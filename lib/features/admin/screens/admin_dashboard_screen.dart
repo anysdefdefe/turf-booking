@@ -5,7 +5,6 @@ import '../../auth/providers/auth_controller.dart';
 import '../../auth/providers/auth_providers.dart';
 import '../../../app/constants/app_constants.dart';
 import '../providers/admin_provider.dart';
-import 'package:turf_booking/app/theme/theme_mode_selector.dart';
 
 class AdminDashboardScreen extends ConsumerStatefulWidget {
   const AdminDashboardScreen({super.key});
@@ -17,6 +16,7 @@ class AdminDashboardScreen extends ConsumerStatefulWidget {
 
 class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
   String _range = '24h'; // '24h', '7d', or 'all'
+
   /// Format a [DateTime] to a readable 12-hour time string (e.g. "9:00 AM").
   String _formatDateTime(DateTime dt) {
     final h = dt.hour % 12 == 0 ? 12 : dt.hour % 12;
@@ -113,19 +113,15 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
   Widget build(BuildContext context) {
     final statsAsync = ref.watch(dashboardStatsProvider);
     final bookingsAsync = ref.watch(allBookingsProvider);
-    final cs = Theme.of(context).colorScheme;
 
     return Scaffold(
-      backgroundColor: cs.surface,
+      backgroundColor: const Color(0xFFF5F5F5),
       body: SafeArea(
         child: RefreshIndicator(
-          color: cs.primary,
+          color: const Color(0xFF4CAF50),
           onRefresh: () async {
-            // Refresh the data providers
-            // ignore: unawaited_futures
-            ref.refresh(dashboardStatsProvider.future);
-            // ignore: unawaited_futures
-            ref.refresh(allBookingsProvider.future);
+            ref.invalidate(dashboardStatsProvider);
+            ref.invalidate(allBookingsProvider);
           },
           child: SingleChildScrollView(
             physics: const AlwaysScrollableScrollPhysics(),
@@ -141,12 +137,12 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
+                          const Text(
                             'Admin dashboard',
                             style: TextStyle(
                               fontSize: 22,
                               fontWeight: FontWeight.bold,
-                              color: cs.onSurface,
+                              color: Color(0xFF1A1A1A),
                             ),
                           ),
                           const SizedBox(height: 4),
@@ -154,7 +150,7 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
                             "Here's your system overview",
                             style: TextStyle(
                               fontSize: 13,
-                              color: cs.onSurfaceVariant,
+                              color: Colors.grey[500],
                             ),
                           ),
                         ],
@@ -174,7 +170,7 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
                               onTap: () => _showProfileMenu(context, ref, user),
                               child: CircleAvatar(
                                 radius: 20,
-                                backgroundColor: cs.primary,
+                                backgroundColor: const Color(0xFF4CAF50),
                                 backgroundImage:
                                     avatar != null && avatar.isNotEmpty
                                     ? NetworkImage(avatar)
@@ -184,26 +180,28 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
                                         display.isNotEmpty
                                             ? display[0].toUpperCase()
                                             : 'A',
-                                        style: TextStyle(color: cs.onPrimary),
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                        ),
                                       )
                                     : null,
                               ),
                             );
                           },
-                          loading: () => CircleAvatar(
-                            backgroundColor: cs.primary,
+                          loading: () => const CircleAvatar(
+                            backgroundColor: Color(0xFF4CAF50),
                             child: SizedBox(
                               width: 16,
                               height: 16,
                               child: CircularProgressIndicator(
-                                color: cs.onPrimary,
+                                color: Colors.white,
                                 strokeWidth: 2,
                               ),
                             ),
                           ),
-                          error: (_, _) => CircleAvatar(
-                            backgroundColor: cs.primary,
-                            child: Icon(Icons.person, color: cs.onPrimary),
+                          error: (_, __) => const CircleAvatar(
+                            backgroundColor: Color(0xFF4CAF50),
+                            child: Icon(Icons.person, color: Colors.white),
                           ),
                         );
                       },
@@ -215,8 +213,8 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
 
                 // Stats Row (horizontally scrollable)
                 statsAsync.when(
-                  loading: () => Center(
-                    child: CircularProgressIndicator(color: cs.primary),
+                  loading: () => const Center(
+                    child: CircularProgressIndicator(color: Color(0xFF4CAF50)),
                   ),
                   error: (e, _) => Center(
                     child: Column(
@@ -243,7 +241,9 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
                           height: 110,
                           child: RawScrollbar(
                             controller: controller,
-                            thumbColor: cs.primary.withValues(alpha: 0.6),
+                            thumbColor: const Color(
+                              0xFF4CAF50,
+                            ).withOpacity(0.6),
                             radius: const Radius.circular(6),
                             thickness: 4,
                             child: SingleChildScrollView(
@@ -337,12 +337,12 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
                 const SizedBox(height: 20),
 
                 // Revenue Chart + Range Toggle
-                Text(
+                const Text(
                   'Revenue',
                   style: TextStyle(
                     fontSize: 17,
                     fontWeight: FontWeight.bold,
-                    color: cs.onSurface,
+                    color: Color(0xFF1A1A1A),
                   ),
                 ),
                 const SizedBox(height: 10),
@@ -373,15 +373,17 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
                 const SizedBox(height: 12),
 
                 bookingsAsync.when(
-                  loading: () => SizedBox(
+                  loading: () => const SizedBox(
                     height: 140,
                     child: Center(
-                      child: CircularProgressIndicator(color: cs.primary),
+                      child: CircularProgressIndicator(
+                        color: Color(0xFF4CAF50),
+                      ),
                     ),
                   ),
                   error: (e, _) => Text(
                     'Could not load bookings',
-                    style: TextStyle(color: cs.onSurfaceVariant),
+                    style: TextStyle(color: Colors.grey[500]),
                   ),
                   data: (bookings) {
                     final series = _computeSeries(
@@ -390,7 +392,7 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
                     return Container(
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        color: cs.surfaceContainer,
+                        color: Colors.white,
                         borderRadius: BorderRadius.circular(14),
                         boxShadow: [
                           BoxShadow(
@@ -415,20 +417,20 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
                                     : _range == '7d'
                                     ? 'Last 7 days'
                                     : 'All time',
-                                style: TextStyle(
+                                style: const TextStyle(
                                   fontSize: 13,
                                   fontWeight: FontWeight.w500,
-                                  color: cs.onSurfaceVariant,
+                                  color: Color(0xFF666666),
                                 ),
                               );
                               final right = Text(
                                 'Total: ₹${bookings.fold<double>(0, (p, e) => p + ((e['total_amount'] ?? 0).toDouble())).toStringAsFixed(0)}',
                                 textAlign: TextAlign.right,
                                 overflow: TextOverflow.ellipsis,
-                                style: TextStyle(
+                                style: const TextStyle(
                                   fontWeight: FontWeight.w700,
                                   fontSize: 14,
-                                  color: cs.primary,
+                                  color: Color(0xFF4CAF50),
                                 ),
                               );
 
@@ -464,36 +466,36 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
                 const SizedBox(height: 20),
 
                 // Recent Bookings Section
-                Text(
+                const Text(
                   'Recent Bookings',
                   style: TextStyle(
                     fontSize: 17,
                     fontWeight: FontWeight.bold,
-                    color: cs.onSurface,
+                    color: Color(0xFF1A1A1A),
                   ),
                 ),
                 const SizedBox(height: 12),
 
                 bookingsAsync.when(
-                  loading: () => Center(
-                    child: CircularProgressIndicator(color: cs.primary),
+                  loading: () => const Center(
+                    child: CircularProgressIndicator(color: Color(0xFF4CAF50)),
                   ),
                   error: (e, _) => Text(
                     'Could not load bookings',
-                    style: TextStyle(color: cs.onSurfaceVariant),
+                    style: TextStyle(color: Colors.grey[500]),
                   ),
                   data: (bookings) {
                     if (bookings.isEmpty) {
                       return Container(
                         padding: const EdgeInsets.all(20),
                         decoration: BoxDecoration(
-                          color: cs.surfaceContainer,
+                          color: Colors.white,
                           borderRadius: BorderRadius.circular(12),
                         ),
-                        child: Center(
+                        child: const Center(
                           child: Text(
                             'No bookings yet',
-                            style: TextStyle(color: cs.onSurfaceVariant),
+                            style: TextStyle(color: Colors.grey),
                           ),
                         ),
                       );
@@ -526,11 +528,11 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
                           margin: const EdgeInsets.only(bottom: 10),
                           padding: const EdgeInsets.all(12),
                           decoration: BoxDecoration(
-                            color: cs.surfaceContainer,
+                            color: Colors.white,
                             borderRadius: BorderRadius.circular(12),
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.black.withValues(alpha: 0.04),
+                                color: Colors.black.withOpacity(0.04),
                                 blurRadius: 6,
                                 offset: const Offset(0, 2),
                               ),
@@ -544,7 +546,7 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
                                   Container(
                                     padding: const EdgeInsets.all(8),
                                     decoration: BoxDecoration(
-                                      color: statusColor.withValues(alpha: 0.1),
+                                      color: statusColor.withOpacity(0.1),
                                       borderRadius: BorderRadius.circular(8),
                                     ),
                                     child: Icon(
@@ -561,17 +563,16 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
                                       children: [
                                         Text(
                                           userName,
-                                          style: TextStyle(
+                                          style: const TextStyle(
                                             fontWeight: FontWeight.w600,
                                             fontSize: 13,
-                                            color: cs.onSurface,
                                           ),
                                         ),
                                         Text(
                                           '${booking['booking_date']} • ₹${booking['total_amount']}',
                                           style: TextStyle(
                                             fontSize: 11,
-                                            color: cs.onSurfaceVariant,
+                                            color: Colors.grey[500],
                                           ),
                                         ),
                                       ],
@@ -586,7 +587,7 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
                                           vertical: 3,
                                         ),
                                         decoration: BoxDecoration(
-                                          color: statusColor.withValues(alpha: 0.1),
+                                          color: statusColor.withOpacity(0.1),
                                           borderRadius: BorderRadius.circular(
                                             6,
                                           ),
@@ -627,9 +628,8 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
                                             s['start_time']?.toString() ?? '';
                                         final et =
                                             s['end_time']?.toString() ?? '';
-                                        if (st.isEmpty || et.isEmpty) {
+                                        if (st.isEmpty || et.isEmpty)
                                           return const SizedBox.shrink();
-                                        }
 
                                         return Container(
                                           padding: const EdgeInsets.symmetric(
@@ -637,31 +637,31 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
                                             vertical: 4,
                                           ),
                                           decoration: BoxDecoration(
-                                            color: cs.primary.withValues(alpha: 0.1),
+                                            color: const Color(0xFFF0FFF4),
                                             borderRadius: BorderRadius.circular(
                                               20,
                                             ),
                                             border: Border.all(
-                                              color: cs.primary.withValues(
-                                                alpha: 0.2,
-                                              ),
+                                              color: const Color(
+                                                0xFF4CAF50,
+                                              ).withOpacity(0.2),
                                             ),
                                           ),
                                           child: Row(
                                             mainAxisSize: MainAxisSize.min,
                                             children: [
-                                              Icon(
+                                              const Icon(
                                                 Icons.access_time_outlined,
                                                 size: 12,
-                                                color: cs.primary,
+                                                color: Color(0xFF4CAF50),
                                               ),
                                               const SizedBox(width: 6),
                                               Text(
                                                 '${_formatTimeStr(st)} – ${_formatTimeStr(et)}',
-                                                style: TextStyle(
+                                                style: const TextStyle(
                                                   fontSize: 11,
                                                   fontWeight: FontWeight.w600,
-                                                  color: cs.primary,
+                                                  color: Color(0xFF2E7D32),
                                                 ),
                                               ),
                                             ],
@@ -683,27 +683,29 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
                                         vertical: 4,
                                       ),
                                       decoration: BoxDecoration(
-                                        color: cs.primary.withValues(alpha: 0.1),
+                                        color: const Color(0xFFF0FFF4),
                                         borderRadius: BorderRadius.circular(20),
                                         border: Border.all(
-                                          color: cs.primary.withValues(alpha: 0.2),
+                                          color: const Color(
+                                            0xFF4CAF50,
+                                          ).withOpacity(0.2),
                                         ),
                                       ),
                                       child: Row(
                                         mainAxisSize: MainAxisSize.min,
                                         children: [
-                                          Icon(
+                                          const Icon(
                                             Icons.access_time_outlined,
                                             size: 12,
-                                            color: cs.primary,
+                                            color: Color(0xFF4CAF50),
                                           ),
                                           const SizedBox(width: 6),
                                           Text(
                                             '${_formatTimeStr(st)} – ${_formatTimeStr(et)}',
-                                            style: TextStyle(
+                                            style: const TextStyle(
                                               fontSize: 11,
                                               fontWeight: FontWeight.w600,
-                                              color: cs.primary,
+                                              color: Color(0xFF2E7D32),
                                             ),
                                           ),
                                         ],
@@ -720,14 +722,14 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
                                   Icon(
                                     Icons.schedule,
                                     size: 13,
-                                    color: cs.onSurfaceVariant,
+                                    color: Colors.grey[600],
                                   ),
                                   const SizedBox(width: 4),
                                   Text(
                                     'Total: $totalHours hour${totalHours != 1 ? 's' : ''}',
                                     style: TextStyle(
                                       fontSize: 10,
-                                      color: cs.onSurfaceVariant,
+                                      color: Colors.grey[600],
                                       fontWeight: FontWeight.w500,
                                     ),
                                   ),
@@ -753,7 +755,6 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
     final avatar = user?.avatarUrl as String?;
     showModalBottomSheet(
       context: context,
-      useSafeArea: true,
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
       builder: (_) => _ProfileMenu(
@@ -769,74 +770,6 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
           Navigator.pop(context);
           context.go(AppConstants.routeModeSelection);
         },
-      ),
-    );
-  }
-}
-
-class _StatBox extends StatelessWidget {
-  final String title;
-  final String value;
-  final IconData icon;
-  final Color iconColor;
-
-  const _StatBox({
-    required this.title,
-    required this.value,
-    required this.icon,
-    required this.iconColor,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: cs.surfaceContainer,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: iconColor.withValues(alpha: 0.15),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(icon, color: iconColor, size: 24),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Text(
-            title,
-            style: TextStyle(
-              fontSize: 12,
-              color: cs.onSurfaceVariant,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            value,
-            style: TextStyle(
-              fontSize: 22,
-              fontWeight: FontWeight.w700,
-              color: cs.onSurface,
-            ),
-          ),
-        ],
       ),
     );
   }
@@ -859,19 +792,17 @@ class _ProfileMenu extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
     return Container(
-      decoration: BoxDecoration(
-        color: cs.surfaceContainer,
-        borderRadius: const BorderRadius.only(
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.only(
           topLeft: Radius.circular(20),
           topRight: Radius.circular(20),
         ),
       ),
       child: Padding(
         padding: EdgeInsets.only(
-          bottom: MediaQuery.of(context).viewInsets.bottom +
-              MediaQuery.of(context).padding.bottom,
+          bottom: MediaQuery.of(context).viewInsets.bottom,
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -882,7 +813,7 @@ class _ProfileMenu extends StatelessWidget {
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                color: cs.outlineVariant,
+                color: Colors.grey[300],
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -894,15 +825,15 @@ class _ProfileMenu extends StatelessWidget {
                 children: [
                   CircleAvatar(
                     radius: 36,
-                    backgroundColor: cs.primary,
+                    backgroundColor: const Color(0xFF4CAF50),
                     backgroundImage: avatarUrl != null && avatarUrl!.isNotEmpty
                         ? NetworkImage(avatarUrl!)
                         : null,
                     child: avatarUrl == null || avatarUrl!.isEmpty
                         ? Text(
                             name.isNotEmpty ? name[0].toUpperCase() : 'A',
-                            style: TextStyle(
-                              color: cs.onPrimary,
+                            style: const TextStyle(
+                              color: Colors.white,
                               fontSize: 26,
                               fontWeight: FontWeight.w700,
                             ),
@@ -912,26 +843,24 @@ class _ProfileMenu extends StatelessWidget {
                   const SizedBox(height: 12),
                   Text(
                     name,
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w700,
-                      color: cs.onSurface,
+                      color: Color(0xFF1A1A1A),
                     ),
                   ),
                   const SizedBox(height: 4),
                   Text(
                     email,
-                    style: TextStyle(fontSize: 13, color: cs.onSurfaceVariant),
+                    style: const TextStyle(
+                      fontSize: 13,
+                      color: Color(0xFF666666),
+                    ),
                   ),
                 ],
               ),
             ),
             const SizedBox(height: 18),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: ThemeModeSelector(title: 'Appearance'),
-            ),
-            const SizedBox(height: 16),
             // Actions
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -941,19 +870,22 @@ class _ProfileMenu extends StatelessWidget {
                     width: double.infinity,
                     child: OutlinedButton.icon(
                       style: OutlinedButton.styleFrom(
-                        backgroundColor: cs.surface,
-                        side: BorderSide(color: cs.primary),
+                        backgroundColor: Colors.white,
+                        side: const BorderSide(color: Color(0xFF4CAF50)),
                         padding: const EdgeInsets.symmetric(vertical: 14),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(10),
                         ),
                       ),
                       onPressed: onSwitch,
-                      icon: Icon(Icons.swap_horiz, color: cs.primary),
-                      label: Text(
+                      icon: const Icon(
+                        Icons.swap_horiz,
+                        color: Color(0xFF4CAF50),
+                      ),
+                      label: const Text(
                         'Switch Role',
                         style: TextStyle(
-                          color: cs.primary,
+                          color: Color(0xFF4CAF50),
                           fontWeight: FontWeight.w700,
                         ),
                       ),
@@ -964,7 +896,7 @@ class _ProfileMenu extends StatelessWidget {
                     width: double.infinity,
                     child: OutlinedButton.icon(
                       style: OutlinedButton.styleFrom(
-                        backgroundColor: cs.surface,
+                        backgroundColor: Colors.white,
                         side: const BorderSide(color: Colors.red),
                         padding: const EdgeInsets.symmetric(vertical: 14),
                         shape: RoundedRectangleBorder(
@@ -993,123 +925,6 @@ class _ProfileMenu extends StatelessWidget {
   }
 }
 
-class _MenuItem extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final VoidCallback onTap;
-  final bool isDestructive;
-
-  const _MenuItem({
-    required this.icon,
-    required this.label,
-    required this.onTap,
-    required this.isDestructive,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final color = isDestructive ? Colors.red : cs.primary;
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-          child: Row(
-            children: [
-              Icon(icon, color: color, size: 22),
-              const SizedBox(width: 14),
-              Text(
-                label,
-                style: TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w600,
-                  color: color,
-                ),
-              ),
-              const Spacer(),
-              Icon(Icons.chevron_right, color: cs.outlineVariant, size: 22),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _EnhancedStatCard extends StatelessWidget {
-  final String label;
-  final String value;
-  final IconData icon;
-  final Color color;
-  final Gradient gradient;
-
-  const _EnhancedStatCard({
-    required this.label,
-    required this.value,
-    required this.icon,
-    required this.color,
-    required this.gradient,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 110,
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        gradient: gradient,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: color.withValues(alpha: 0.15), width: 1),
-        boxShadow: [
-          BoxShadow(
-            color: color.withValues(alpha: 0.08),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.12),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(icon, color: color, size: 22),
-          ),
-          const SizedBox(height: 10),
-          Text(
-            value,
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w700,
-              color: color,
-            ),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-          const SizedBox(height: 4),
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 11,
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-              fontWeight: FontWeight.w500,
-            ),
-            textAlign: TextAlign.center,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-        ],
-      ),
-    );
-  }
-}
-
 class _StatCardLarge extends StatelessWidget {
   final double width;
   final double height;
@@ -1129,18 +944,17 @@ class _StatCardLarge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
     return Container(
       width: width,
       height: height,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        color: cs.surfaceContainer,
+        color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: cs.outlineVariant),
+        border: Border.all(color: Colors.grey[200]!),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
+            color: Colors.black.withOpacity(0.03),
             blurRadius: 8,
             offset: const Offset(0, 3),
           ),
@@ -1152,7 +966,7 @@ class _StatCardLarge extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: iconColor.withValues(alpha: 0.12),
+              color: iconColor.withOpacity(0.12),
               shape: BoxShape.circle,
             ),
             child: Icon(icon, color: iconColor, size: 22),
@@ -1165,9 +979,9 @@ class _StatCardLarge extends StatelessWidget {
               children: [
                 Text(
                   title,
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: 12,
-                    color: cs.onSurfaceVariant,
+                    color: Color(0xFF888888),
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -1177,10 +991,10 @@ class _StatCardLarge extends StatelessWidget {
                     Expanded(
                       child: Text(
                         value,
-                        style: TextStyle(
+                        style: const TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.w800,
-                          color: cs.onSurface,
+                          color: Color(0xFF1A1A1A),
                         ),
                       ),
                     ),
@@ -1192,18 +1006,24 @@ class _StatCardLarge extends StatelessWidget {
                         vertical: 6,
                       ),
                       decoration: BoxDecoration(
-                        color: cs.surfaceContainerHighest,
+                        color: Colors.green.withOpacity(0.08),
                         borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: cs.outlineVariant),
+                        border: Border.all(
+                          color: Colors.green.withOpacity(0.12),
+                        ),
                       ),
                       child: Row(
-                        children: [
-                          Icon(Icons.trending_up, size: 12, color: cs.primary),
-                          const SizedBox(width: 4),
+                        children: const [
+                          Icon(
+                            Icons.trending_up,
+                            size: 12,
+                            color: Color(0xFF2E7D32),
+                          ),
+                          SizedBox(width: 4),
                           Text(
                             '16%',
                             style: TextStyle(
-                              color: cs.primary,
+                              color: Color(0xFF2E7D32),
                               fontSize: 12,
                               fontWeight: FontWeight.w700,
                             ),
@@ -1235,22 +1055,21 @@ class _CustomChoiceChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
     return GestureDetector(
       onTap: () => onSelected(true),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
         decoration: BoxDecoration(
-          color: cs.surface,
+          color: Colors.white,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: selected ? cs.primary : cs.outline,
+            color: selected ? const Color(0xFF4CAF50) : Colors.grey[300]!,
             width: 1.5,
           ),
           boxShadow: selected
               ? [
                   BoxShadow(
-                    color: cs.primary.withValues(alpha: 0.15),
+                    color: const Color(0xFF4CAF50).withValues(alpha: 0.15),
                     blurRadius: 6,
                     offset: const Offset(0, 2),
                   ),
@@ -1268,7 +1087,7 @@ class _CustomChoiceChip extends StatelessWidget {
           style: TextStyle(
             fontSize: 13,
             fontWeight: FontWeight.w600,
-            color: selected ? cs.primary : cs.onSurfaceVariant,
+            color: selected ? const Color(0xFF4CAF50) : const Color(0xFF666666),
           ),
         ),
       ),
@@ -1283,9 +1102,8 @@ class _EnhancedSparklineChart extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final line = Theme.of(context).colorScheme.primary;
     return CustomPaint(
-      painter: _EnhancedSparklinePainter(data, line),
+      painter: _EnhancedSparklinePainter(data, const Color(0xFF2196F3)),
       size: const Size(double.infinity, double.infinity),
     );
   }
@@ -1340,11 +1158,10 @@ class _EnhancedSparklinePainter extends CustomPainter {
     for (var i = 0; i < data.length; i++) {
       final x = stepX * i;
       final y = size.height - ((data[i] - min) / range) * size.height;
-      if (i == 0) {
+      if (i == 0)
         path.moveTo(x, y);
-      } else {
+      else
         path.lineTo(x, y);
-      }
     }
     canvas.drawPath(path, linePaint);
 
@@ -1369,58 +1186,6 @@ class _EnhancedSparklinePainter extends CustomPainter {
       final y = size.height - ((data[i] - min) / range) * size.height;
       canvas.drawCircle(Offset(x, y), 5.5, bgDotPaint);
     }
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
-}
-
-// Legacy sparkline chart class (kept for compatibility if needed)
-class _SparklineChart extends StatelessWidget {
-  final List<double> data;
-
-  const _SparklineChart({required this.data});
-
-  @override
-  Widget build(BuildContext context) {
-    return CustomPaint(
-      painter: _SparklinePainter(data, Theme.of(context).colorScheme.primary),
-      size: const Size(double.infinity, double.infinity),
-    );
-  }
-}
-
-class _SparklinePainter extends CustomPainter {
-  final List<double> data;
-  final Color color;
-
-  _SparklinePainter(this.data, this.color);
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = color
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 2.0
-      ..isAntiAlias = true;
-
-    if (data.isEmpty) return;
-    final max = data.reduce((a, b) => a > b ? a : b);
-    final min = data.reduce((a, b) => a < b ? a : b);
-    final range = (max - min) == 0 ? 1 : (max - min);
-
-    final stepX = size.width / (data.length - 1).clamp(1, double.infinity);
-    final path = Path();
-    for (var i = 0; i < data.length; i++) {
-      final x = stepX * i;
-      final y = size.height - ((data[i] - min) / range) * size.height;
-      if (i == 0) {
-        path.moveTo(x, y);
-      } else {
-        path.lineTo(x, y);
-      }
-    }
-    canvas.drawPath(path, paint);
   }
 
   @override

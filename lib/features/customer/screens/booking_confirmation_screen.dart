@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../app/constants/app_constants.dart';
+import '../../../app/theme/app_colors.dart';
 import '../data/models/booking_args.dart';
 import '../data/models/booking_cart_item.dart';
 import '../data/models/payment_models.dart';
@@ -88,7 +89,7 @@ class _BookingConfirmationScreenState
     final totalSlots = widget.args.totalSlots;
 
     return Scaffold(
-      backgroundColor: Theme.of(context).colorScheme.surface,
+      backgroundColor: AppColors.background,
       appBar: AppBar(
         title: const Text(
           'Booking Confirmation',
@@ -99,8 +100,8 @@ class _BookingConfirmationScreenState
             letterSpacing: -0.3,
           ),
         ),
-        backgroundColor: Theme.of(context).colorScheme.surface,
-        foregroundColor: Theme.of(context).colorScheme.onSurface,
+        backgroundColor: AppColors.surface,
+        foregroundColor: AppColors.textPrimary,
         elevation: 0,
         centerTitle: true,
         leading: IconButton(
@@ -114,24 +115,22 @@ class _BookingConfirmationScreenState
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
+              const Text(
                 'Review Bookings',
                 style: TextStyle(
                   fontFamily: 'Poppins',
                   fontSize: 16,
                   fontWeight: FontWeight.w700,
-                  color: Theme.of(context).colorScheme.onSurface,
+                  color: AppColors.textPrimary,
                 ),
               ),
               const SizedBox(height: 12),
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.surface,
+                  color: AppColors.surface,
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(
-                    color: Theme.of(context).colorScheme.outlineVariant,
-                  ),
+                  border: Border.all(color: AppColors.divider),
                 ),
                 child: Column(
                   children: items
@@ -143,11 +142,9 @@ class _BookingConfirmationScreenState
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.surface,
+                  color: AppColors.surface,
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(
-                    color: Theme.of(context).colorScheme.outlineVariant,
-                  ),
+                  border: Border.all(color: AppColors.divider),
                 ),
                 child: Column(
                   children: [
@@ -166,56 +163,51 @@ class _BookingConfirmationScreenState
                 ),
               ),
               const SizedBox(height: 26),
-              Text(
+              const Text(
                 'Payment Details',
                 style: TextStyle(
                   fontFamily: 'Poppins',
                   fontSize: 16,
                   fontWeight: FontWeight.w700,
-                  color: Theme.of(context).colorScheme.onSurface,
+                  color: AppColors.textPrimary,
                 ),
               ),
               const SizedBox(height: 12),
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.surface,
+                  color: AppColors.surface,
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(
-                    color: Theme.of(context).colorScheme.outlineVariant,
-                  ),
+                  border: Border.all(color: AppColors.divider),
                 ),
                 child: Column(
                   children: [
                     _buildPriceRow('Subtotal', '₹${totalAmount.toInt()}'),
                     const SizedBox(height: 10),
                     _buildPriceRow('Platform fee', '₹0'),
-                    Padding(
+                    const Padding(
                       padding: EdgeInsets.symmetric(vertical: 12),
-                      child: Divider(
-                        color: Theme.of(context).colorScheme.outlineVariant,
-                        height: 1,
-                      ),
+                      child: Divider(color: AppColors.divider, height: 1),
                     ),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text(
+                        const Text(
                           'Grand Total',
                           style: TextStyle(
                             fontFamily: 'Poppins',
                             fontSize: 16,
                             fontWeight: FontWeight.w800,
-                            color: Theme.of(context).colorScheme.onSurface,
+                            color: AppColors.textPrimary,
                           ),
                         ),
                         Text(
                           '₹${totalAmount.toInt()}',
-                          style: TextStyle(
+                          style: const TextStyle(
                             fontFamily: 'Poppins',
                             fontSize: 20,
                             fontWeight: FontWeight.w800,
-                            color: Theme.of(context).colorScheme.primary,
+                            color: AppColors.primary,
                           ),
                         ),
                       ],
@@ -231,15 +223,11 @@ class _BookingConfirmationScreenState
                       onPressed: () => _onCancel(context),
                       style: OutlinedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 18),
-                        side: BorderSide(
-                          color: Theme.of(context).colorScheme.onSurface,
-                        ),
+                        side: const BorderSide(color: AppColors.textPrimary),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(30),
                         ),
-                        foregroundColor: Theme.of(
-                          context,
-                        ).colorScheme.onSurface,
+                        foregroundColor: AppColors.textPrimary,
                       ),
                       child: const Text(
                         'Cancel',
@@ -257,15 +245,11 @@ class _BookingConfirmationScreenState
                       onPressed: () => _onKeepInCart(context),
                       style: OutlinedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 18),
-                        side: BorderSide(
-                          color: Theme.of(context).colorScheme.onSurface,
-                        ),
+                        side: const BorderSide(color: AppColors.textPrimary),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(30),
                         ),
-                        foregroundColor: Theme.of(
-                          context,
-                        ).colorScheme.onSurface,
+                        foregroundColor: AppColors.textPrimary,
                       ),
                       child: const Text(
                         'Keep in Cart',
@@ -287,20 +271,20 @@ class _BookingConfirmationScreenState
                       ? null
                       : () async => _onProceedToPay(context),
                   style: FilledButton.styleFrom(
-                    backgroundColor: Theme.of(context).colorScheme.primary,
-                    foregroundColor: Theme.of(context).colorScheme.onPrimary,
+                    backgroundColor: AppColors.textPrimary,
+                    foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(vertical: 20),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(30),
                     ),
                   ),
                   child: _isProcessing
-                      ? SizedBox(
+                      ? const SizedBox(
                           height: 20,
                           width: 20,
                           child: CircularProgressIndicator(
                             strokeWidth: 2,
-                            color: Theme.of(context).colorScheme.onPrimary,
+                            color: Colors.white,
                           ),
                         )
                       : const Text(
@@ -325,11 +309,7 @@ class _BookingConfirmationScreenState
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(
-          icon,
-          size: 18,
-          color: Theme.of(context).colorScheme.onSurfaceVariant,
-        ),
+        Icon(icon, size: 18, color: AppColors.textSecondary),
         const SizedBox(width: 12),
         Expanded(
           child: Column(
@@ -337,20 +317,20 @@ class _BookingConfirmationScreenState
             children: [
               Text(
                 label,
-                style: TextStyle(
+                style: const TextStyle(
                   fontFamily: 'Poppins',
                   fontSize: 12,
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  color: AppColors.textSecondary,
                 ),
               ),
               const SizedBox(height: 2),
               Text(
                 value,
-                style: TextStyle(
+                style: const TextStyle(
                   fontFamily: 'Poppins',
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
-                  color: Theme.of(context).colorScheme.onSurface,
+                  color: AppColors.textPrimary,
                 ),
               ),
             ],
@@ -366,20 +346,20 @@ class _BookingConfirmationScreenState
       children: [
         Text(
           label,
-          style: TextStyle(
+          style: const TextStyle(
             fontFamily: 'Poppins',
             fontSize: 14,
             fontWeight: FontWeight.w500,
-            color: Theme.of(context).colorScheme.onSurfaceVariant,
+            color: AppColors.textSecondary,
           ),
         ),
         Text(
           value,
-          style: TextStyle(
+          style: const TextStyle(
             fontFamily: 'Poppins',
             fontSize: 14,
             fontWeight: FontWeight.w600,
-            color: Theme.of(context).colorScheme.onSurface,
+            color: AppColors.textPrimary,
           ),
         ),
       ],
@@ -402,45 +382,42 @@ class _BookingSummaryTile extends StatelessWidget {
         children: [
           Text(
             item.court.name,
-            style: TextStyle(
+            style: const TextStyle(
               fontFamily: 'Poppins',
               fontSize: 14,
               fontWeight: FontWeight.w700,
-              color: Theme.of(context).colorScheme.onSurface,
+              color: AppColors.textPrimary,
             ),
           ),
           const SizedBox(height: 3),
           Text(
             '${item.court.stadiumName} • $dateText',
-            style: TextStyle(
+            style: const TextStyle(
               fontFamily: 'Poppins',
               fontSize: 12,
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
+              color: AppColors.textSecondary,
             ),
           ),
           const SizedBox(height: 3),
           Text(
             'Slots: ${item.slots.join(', ')}',
-            style: TextStyle(
+            style: const TextStyle(
               fontFamily: 'Poppins',
               fontSize: 12,
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
+              color: AppColors.textSecondary,
             ),
           ),
           const SizedBox(height: 3),
           Text(
             'Sports available: ${item.sportsLabel}',
-            style: TextStyle(
+            style: const TextStyle(
               fontFamily: 'Poppins',
               fontSize: 12,
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
+              color: AppColors.textSecondary,
             ),
           ),
           const SizedBox(height: 6),
-          Divider(
-            color: Theme.of(context).colorScheme.outlineVariant,
-            height: 1,
-          ),
+          const Divider(color: AppColors.divider, height: 1),
         ],
       ),
     );

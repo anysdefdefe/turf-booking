@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../app/theme/app_colors.dart';
 
 /// A reusable widget for displaying section titles in the detail page.
 class DetailSectionTitle extends StatelessWidget {
@@ -10,11 +11,11 @@ class DetailSectionTitle extends StatelessWidget {
   Widget build(BuildContext context) {
     return Text(
       title,
-      style: TextStyle(
+      style: const TextStyle(
         fontFamily: 'Poppins',
         fontSize: 16,
         fontWeight: FontWeight.w700,
-        color: Theme.of(context).colorScheme.onSurface,
+        color: AppColors.textPrimary,
       ),
     );
   }

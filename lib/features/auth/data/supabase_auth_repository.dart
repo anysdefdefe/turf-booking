@@ -82,9 +82,9 @@ class SupabaseAuthRepository implements AuthRepository {
 
       return _getUserProfile(user.id);
     } on UnimplementedError {
-      rethrow;
+      rethrow; 
     } on AppAuthException {
-      rethrow;
+      rethrow; 
     } on AuthException catch (e) {
       throw AppAuthException(e.message, e.statusCode, e);
     } catch (e) {

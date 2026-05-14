@@ -10,27 +10,38 @@ class AdminApprovalsScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final applicationsAsync = ref.watch(pendingApplicationsProvider);
-    final cs = Theme.of(context).colorScheme;
 
     return Scaffold(
-      backgroundColor: cs.surface,
-      appBar: AppBar(title: const Text('Pending Approvals')),
+      backgroundColor: const Color(0xFFF5F5F5),
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        elevation: 0,
+        automaticallyImplyLeading: false,
+        title: const Text(
+          'Pending Approvals',
+          style: TextStyle(
+            color: Color(0xFF1A1A1A),
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ),
       body: applicationsAsync.when(
-        loading: () =>
-            Center(child: CircularProgressIndicator(color: cs.primary)),
+        loading: () => const Center(
+          child: CircularProgressIndicator(color: Color(0xFF4CAF50)),
+        ),
         error: (error, stack) => Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Icons.error_outline, size: 48, color: cs.error),
+              const Icon(Icons.error_outline, size: 48, color: Colors.red),
               const SizedBox(height: 12),
               Text(
                 'Error: $error',
                 textAlign: TextAlign.center,
-                style: TextStyle(color: cs.error),
+                style: const TextStyle(color: Colors.red),
               ),
               const SizedBox(height: 12),
-              FilledButton(
+              ElevatedButton(
                 onPressed: () => ref.invalidate(pendingApplicationsProvider),
                 child: const Text('Retry'),
               ),
@@ -39,24 +50,28 @@ class AdminApprovalsScreen extends ConsumerWidget {
         ),
         data: (applications) {
           if (applications.isEmpty) {
-            return Center(
+            return const Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.check_circle_outline, size: 64, color: cs.primary),
-                  const SizedBox(height: 16),
+                  Icon(
+                    Icons.check_circle_outline,
+                    size: 64,
+                    color: Color(0xFF4CAF50),
+                  ),
+                  SizedBox(height: 16),
                   Text(
                     'All caught up!',
                     style: TextStyle(
                       fontSize: 16,
-                      color: cs.onSurfaceVariant,
+                      color: Colors.grey,
                       fontWeight: FontWeight.w500,
                     ),
                   ),
-                  const SizedBox(height: 8),
+                  SizedBox(height: 8),
                   Text(
                     'No pending applications',
-                    style: TextStyle(fontSize: 13, color: cs.onSurfaceVariant),
+                    style: TextStyle(fontSize: 13, color: Colors.grey),
                   ),
                 ],
               ),
@@ -64,10 +79,8 @@ class AdminApprovalsScreen extends ConsumerWidget {
           }
 
           return RefreshIndicator(
-            color: cs.primary,
-            onRefresh: () async {
-              ref.invalidate(pendingApplicationsProvider);
-            },
+            color: const Color(0xFF4CAF50),
+            onRefresh: () async => ref.invalidate(pendingApplicationsProvider),
             child: ListView.builder(
               padding: const EdgeInsets.all(20),
               itemCount: applications.length,
@@ -104,10 +117,10 @@ class AdminApprovalsScreen extends ConsumerWidget {
             onPressed: () => Navigator.pop(context, false),
             child: const Text('Cancel'),
           ),
-          FilledButton(
-            style: FilledButton.styleFrom(
-              backgroundColor: Theme.of(context).colorScheme.primary,
-              foregroundColor: Theme.of(context).colorScheme.onPrimary,
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF4CAF50),
+              foregroundColor: Colors.white,
             ),
             onPressed: () => Navigator.pop(context, true),
             child: const Text('Approve'),
@@ -126,14 +139,17 @@ class AdminApprovalsScreen extends ConsumerWidget {
 
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Owner approved successfully')),
+          const SnackBar(
+            content: Text('Owner approved successfully ✅'),
+            backgroundColor: Color(0xFF4CAF50),
+          ),
         );
       }
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Error: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
+        );
       }
     }
   }
@@ -174,10 +190,10 @@ class AdminApprovalsScreen extends ConsumerWidget {
             onPressed: () => Navigator.pop(context, null),
             child: const Text('Cancel'),
           ),
-          FilledButton(
-            style: FilledButton.styleFrom(
-              backgroundColor: Theme.of(context).colorScheme.error,
-              foregroundColor: Theme.of(context).colorScheme.onError,
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
             ),
             onPressed: () => Navigator.pop(context, reasonController.text),
             child: const Text('Reject'),
@@ -195,15 +211,18 @@ class AdminApprovalsScreen extends ConsumerWidget {
       ref.invalidate(pendingApplicationsProvider);
 
       if (context.mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('Application rejected')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Application rejected ❌'),
+            backgroundColor: Colors.red,
+          ),
+        );
       }
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Error: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
+        );
       }
     }
   }

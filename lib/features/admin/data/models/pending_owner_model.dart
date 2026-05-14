@@ -28,9 +28,7 @@ class PendingOwnerModel {
       stadiumName: map['stadiumName'] ?? '',
       city: map['city'] ?? '',
       status: map['status'] ?? 'pending',
-      submittedAt: DateTime.parse(
-        map['submittedAt'] ?? DateTime.now().toIso8601String(),
-      ),
+      submittedAt: DateTime.parse(map['submittedAt'] ?? DateTime.now().toIso8601String()),
     );
   }
 }

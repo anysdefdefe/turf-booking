@@ -25,8 +25,7 @@ class CourtRepository {
         if (permission == LocationPermission.denied) {
           permission = await Geolocator.requestPermission();
         }
-        if (permission == LocationPermission.whileInUse ||
-            permission == LocationPermission.always) {
+        if (permission == LocationPermission.whileInUse || permission == LocationPermission.always) {
           userPosition = await Geolocator.getLastKnownPosition();
           userPosition ??= await Geolocator.getCurrentPosition();
         }
@@ -303,17 +302,15 @@ class CourtRepository {
 
     final lat = (row['latitude'] as num?)?.toDouble() ?? 0.0;
     final lng = (row['longitude'] as num?)?.toDouble() ?? 0.0;
-
+    
     double distanceKm = 0.0;
     if (userPosition != null && lat != 0.0 && lng != 0.0) {
-      distanceKm =
-          Geolocator.distanceBetween(
-            userPosition.latitude,
-            userPosition.longitude,
-            lat,
-            lng,
-          ) /
-          1000.0; // Convert meters to km
+      distanceKm = Geolocator.distanceBetween(
+        userPosition.latitude,
+        userPosition.longitude,
+        lat,
+        lng,
+      ) / 1000.0; // Convert meters to km
     }
 
     return Stadium(

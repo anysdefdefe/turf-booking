@@ -4,19 +4,21 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 Future<void> nativeGoogleSignIn() async {
   final webClientId = dotenv.env['GOOGLE_WEB_CLIENT_ID'];
+  // openid is implicit in ID token auth — don't put it in OAuth scope requests
   const authScopes = ['email', 'profile'];
 
   final googleSignIn = GoogleSignIn.instance;
 
   await googleSignIn.initialize(
-    serverClientId: (webClientId != null && webClientId.isNotEmpty)
-        ? webClientId
-        : null,
+    serverClientId:
+        (webClientId != null && webClientId.isNotEmpty) ? webClientId : null,
   );
 
   final GoogleSignInAccount account;
   try {
-    account = await googleSignIn.authenticate(scopeHint: authScopes);
+    account = await googleSignIn.authenticate(
+      scopeHint: authScopes,
+    );
   } on GoogleSignInException catch (e) {
     throw AuthException('Google Sign-In failed: ${e.description}');
   }

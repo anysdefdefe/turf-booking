@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'dart:async';
 import '../providers/admin_provider.dart';
 import '../widgets/venue_tile.dart';
 
@@ -47,25 +46,27 @@ class _AdminVenuesScreenState extends ConsumerState<AdminVenuesScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
     final venuesAsync = ref.watch(allVenuesProvider);
 
     return Scaffold(
-      backgroundColor: cs.surface,
+      backgroundColor: const Color(0xFFF5F5F5),
       appBar: AppBar(
-        backgroundColor: cs.surface,
+        backgroundColor: Colors.white,
         elevation: 0,
         automaticallyImplyLeading: false,
         title: const Text(
           'Manage Venues',
-          style: TextStyle(fontWeight: FontWeight.bold),
+          style: TextStyle(
+            color: Color(0xFF1A1A1A),
+            fontWeight: FontWeight.bold,
+          ),
         ),
       ),
       body: Column(
         children: [
           // Search + Filter Section
           Container(
-            color: cs.surface,
+            color: Colors.white,
             padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
             child: Column(
               children: [
@@ -75,19 +76,19 @@ class _AdminVenuesScreenState extends ConsumerState<AdminVenuesScreen> {
                   onChanged: (value) => setState(() => _searchQuery = value),
                   decoration: InputDecoration(
                     hintText: 'Search by name or city...',
-                    hintStyle: TextStyle(color: cs.onSurfaceVariant, fontSize: 14),
-                    prefixIcon: Icon(Icons.search, color: cs.onSurfaceVariant),
+                    hintStyle: TextStyle(color: Colors.grey[400], fontSize: 14),
+                    prefixIcon: const Icon(Icons.search, color: Colors.grey),
                     suffixIcon: _searchQuery.isNotEmpty
                         ? GestureDetector(
                             onTap: () {
                               _searchController.clear();
                               setState(() => _searchQuery = '');
                             },
-                            child: Icon(Icons.close, color: cs.onSurfaceVariant),
+                            child: const Icon(Icons.close, color: Colors.grey),
                           )
                         : null,
                     filled: true,
-                    fillColor: cs.surfaceContainerHighest,
+                    fillColor: const Color(0xFFF5F5F5),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
                       borderSide: BorderSide.none,
@@ -101,11 +102,11 @@ class _AdminVenuesScreenState extends ConsumerState<AdminVenuesScreen> {
                 // Filter Chips
                 Row(
                   children: [
-                    _filterChip(context, 'All', 'all'),
+                    _filterChip('All', 'all'),
                     const SizedBox(width: 8),
-                    _filterChip(context, 'Active', 'active'),
+                    _filterChip('Active', 'active'),
                     const SizedBox(width: 8),
-                    _filterChip(context, 'Suspended', 'suspended'),
+                    _filterChip('Suspended', 'suspended'),
                   ],
                 ),
               ],
@@ -116,7 +117,7 @@ class _AdminVenuesScreenState extends ConsumerState<AdminVenuesScreen> {
           Expanded(
             child: venuesAsync.when(
               loading: () => const Center(
-                child: CircularProgressIndicator(),
+                child: CircularProgressIndicator(color: Color(0xFF4CAF50)),
               ),
               error: (e, _) => Center(
                 child: Column(
@@ -124,9 +125,7 @@ class _AdminVenuesScreenState extends ConsumerState<AdminVenuesScreen> {
                   children: [
                     Text(
                       'Error: $e',
-                      style: TextStyle(
-                        color: Theme.of(context).colorScheme.error,
-                      ),
+                      style: const TextStyle(color: Colors.red),
                     ),
                     ElevatedButton(
                       onPressed: () => ref.invalidate(allVenuesProvider),
@@ -138,17 +137,15 @@ class _AdminVenuesScreenState extends ConsumerState<AdminVenuesScreen> {
               data: (venues) {
                 final filtered = _filterVenues(venues);
                 return RefreshIndicator(
-                  color: Theme.of(context).colorScheme.primary,
-                  onRefresh: () async => ref.refresh(allVenuesProvider),
+                  color: const Color(0xFF4CAF50),
+                  onRefresh: () async => ref.invalidate(allVenuesProvider),
                   child: filtered.isEmpty
                       ? Center(
                           child: Text(
                             _searchQuery.isEmpty
                                 ? 'No venues found'
                                 : 'No results for "$_searchQuery"',
-                            style: TextStyle(
-                              color: Theme.of(context).colorScheme.onSurfaceVariant,
-                            ),
+                            style: const TextStyle(color: Colors.grey),
                           ),
                         )
                       : ListView.builder(
@@ -174,21 +171,20 @@ class _AdminVenuesScreenState extends ConsumerState<AdminVenuesScreen> {
     );
   }
 
-  Widget _filterChip(BuildContext context, String label, String value) {
-    final cs = Theme.of(context).colorScheme;
+  Widget _filterChip(String label, String value) {
     final isSelected = _filterStatus == value;
     return GestureDetector(
       onTap: () => setState(() => _filterStatus = value),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
         decoration: BoxDecoration(
-          color: isSelected ? cs.primary : cs.surfaceContainerHighest,
+          color: isSelected ? const Color(0xFF4CAF50) : const Color(0xFFF5F5F5),
           borderRadius: BorderRadius.circular(20),
         ),
         child: Text(
           label,
           style: TextStyle(
-            color: isSelected ? cs.onPrimary : cs.onSurfaceVariant,
+            color: isSelected ? Colors.white : Colors.grey[600],
             fontSize: 12,
             fontWeight: FontWeight.w600,
           ),
@@ -216,8 +212,8 @@ class _AdminVenuesScreenState extends ConsumerState<AdminVenuesScreen> {
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
-              backgroundColor: Theme.of(context).colorScheme.error,
-              foregroundColor: Theme.of(context).colorScheme.onError,
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
             ),
             onPressed: () => Navigator.pop(context, true),
             child: const Text('Suspend'),
@@ -231,13 +227,12 @@ class _AdminVenuesScreenState extends ConsumerState<AdminVenuesScreen> {
     try {
       final repo = ref.read(adminRepositoryProvider);
       await repo.suspendVenue(venue['id']);
-      // ignore: unused_result
-      ref.refresh(allVenuesProvider);
+      ref.invalidate(allVenuesProvider);
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('"${venue['name']}" suspended ❌'),
-            backgroundColor: Theme.of(context).colorScheme.error,
+            backgroundColor: Colors.red,
           ),
         );
       }
@@ -267,8 +262,8 @@ class _AdminVenuesScreenState extends ConsumerState<AdminVenuesScreen> {
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
-              backgroundColor: Theme.of(context).colorScheme.primary,
-              foregroundColor: Theme.of(context).colorScheme.onPrimary,
+              backgroundColor: const Color(0xFF4CAF50),
+              foregroundColor: Colors.white,
             ),
             onPressed: () => Navigator.pop(context, true),
             child: const Text('Activate'),
@@ -282,13 +277,12 @@ class _AdminVenuesScreenState extends ConsumerState<AdminVenuesScreen> {
     try {
       final repo = ref.read(adminRepositoryProvider);
       await repo.activateVenue(venue['id']);
-      // ignore: unused_result
-      ref.refresh(allVenuesProvider);
+      ref.invalidate(allVenuesProvider);
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('"${venue['name']}" activated ✅'),
-            backgroundColor: Theme.of(context).colorScheme.primary,
+            backgroundColor: const Color(0xFF4CAF50),
           ),
         );
       }

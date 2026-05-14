@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../app/constants/app_constants.dart';
+import '../../../app/theme/app_colors.dart';
 import 'package:turf_booking/features/owner/widgets/storage_media.dart';
 import 'package:turf_booking/features/owner/data/repositories/stadium_repository.dart';
 import '../data/models/court_model.dart';
@@ -28,12 +29,9 @@ class CourtCard extends StatelessWidget {
         width: double.infinity,
         margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
         decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.surfaceContainer,
+          color: AppColors.cardBg,
           borderRadius: BorderRadius.circular(AppConstants.radiusL),
-          border: Border.all(
-            color: Theme.of(context).colorScheme.outlineVariant,
-            width: 1,
-          ),
+          border: Border.all(color: AppColors.divider, width: 1),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -75,30 +73,31 @@ class _CourtImage extends StatelessWidget {
                   height: AppConstants.cardImageHeight,
                   fit: BoxFit.cover,
                   borderRadius: BorderRadius.zero,
-                  placeholder: _buildPlaceholder(context),
+                  placeholder: _buildPlaceholder(),
                 )
-              : _buildPlaceholder(context),
+              : _buildPlaceholder(),
         ),
       ],
     );
   }
 
-  Widget _buildPlaceholder(BuildContext context) {
+  Widget _buildPlaceholder() {
     return Container(
       height: AppConstants.cardImageHeight,
       // THE FIX: Forces the placeholder to fill the width provided by the parent
       width: double.infinity,
-      color: Theme.of(context).colorScheme.outlineVariant,
-      child: Center(
+      color: AppColors.divider,
+      child: const Center(
         child: Icon(
           Icons.sports_tennis_rounded,
           size: 44,
-          color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.3),
+          color: AppColors.textMuted,
         ),
       ),
     );
   }
 }
+
 
 class _CourtInfo extends StatelessWidget {
   final Court court;
@@ -137,11 +136,11 @@ class _CourtInfo extends StatelessWidget {
               Expanded(
                 child: Text(
                   court.name,
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontFamily: 'Poppins',
                     fontSize: 16,
                     fontWeight: FontWeight.w700,
-                    color: Theme.of(context).colorScheme.onSurface,
+                    color: AppColors.textPrimary,
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
@@ -153,20 +152,20 @@ class _CourtInfo extends StatelessWidget {
                   children: [
                     TextSpan(
                       text: '₹${court.pricePerHour.toInt()}',
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontFamily: 'Poppins',
                         fontSize: 15,
                         fontWeight: FontWeight.w700,
-                        color: Theme.of(context).colorScheme.onSurface,
+                        color: AppColors.textPrimary,
                       ),
                     ),
-                    TextSpan(
+                    const TextSpan(
                       text: '/hr',
                       style: TextStyle(
                         fontFamily: 'Poppins',
                         fontSize: 11,
                         fontWeight: FontWeight.w500,
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        color: AppColors.textSecondary,
                       ),
                     ),
                   ],
@@ -182,11 +181,9 @@ class _CourtInfo extends StatelessWidget {
                     height: 26,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: Theme.of(context).colorScheme.surface,
+                      color: AppColors.surface,
                       border: Border.all(
-                        color: isLiked
-                            ? Theme.of(context).colorScheme.primary
-                            : Theme.of(context).colorScheme.outlineVariant,
+                        color: isLiked ? AppColors.primary : AppColors.divider,
                         width: 1,
                       ),
                     ),
@@ -196,8 +193,8 @@ class _CourtInfo extends StatelessWidget {
                           : Icons.favorite_border_rounded,
                       size: 15,
                       color: isLiked
-                          ? Theme.of(context).colorScheme.primary
-                          : Theme.of(context).colorScheme.onSurfaceVariant,
+                          ? AppColors.primary
+                          : AppColors.textSecondary,
                     ),
                   ),
                 ),
@@ -207,10 +204,10 @@ class _CourtInfo extends StatelessWidget {
           const SizedBox(height: 4),
           Text(
             '${court.place}, ${court.city}',
-            style: TextStyle(
+            style: const TextStyle(
               fontFamily: 'Poppins',
               fontSize: 12,
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
+              color: AppColors.textSecondary,
             ),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
@@ -229,21 +226,17 @@ class _CourtInfo extends StatelessWidget {
                           width: 24,
                           height: 24,
                           decoration: BoxDecoration(
-                            color: Theme.of(context).colorScheme.surface,
+                            color: AppColors.background,
                             borderRadius: BorderRadius.circular(7),
                             border: Border.all(
-                              color: Theme.of(
-                                context,
-                              ).colorScheme.outlineVariant,
+                              color: AppColors.divider,
                               width: 1,
                             ),
                           ),
                           child: Icon(
                             badge.icon,
                             size: 14,
-                            color: Theme.of(
-                              context,
-                            ).colorScheme.onSurfaceVariant,
+                            color: AppColors.textSecondary,
                           ),
                         ),
                       ),
@@ -252,11 +245,11 @@ class _CourtInfo extends StatelessWidget {
               if (visibleSports.length > 3)
                 Text(
                   '+${visibleSports.length - 3} more',
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontFamily: 'Poppins',
                     fontSize: 11.5,
                     fontWeight: FontWeight.w600,
-                    color: Theme.of(context).colorScheme.primary,
+                    color: AppColors.primary,
                   ),
                 ),
             ],

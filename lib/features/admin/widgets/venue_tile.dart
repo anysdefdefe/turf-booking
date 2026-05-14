@@ -14,7 +14,6 @@ class VenueTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
     final bool isActive = venue['is_active'] == true;
     final name = venue['name'] ?? 'Unknown Stadium';
     final city = venue['city'] ?? 'Unknown City';
@@ -28,14 +27,16 @@ class VenueTile extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: cs.surfaceContainer,
+        color: Colors.white,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(
-          color: isActive ? Colors.transparent : cs.error.withValues(alpha: 0.3),
+          color: isActive
+              ? Colors.transparent
+              : Colors.red.withOpacity(0.3),
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
+            color: Colors.black.withOpacity(0.05),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -52,13 +53,15 @@ class VenueTile extends StatelessWidget {
                 height: 46,
                 decoration: BoxDecoration(
                   color: isActive
-                      ? cs.primary.withValues(alpha: 0.1)
-                      : cs.error.withValues(alpha: 0.1),
+                      ? const Color(0xFF4CAF50).withOpacity(0.1)
+                      : Colors.red.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Icon(
                   Icons.stadium,
-                  color: isActive ? cs.primary : cs.error,
+                  color: isActive
+                      ? const Color(0xFF4CAF50)
+                      : Colors.red,
                 ),
               ),
               const SizedBox(width: 12),
@@ -75,24 +78,26 @@ class VenueTile extends StatelessWidget {
                     ),
                     Text(
                       city,
-                      style: TextStyle(fontSize: 12, color: cs.onSurfaceVariant),
+                      style: TextStyle(
+                          fontSize: 12, color: Colors.grey[500]),
                     ),
                   ],
                 ),
               ),
               // Status badge
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
                   color: isActive
-                      ? cs.primary.withValues(alpha: 0.1)
-                      : cs.error.withValues(alpha: 0.1),
+                      ? Colors.green.withOpacity(0.1)
+                      : Colors.red.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
                   isActive ? 'Active' : 'Suspended',
                   style: TextStyle(
-                    color: isActive ? cs.primary : cs.error,
+                    color: isActive ? Colors.green : Colors.red,
                     fontSize: 11,
                     fontWeight: FontWeight.bold,
                   ),
@@ -104,14 +109,13 @@ class VenueTile extends StatelessWidget {
           const Divider(height: 20),
 
           // Details
-          _infoRow(context, Icons.location_on_outlined, address),
+          _infoRow(Icons.location_on_outlined, address),
           const SizedBox(height: 6),
-          _infoRow(context, Icons.calendar_today_outlined, 'Added: $createdAt'),
+          _infoRow(Icons.calendar_today_outlined, 'Added: $createdAt'),
 
           if (description.isNotEmpty) ...[
             const SizedBox(height: 6),
             _infoRow(
-              context,
               Icons.info_outline,
               description.length > 60
                   ? '${description.substring(0, 60)}...'
@@ -130,8 +134,8 @@ class VenueTile extends StatelessWidget {
                     icon: const Icon(Icons.block, size: 16),
                     label: const Text('Suspend Venue'),
                     style: OutlinedButton.styleFrom(
-                      foregroundColor: cs.error,
-                      side: BorderSide(color: cs.error),
+                      foregroundColor: Colors.red,
+                      side: const BorderSide(color: Colors.red),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(10),
                       ),
@@ -139,11 +143,12 @@ class VenueTile extends StatelessWidget {
                   )
                 : ElevatedButton.icon(
                     onPressed: onActivate,
-                    icon: const Icon(Icons.check_circle_outline, size: 16),
+                    icon: const Icon(Icons.check_circle_outline,
+                        size: 16),
                     label: const Text('Activate Venue'),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: cs.primary,
-                      foregroundColor: cs.onPrimary,
+                      backgroundColor: const Color(0xFF4CAF50),
+                      foregroundColor: Colors.white,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(10),
                       ),
@@ -155,16 +160,15 @@ class VenueTile extends StatelessWidget {
     );
   }
 
-  Widget _infoRow(BuildContext context, IconData icon, String value) {
-    final cs = Theme.of(context).colorScheme;
+  Widget _infoRow(IconData icon, String value) {
     return Row(
       children: [
-        Icon(icon, size: 14, color: cs.onSurfaceVariant),
+        Icon(icon, size: 14, color: Colors.grey[400]),
         const SizedBox(width: 6),
         Expanded(
           child: Text(
             value,
-            style: TextStyle(fontSize: 12, color: cs.onSurfaceVariant),
+            style: TextStyle(fontSize: 12, color: Colors.grey[600]),
             overflow: TextOverflow.ellipsis,
           ),
         ),

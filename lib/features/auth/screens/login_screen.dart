@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:turf_booking/app/theme/app_colors.dart';
 import 'package:turf_booking/features/auth/providers/auth_controller.dart';
 import 'package:turf_booking/features/auth/providers/auth_notifier.dart';
 import 'package:turf_booking/features/auth/widgets/auth_form_widgets.dart';
@@ -34,26 +35,26 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   void _submit() {
     final isValid = _formKey.currentState?.validate() ?? false;
     if (!isValid) return;
-
-    ref
-        .read(authControllerProvider.notifier)
-        .signIn(_emailController.text.trim(), _passwordController.text.trim());
+    
+    ref.read(authControllerProvider.notifier).signIn(
+      _emailController.text.trim(),
+      _passwordController.text.trim(),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     final authState = ref.watch(authControllerProvider);
-    final cs = Theme.of(context).colorScheme;
 
     if (authState.isLoading) {
-      return Scaffold(
-        backgroundColor: cs.surface,
-        body: Center(child: CircularProgressIndicator(color: cs.primary)),
+      return const Scaffold(
+        backgroundColor: AppColors.background,
+        body: Center(child: CircularProgressIndicator(color: AppColors.textPrimary)),
       );
     }
 
     return Scaffold(
-      backgroundColor: cs.surface,
+      backgroundColor: AppColors.background,
       body: Stack(
         children: [
           Positioned(
@@ -69,18 +70,16 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 const SliverToBoxAdapter(child: SizedBox(height: 290)),
                 SliverToBoxAdapter(
                   child: Container(
-                    decoration: BoxDecoration(
-                      color: cs.surface,
-                      borderRadius: BorderRadius.vertical(
-                        top: Radius.circular(40),
-                      ),
+                    decoration: const BoxDecoration(
+                      color: AppColors.background,
+                      borderRadius: BorderRadius.vertical(top: Radius.circular(40)),
                     ),
                     child: Padding(
                       padding: const EdgeInsets.fromLTRB(24, 32, 24, 32),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          FadeSlideTransition(
+                          const FadeSlideTransition(
                             delay: Duration(milliseconds: 100),
                             child: Text(
                               'Welcome back',
@@ -88,20 +87,20 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                 fontFamily: 'Poppins',
                                 fontSize: 28,
                                 fontWeight: FontWeight.w800,
-                                color: cs.onSurface,
+                                color: AppColors.textPrimary,
                                 letterSpacing: -0.5,
                               ),
                             ),
                           ),
                           const SizedBox(height: 6),
-                          FadeSlideTransition(
+                          const FadeSlideTransition(
                             delay: Duration(milliseconds: 150),
                             child: Text(
                               'Sign in to your account',
                               style: TextStyle(
-                                fontFamily: 'Poppins',
-                                fontSize: 14,
-                                color: cs.onSurfaceVariant,
+                                fontFamily: 'Poppins', 
+                                fontSize: 14, 
+                                color: AppColors.textSecondary,
                               ),
                             ),
                           ),
@@ -119,12 +118,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                     hint: 'you@example.com',
                                     keyboardType: TextInputType.emailAddress,
                                     validator: (v) {
-                                      if (v == null || v.trim().isEmpty) {
-                                        return 'Email is required';
-                                      }
-                                      if (!v.contains('@')) {
-                                        return 'Enter a valid email';
-                                      }
+                                      if (v == null || v.trim().isEmpty) return 'Email is required';
+                                      if (!v.contains('@')) return 'Enter a valid email';
                                       return null;
                                     },
                                   ),
@@ -135,55 +130,40 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                     hint: '••••••••',
                                     obscureText: !_passwordVisible,
                                     validator: (v) {
-                                      if (v == null || v.trim().isEmpty) {
-                                        return 'Password is required';
-                                      }
+                                      if (v == null || v.trim().isEmpty) return 'Password is required';
                                       return null;
                                     },
                                     suffixIcon: GestureDetector(
-                                      onTap: () => setState(
-                                        () => _passwordVisible =
-                                            !_passwordVisible,
-                                      ),
+                                      onTap: () => setState(() => _passwordVisible = !_passwordVisible),
                                       child: Icon(
                                         _passwordVisible
                                             ? Icons.visibility_off_outlined
                                             : Icons.visibility_outlined,
                                         size: 18,
-                                        color: cs.onSurfaceVariant,
+                                        color: AppColors.textSecondary,
                                       ),
                                     ),
                                   ),
-
+                                  
                                   if (authState.hasError) ...[
                                     const SizedBox(height: 16),
                                     Container(
                                       padding: const EdgeInsets.all(12),
                                       decoration: BoxDecoration(
-                                        color: cs.errorContainer.withValues(
-                                          alpha: 0.16,
-                                        ),
+                                        color: AppColors.error.withValues(alpha: 0.1),
                                         borderRadius: BorderRadius.circular(10),
-                                        border: Border.all(
-                                          color: cs.error.withValues(
-                                            alpha: 0.3,
-                                          ),
-                                        ),
+                                        border: Border.all(color: AppColors.error.withValues(alpha: 0.3)),
                                       ),
                                       child: Row(
                                         children: [
-                                          Icon(
-                                            Icons.error_outline_rounded,
-                                            color: cs.error,
-                                            size: 20,
-                                          ),
+                                          const Icon(Icons.error_outline_rounded, color: AppColors.error, size: 20),
                                           const SizedBox(width: 8),
                                           Expanded(
                                             child: Text(
                                               authState.error.toString(),
-                                              style: TextStyle(
+                                              style: const TextStyle(
                                                 fontFamily: 'Poppins',
-                                                color: cs.error,
+                                                color: AppColors.error,
                                                 fontSize: 13,
                                                 fontWeight: FontWeight.w600,
                                               ),
@@ -210,18 +190,18 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                               child: GestureDetector(
                                 onTap: _openRegister,
                                 child: RichText(
-                                  text: TextSpan(
+                                  text: const TextSpan(
                                     style: TextStyle(
                                       fontFamily: 'Poppins',
-                                      fontSize: 13.5,
-                                      color: cs.onSurfaceVariant,
+                                      fontSize: 13.5, 
+                                      color: AppColors.textSecondary,
                                     ),
                                     children: [
                                       TextSpan(text: "Don't have an account? "),
                                       TextSpan(
                                         text: 'Sign up',
                                         style: TextStyle(
-                                          color: cs.onSurface,
+                                          color: AppColors.textPrimary,
                                           fontWeight: FontWeight.w700,
                                         ),
                                       ),
@@ -235,9 +215,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           FadeSlideTransition(
                             delay: Duration(milliseconds: 320),
                             child: Padding(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 8.0,
-                              ),
+                              padding: const EdgeInsets.symmetric(horizontal: 8.0),
                               child: GoogleAuthButton(
                                 onPressed: _googleLoading
                                     ? null
@@ -248,19 +226,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                               .read(authProvider.notifier)
                                               .signInWithGoogle();
                                         } catch (e) {
-                                          ScaffoldMessenger.of(
-                                            context,
-                                          ).showSnackBar(
-                                            SnackBar(
-                                              content: Text(e.toString()),
-                                            ),
+                                          ScaffoldMessenger.of(context).showSnackBar(
+                                            SnackBar(content: Text(e.toString())),
                                           );
                                         } finally {
-                                          if (mounted) {
-                                            setState(
-                                              () => _googleLoading = false,
-                                            );
-                                          }
+                                          if (mounted) setState(() => _googleLoading = false);
                                         }
                                       },
                               ),
@@ -299,11 +269,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           keyboardType: keyboardType,
           obscureText: obscureText,
           validator: validator,
-          style: TextStyle(
-            fontSize: 15,
-            color: Theme.of(context).colorScheme.onSurface,
-          ),
-          decoration: authPillInputDecoration(context, hint, suffixIcon),
+          style: const TextStyle(fontSize: 15, color: AppColors.textPrimary),
+          decoration: authPillInputDecoration(hint, suffixIcon),
         ),
       ],
     );
@@ -321,7 +288,7 @@ class _HeroImage extends StatelessWidget {
       width: double.infinity,
       height: 340,
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
+        color: AppColors.surface,
         image: DecorationImage(
           image: const NetworkImage(
             'https://images.unsplash.com/photo-1565992441121-4367c2967103?q=80&w=627&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
@@ -356,14 +323,14 @@ class _HeroImage extends StatelessWidget {
                     shape: BoxShape.circle,
                   ),
                   child: const Icon(
-                    Icons.sports_soccer_rounded,
-                    size: 48,
+                    Icons.sports_soccer_rounded, 
+                    size: 48, 
                     color: Colors.white,
                   ),
                 ),
                 const SizedBox(height: 16),
                 const Text(
-                  'Courtly',
+                  'Courtly', 
                   style: TextStyle(
                     fontFamily: 'Poppins',
                     color: Colors.white,
@@ -377,7 +344,7 @@ class _HeroImage extends StatelessWidget {
                   'Book a venue, play your game',
                   style: TextStyle(
                     fontFamily: 'Poppins',
-                    color: Colors.white.withValues(alpha: 0.9),
+                    color: Colors.white.withValues(alpha: 0.9), 
                     fontSize: 14,
                     fontWeight: FontWeight.w500,
                   ),

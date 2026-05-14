@@ -4,6 +4,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:turf_booking/app/theme/app_colors.dart';
 import 'package:turf_booking/app/constants/app_constants.dart';
 import 'package:turf_booking/features/owner/data/models/stadium_model.dart';
 import 'package:turf_booking/features/owner/data/repositories/stadium_repository.dart';
@@ -31,7 +32,6 @@ class _OwnerStadiumEditScreenState
   bool _initialized = false;
   File? _selectedImage;
 
-  @override
   void dispose() {
     _nameController.dispose();
     _addressController.dispose();
@@ -125,7 +125,7 @@ class _OwnerStadiumEditScreenState
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message, style: const TextStyle(fontFamily: 'Poppins')),
-        backgroundColor: Theme.of(context).colorScheme.primary,
+        backgroundColor: AppColors.primary,
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppConstants.radiusM),
@@ -139,16 +139,14 @@ class _OwnerStadiumEditScreenState
     final stadiumAsync = ref.watch(currentStadiumProvider);
 
     return stadiumAsync.when(
-      loading: () => Scaffold(
-        backgroundColor: Theme.of(context).colorScheme.surface,
+      loading: () => const Scaffold(
+        backgroundColor: AppColors.background,
         body: Center(
-          child: CircularProgressIndicator(
-            color: Theme.of(context).colorScheme.primary,
-          ),
+          child: CircularProgressIndicator(color: AppColors.primary),
         ),
       ),
       error: (error, _) => Scaffold(
-        backgroundColor: Theme.of(context).colorScheme.surface,
+        backgroundColor: AppColors.background,
         body: Center(child: Text('Error: $error')),
       ),
       data: (stadium) {
@@ -156,9 +154,7 @@ class _OwnerStadiumEditScreenState
           WidgetsBinding.instance.addPostFrameCallback((_) {
             if (context.mounted) context.go('/owner/add-stadium');
           });
-          return Scaffold(
-            backgroundColor: Theme.of(context).colorScheme.surface,
-          );
+          return const Scaffold(backgroundColor: AppColors.background);
         }
 
         _initFields(
@@ -171,17 +167,17 @@ class _OwnerStadiumEditScreenState
         );
 
         return Scaffold(
-          backgroundColor: Theme.of(context).colorScheme.surface,
+          backgroundColor: AppColors.background,
           appBar: AppBar(
-            backgroundColor: Theme.of(context).colorScheme.surface,
+            backgroundColor: AppColors.surface,
             elevation: 0,
-            title: Text(
+            title: const Text(
               'Edit Stadium',
               style: TextStyle(
                 fontFamily: 'Poppins',
                 fontWeight: FontWeight.w700,
                 fontSize: 18,
-                color: Theme.of(context).colorScheme.onSurface,
+                color: AppColors.textPrimary,
               ),
             ),
           ),
@@ -222,37 +218,32 @@ class _OwnerStadiumEditScreenState
                     vertical: 12,
                   ),
                   decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.surface,
+                    color: AppColors.surface,
                     borderRadius: BorderRadius.circular(AppConstants.radiusM),
-                    border: Border.all(
-                      color: Theme.of(context).colorScheme.outlineVariant,
-                    ),
+                    border: Border.all(color: AppColors.divider),
                   ),
                   child: Row(
                     children: [
-                      Icon(
+                      const Icon(
                         Icons.power_settings_new_outlined,
                         size: 18,
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        color: AppColors.textSecondary,
                       ),
                       const SizedBox(width: 12),
-                      Expanded(
+                      const Expanded(
                         child: Text(
                           'Stadium Active',
                           style: TextStyle(
                             fontFamily: 'Poppins',
                             fontSize: 14,
-                            color: Theme.of(context).colorScheme.onSurface,
+                            color: AppColors.textPrimary,
                           ),
                         ),
                       ),
                       Switch.adaptive(
                         value: _isActive,
                         onChanged: (v) => setState(() => _isActive = v),
-                        activeThumbColor: Theme.of(context).colorScheme.onPrimary,
-                        activeTrackColor: Theme.of(context).colorScheme.primary,
-                        inactiveThumbColor: Theme.of(context).colorScheme.surface,
-                        inactiveTrackColor: Theme.of(context).colorScheme.outlineVariant,
+                        activeThumbColor: AppColors.primary,
                       ),
                     ],
                   ),
@@ -268,7 +259,7 @@ class _OwnerStadiumEditScreenState
                         ? null
                         : () => _save(stadium.id, stadium.imageUrl),
                     style: FilledButton.styleFrom(
-                      backgroundColor: Theme.of(context).colorScheme.primary,
+                      backgroundColor: AppColors.primary,
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(
@@ -308,11 +299,11 @@ class _OwnerStadiumEditScreenState
     padding: const EdgeInsets.only(bottom: 6),
     child: Text(
       label,
-      style: TextStyle(
+      style: const TextStyle(
         fontFamily: 'Poppins',
         fontSize: 13,
         fontWeight: FontWeight.w500,
-        color: Theme.of(context).colorScheme.onSurfaceVariant,
+        color: AppColors.textSecondary,
       ),
     ),
   );
@@ -324,39 +315,32 @@ class _OwnerStadiumEditScreenState
   }) => TextField(
     controller: controller,
     maxLines: maxLines,
-    style: TextStyle(
+    style: const TextStyle(
       fontFamily: 'Poppins',
       fontSize: 14,
-      color: Theme.of(context).colorScheme.onSurface,
+      color: AppColors.textPrimary,
     ),
     decoration: InputDecoration(
       hintText: hint,
-      hintStyle: TextStyle(
+      hintStyle: const TextStyle(
         fontFamily: 'Poppins',
         fontSize: 14,
-        color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.3),
+        color: AppColors.textMuted,
       ),
       filled: true,
-      fillColor: Theme.of(context).colorScheme.surface,
+      fillColor: AppColors.surface,
       contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(AppConstants.radiusM),
-        borderSide: BorderSide(
-          color: Theme.of(context).colorScheme.outlineVariant,
-        ),
+        borderSide: const BorderSide(color: AppColors.divider),
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(AppConstants.radiusM),
-        borderSide: BorderSide(
-          color: Theme.of(context).colorScheme.outlineVariant,
-        ),
+        borderSide: const BorderSide(color: AppColors.divider),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(AppConstants.radiusM),
-        borderSide: BorderSide(
-          color: Theme.of(context).colorScheme.primary,
-          width: 1.5,
-        ),
+        borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
       ),
     ),
   );
@@ -368,11 +352,9 @@ class _OwnerStadiumEditScreenState
         height: 180,
         width: double.infinity,
         decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.surface,
+          color: AppColors.surface,
           borderRadius: BorderRadius.circular(AppConstants.radiusL),
-          border: Border.all(
-            color: Theme.of(context).colorScheme.outlineVariant,
-          ),
+          border: Border.all(color: AppColors.divider),
         ),
         child: _selectedImage != null
             ? Stack(
@@ -417,33 +399,24 @@ class _OwnerStadiumEditScreenState
                       width: double.infinity,
                       height: 180,
                       borderRadius: BorderRadius.circular(AppConstants.radiusL),
-                      placeholder: Builder(
-                        builder: (context) {
-                          final cs = Theme.of(context).colorScheme;
-                          return Container(
-                            decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                colors: [
-                                  cs.surfaceContainerHighest,
-                                  cs.surfaceContainerLowest,
-                                ],
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
-                              ),
-                              borderRadius: BorderRadius.circular(
-                                AppConstants.radiusL,
-                              ),
-                              border: Border.all(color: cs.outlineVariant),
-                            ),
-                            child: Center(
-                              child: Icon(
-                                Icons.stadium_rounded,
-                                size: 42,
-                                color: cs.primary,
-                              ),
-                            ),
-                          );
-                        },
+                      placeholder: Container(
+                        decoration: BoxDecoration(
+                          gradient: const LinearGradient(
+                            colors: [Color(0xFFF4FBF7), Colors.white],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                          borderRadius: BorderRadius.circular(
+                            AppConstants.radiusL,
+                          ),
+                        ),
+                        child: const Center(
+                          child: Icon(
+                            Icons.stadium_rounded,
+                            size: 42,
+                            color: AppColors.primary,
+                          ),
+                        ),
                       ),
                     ),
                   ),

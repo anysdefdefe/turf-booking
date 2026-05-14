@@ -7,7 +7,7 @@ class CourtModel {
   final double pricePerHour;
   final String? imageUrl;
   final List<String> equipments;
-  final String openTime; // Stored as HH:mm:ss in Postgres
+  final String openTime;  // Stored as HH:mm:ss in Postgres
   final String closeTime; // Stored as HH:mm:ss in Postgres
   final bool isActive;
   final DateTime createdAt;

@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:turf_booking/features/auth/providers/auth_controller.dart';
 import 'package:go_router/go_router.dart';
-import '../../../app/theme/theme_mode_selector.dart';
+import '../../../app/theme/app_colors.dart';
 import '../widgets/customer_bottom_nav_bar.dart';
 import '../providers/customer_providers.dart';
 import '../providers/customer_bookings_controller.dart';
@@ -169,7 +169,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     final updated = await showModalBottomSheet<_ProfileData>(
       context: context,
       isScrollControlled: true,
-      useSafeArea: true,
       backgroundColor: Colors.transparent,
       builder: (_) => _EditProfileSheet(current: current),
     );
@@ -207,8 +206,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   }
 
   Future<void> _handleLogout() async {
-    final cs = Theme.of(context).colorScheme;
-
     final shouldLogout = await showDialog<bool>(
       context: context,
       builder: (context) => Dialog(
@@ -216,11 +213,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         elevation: 0,
         child: Container(
           decoration: BoxDecoration(
-            color: cs.surface,
+            color: Colors.white,
             borderRadius: BorderRadius.circular(24),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.08),
+                color: Colors.black.withOpacity(0.08),
                 blurRadius: 32,
                 offset: const Offset(0, 12),
               ),
@@ -239,13 +236,17 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                       colors: [
-                        cs.errorContainer,
-                        cs.errorContainer.withValues(alpha: 0.6),
+                        const Color(0xFFFEE2E2),
+                        const Color(0xFFFECACA).withOpacity(0.6),
                       ],
                     ),
                     borderRadius: BorderRadius.circular(18),
                   ),
-                  child: Icon(Icons.logout_rounded, color: cs.error, size: 26),
+                  child: const Icon(
+                    Icons.logout_rounded,
+                    color: Color(0xFFDC2626),
+                    size: 26,
+                  ),
                 ),
                 const SizedBox(height: 20),
                 Text(
@@ -253,7 +254,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   style: TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.w700,
-                    color: cs.onSurface,
+                    color: const Color(0xFF0A0A0B),
                   ),
                 ),
                 const SizedBox(height: 8),
@@ -262,7 +263,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 13.5,
-                    color: cs.onSurfaceVariant,
+                    color: const Color(0xFF71717A),
                     fontWeight: FontWeight.w400,
                     height: 1.5,
                   ),
@@ -274,11 +275,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                       child: OutlinedButton(
                         onPressed: () => Navigator.of(context).pop(false),
                         style: OutlinedButton.styleFrom(
-                          side: BorderSide(
-                            color: cs.outlineVariant,
+                          side: const BorderSide(
+                            color: Color(0xFFE4E4E7),
                             width: 1.2,
                           ),
-                          foregroundColor: cs.onSurface,
+                          foregroundColor: const Color(0xFF0A0A0B),
                           padding: const EdgeInsets.symmetric(vertical: 14),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(30),
@@ -299,8 +300,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                       child: ElevatedButton(
                         onPressed: () => Navigator.of(context).pop(true),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: cs.error,
-                          foregroundColor: cs.onError,
+                          backgroundColor: const Color(0xFFDC2626),
+                          foregroundColor: Colors.white,
                           elevation: 0,
                           padding: const EdgeInsets.symmetric(vertical: 14),
                           shape: RoundedRectangleBorder(
@@ -335,17 +336,16 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
     final profile = _profile;
 
     return Scaffold(
-      backgroundColor: cs.surface,
+      backgroundColor: AppColors.background,
       bottomNavigationBar: CustomerBottomNavBar(
         selectedIndex: 3,
         onTap: _onNavTap,
       ),
       appBar: AppBar(
-        backgroundColor: cs.surface,
+        backgroundColor: AppColors.background,
         elevation: 0,
         automaticallyImplyLeading: false,
         centerTitle: false,
@@ -354,7 +354,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           style: TextStyle(
             fontFamily: 'Poppins',
             fontSize: 22,
-            color: cs.onSurface,
+            color: AppColors.textPrimary,
             fontWeight: FontWeight.w700,
             letterSpacing: -0.3,
           ),
@@ -367,10 +367,12 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         ],
       ),
       body: _isLoading && profile == null
-          ? Center(child: CircularProgressIndicator(color: cs.primary))
+          ? const Center(
+              child: CircularProgressIndicator(color: Color(0xFF0A0A0B)),
+            )
           : RefreshIndicator(
               onRefresh: _loadProfile,
-              color: cs.primary,
+              color: const Color(0xFF0A0A0B),
               child: ListView(
                 padding: const EdgeInsets.fromLTRB(20, 4, 20, 32),
                 physics: const AlwaysScrollableScrollPhysics(),
@@ -416,17 +418,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                       onTap: () {},
                     ),
                     const SizedBox(height: 24),
-                    const ThemeModeSelector(title: 'Appearance'),
-                    const SizedBox(height: 12),
                     _LogoutButton(onTap: _handleLogout),
                   ] else ...[
                     const SizedBox(height: 32),
-                    Center(
-                      child: Text(
-                        'Unable to load profile data.',
-                        style: TextStyle(color: cs.onSurfaceVariant),
-                      ),
-                    ),
+                    const Center(child: Text('Unable to load profile data.')),
                   ],
                 ],
               ),
@@ -488,13 +483,12 @@ class _EditProfileSheetState extends State<_EditProfileSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final mediaQuery = MediaQuery.of(context);
-    final bottomInset = mediaQuery.viewInsets.bottom + mediaQuery.padding.bottom;
+    final bottomInset = MediaQuery.of(context).viewInsets.bottom;
 
     return Container(
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceContainer,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+      decoration: const BoxDecoration(
+        color: AppColors.background,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
       ),
       padding: EdgeInsets.fromLTRB(24, 0, 24, 24 + bottomInset),
       child: Column(
@@ -507,7 +501,7 @@ class _EditProfileSheetState extends State<_EditProfileSheet> {
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.outlineVariant,
+                color: AppColors.divider,
                 borderRadius: BorderRadius.circular(4),
               ),
             ),
@@ -519,17 +513,14 @@ class _EditProfileSheetState extends State<_EditProfileSheet> {
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.w700,
-              color: Theme.of(context).colorScheme.onSurface,
+              color: AppColors.textPrimary,
               letterSpacing: -0.2,
             ),
           ),
           const SizedBox(height: 6),
           Text(
             'Update your personal information',
-            style: TextStyle(
-              fontSize: 13,
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-            ),
+            style: TextStyle(fontSize: 13, color: AppColors.textSecondary),
           ),
           const SizedBox(height: 20),
           _SheetField(
@@ -558,15 +549,15 @@ class _EditProfileSheetState extends State<_EditProfileSheet> {
             child: FilledButton(
               onPressed: _save,
               style: FilledButton.styleFrom(
-                backgroundColor: Theme.of(context).colorScheme.primary,
-                foregroundColor: Theme.of(context).colorScheme.onPrimary,
+                backgroundColor: AppColors.textPrimary,
+                foregroundColor: AppColors.background,
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(30),
                 ),
                 textStyle: TextStyle(
                   fontFamily: 'Poppins',
-                  fontWeight: FontWeight.w600,
+                  fontWeight: FontWeight.w600, 
                   fontSize: 15,
                 ),
               ),
@@ -610,47 +601,37 @@ class _AvatarPreviewState extends State<_AvatarPreview> {
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
-        backgroundColor: Theme.of(context).colorScheme.surfaceContainerLowest,
+        backgroundColor: AppColors.surface,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Text(
           'Avatar URL',
           style: TextStyle(
             fontWeight: FontWeight.w700,
             fontSize: 16,
-            color: Theme.of(context).colorScheme.onSurface,
+            color: AppColors.textPrimary,
           ),
         ),
         content: TextField(
           controller: tempCtrl,
           autofocus: true,
-          style: TextStyle(
-            fontSize: 13,
-            color: Theme.of(context).colorScheme.onSurface,
-          ),
+          style: TextStyle(fontSize: 13, color: AppColors.textPrimary),
           decoration: InputDecoration(
             hintText: 'https://...',
-            hintStyle: TextStyle(
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-              fontSize: 13,
-            ),
+            hintStyle: TextStyle(color: AppColors.textSecondary, fontSize: 13),
             filled: true,
-            fillColor: Theme.of(context).colorScheme.surface,
+            fillColor: AppColors.background,
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(
-                color: Theme.of(context).colorScheme.outlineVariant,
-              ),
+              borderSide: const BorderSide(color: AppColors.divider),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(
-                color: Theme.of(context).colorScheme.outlineVariant,
-              ),
+              borderSide: const BorderSide(color: AppColors.divider),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(
-                color: Theme.of(context).colorScheme.primary,
+              borderSide: const BorderSide(
+                color: AppColors.textPrimary,
                 width: 1.5,
               ),
             ),
@@ -665,9 +646,7 @@ class _AvatarPreviewState extends State<_AvatarPreview> {
             onPressed: () => Navigator.pop(context),
             child: Text(
               'Cancel',
-              style: TextStyle(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-              ),
+              style: TextStyle(color: AppColors.textSecondary),
             ),
           ),
           TextButton(
@@ -679,7 +658,7 @@ class _AvatarPreviewState extends State<_AvatarPreview> {
               'Apply',
               style: TextStyle(
                 fontWeight: FontWeight.w600,
-                color: Theme.of(context).colorScheme.onSurface,
+                color: AppColors.textPrimary,
               ),
             ),
           ),
@@ -703,14 +682,11 @@ class _AvatarPreviewState extends State<_AvatarPreview> {
             height: 88,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: Theme.of(context).colorScheme.surfaceContainerLowest,
-              border: Border.all(
-                color: Theme.of(context).colorScheme.outlineVariant,
-                width: 2,
-              ),
+              color: AppColors.surface,
+              border: Border.all(color: AppColors.divider, width: 2),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.06),
+                  color: Colors.black.withOpacity(0.06),
                   blurRadius: 12,
                   offset: const Offset(0, 4),
                 ),
@@ -721,16 +697,16 @@ class _AvatarPreviewState extends State<_AvatarPreview> {
                   ? Image.network(
                       url,
                       fit: BoxFit.cover,
-                      errorBuilder: (_, _, _) => Icon(
+                      errorBuilder: (_, _, _) => const Icon(
                         Icons.person_outline_rounded,
                         size: 36,
-                        color: Theme.of(context).colorScheme.onSurface,
+                        color: AppColors.textPrimary,
                       ),
                     )
-                  : Icon(
+                  : const Icon(
                       Icons.person_outline_rounded,
                       size: 36,
-                      color: Theme.of(context).colorScheme.onSurface,
+                      color: AppColors.textPrimary,
                     ),
             ),
           ),
@@ -738,17 +714,14 @@ class _AvatarPreviewState extends State<_AvatarPreview> {
             width: 28,
             height: 28,
             decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.primary,
+              color: AppColors.primary,
               shape: BoxShape.circle,
-              border: Border.all(
-                color: Theme.of(context).colorScheme.surface,
-                width: 2.5,
-              ),
+              border: Border.all(color: AppColors.background, width: 2.5),
             ),
             child: Icon(
               Icons.camera_alt_rounded,
               size: 13,
-              color: Theme.of(context).colorScheme.onPrimary,
+              color: Colors.white,
             ),
           ),
         ],
@@ -777,39 +750,25 @@ class _SheetField extends StatelessWidget {
     return TextField(
       controller: controller,
       keyboardType: inputType,
-      style: TextStyle(
-        fontSize: 13.5,
-        color: Theme.of(context).colorScheme.onSurface,
-      ),
+      style: TextStyle(fontSize: 13.5, color: AppColors.textPrimary),
       decoration: InputDecoration(
         labelText: label,
-        labelStyle: TextStyle(
-          fontSize: 12.5,
-          color: Theme.of(context).colorScheme.onSurfaceVariant,
-        ),
-        prefixIcon: Icon(
-          icon,
-          size: 18,
-          color: Theme.of(context).colorScheme.onSurfaceVariant,
-        ),
+        labelStyle: TextStyle(fontSize: 12.5, color: AppColors.textSecondary),
+        prefixIcon: Icon(icon, size: 18, color: AppColors.textSecondary),
         filled: true,
-        fillColor: Theme.of(context).colorScheme.surfaceContainerLowest,
+        fillColor: AppColors.surface,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide: BorderSide(
-            color: Theme.of(context).colorScheme.outlineVariant,
-          ),
+          borderSide: const BorderSide(color: AppColors.divider),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide: BorderSide(
-            color: Theme.of(context).colorScheme.outlineVariant,
-          ),
+          borderSide: const BorderSide(color: AppColors.divider),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide: BorderSide(
-            color: Theme.of(context).colorScheme.primary,
+          borderSide: const BorderSide(
+            color: AppColors.textPrimary,
             width: 1.5,
           ),
         ),
@@ -836,12 +795,9 @@ class _ProfileHeroCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceContainerLowest,
+        color: AppColors.surface,
         borderRadius: BorderRadius.circular(22),
-        border: Border.all(
-          color: Theme.of(context).colorScheme.outlineVariant,
-          width: 1,
-        ),
+        border: Border.all(color: AppColors.divider, width: 1),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
@@ -851,28 +807,25 @@ class _ProfileHeroCard extends StatelessWidget {
             width: 68,
             height: 68,
             decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.surface,
+              color: AppColors.background,
               shape: BoxShape.circle,
-              border: Border.all(
-                color: Theme.of(context).colorScheme.outlineVariant,
-                width: 1.5,
-              ),
+              border: Border.all(color: AppColors.divider, width: 1.5),
             ),
             child: ClipOval(
               child: hasAvatar
                   ? Image.network(
                       profile.avatarUrl,
                       fit: BoxFit.cover,
-                      errorBuilder: (_, _, _) => Icon(
+                      errorBuilder: (_, _, _) => const Icon(
                         Icons.person_outline_rounded,
                         size: 30,
-                        color: Theme.of(context).colorScheme.onSurface,
+                        color: AppColors.textPrimary,
                       ),
                     )
-                  : Icon(
+                  : const Icon(
                       Icons.person_outline_rounded,
                       size: 30,
-                      color: Theme.of(context).colorScheme.onSurface,
+                      color: AppColors.textPrimary,
                     ),
             ),
           ),
@@ -887,7 +840,7 @@ class _ProfileHeroCard extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 17,
                     fontWeight: FontWeight.w700,
-                    color: Theme.of(context).colorScheme.onSurface,
+                    color: AppColors.textPrimary,
                     letterSpacing: -0.2,
                   ),
                 ),
@@ -922,19 +875,12 @@ class _HeroInfoRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Icon(
-          icon,
-          size: 13,
-          color: Theme.of(context).colorScheme.onSurfaceVariant,
-        ),
+        Icon(icon, size: 13, color: AppColors.textSecondary),
         const SizedBox(width: 6),
         Expanded(
           child: Text(
             text,
-            style: TextStyle(
-              fontSize: 12.5,
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-            ),
+            style: TextStyle(fontSize: 12.5, color: AppColors.textSecondary),
             overflow: TextOverflow.ellipsis,
           ),
         ),
@@ -965,7 +911,7 @@ class _CustomerStatsRow extends ConsumerWidget {
       if (b.status != BookingStatus.cancelled) {
         activeBookings++;
         uniqueVenues.add(b.court.stadiumId);
-
+        
         // Let's assume paid means not unpaid and not cancelled
         if (b.status != BookingStatus.unpaid) {
           spent += b.totalAmount;
@@ -1039,33 +985,27 @@ class _StatChip extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 16),
         decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.surfaceContainerLowest,
+          color: AppColors.surface,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: Theme.of(context).colorScheme.outlineVariant,
-            width: 1,
-          ),
+          border: Border.all(color: AppColors.divider, width: 1),
         ),
         child: Column(
           children: [
-            Icon(icon, size: 18, color: Theme.of(context).colorScheme.primary),
+            Icon(icon, size: 18, color: AppColors.primary),
             const SizedBox(height: 6),
             Text(
               value,
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.w700,
-                color: Theme.of(context).colorScheme.onSurface,
+                color: AppColors.textPrimary,
                 letterSpacing: -0.3,
               ),
             ),
             const SizedBox(height: 2),
             Text(
               label,
-              style: TextStyle(
-                fontSize: 11,
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-              ),
+              style: TextStyle(fontSize: 11, color: AppColors.textSecondary),
             ),
           ],
         ),
@@ -1098,32 +1038,26 @@ class _RoleSwitcher extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(14),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
         decoration: BoxDecoration(
-          color: cs.inverseSurface,
+          color: const Color(0xFF0B1220),
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: cs.outlineVariant),
         ),
-        child: Row(
+        child: const Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              Icons.swap_horiz_rounded,
-              size: 14,
-              color: cs.onInverseSurface,
-            ),
-            const SizedBox(width: 4),
+            Icon(Icons.swap_horiz_rounded, size: 14, color: Colors.white),
+            SizedBox(width: 4),
             Text(
               'Switch',
               style: TextStyle(
                 fontSize: 11,
                 fontWeight: FontWeight.w600,
-                color: cs.onInverseSurface,
+                color: Colors.white,
               ),
             ),
           ],
@@ -1169,12 +1103,9 @@ class _InfoCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceContainerLowest,
+        color: AppColors.surface,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(
-          color: Theme.of(context).colorScheme.outlineVariant,
-          width: 1,
-        ),
+        border: Border.all(color: AppColors.divider, width: 1),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1188,7 +1119,7 @@ class _InfoCard extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 13.5,
                     fontWeight: FontWeight.w700,
-                    color: Theme.of(context).colorScheme.onSurface,
+                    color: AppColors.textPrimary,
                   ),
                 ),
                 const SizedBox(height: 5),
@@ -1197,7 +1128,7 @@ class _InfoCard extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 12,
                     height: 1.5,
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    color: AppColors.textSecondary,
                   ),
                 ),
               ],
@@ -1219,22 +1150,20 @@ class _RoleBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       decoration: BoxDecoration(
         color: isPositive
-            ? cs.primary.withValues(alpha: 0.12)
-            : cs.tertiary.withValues(alpha: 0.12),
+            ? const Color(0xFF1A7A4A).withOpacity(0.12)
+            : const Color(0xFFC97A00).withOpacity(0.12),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: cs.outlineVariant),
       ),
       child: Text(
         label,
         style: TextStyle(
           fontSize: 11,
           fontWeight: FontWeight.w600,
-          color: isPositive ? cs.primary : cs.tertiary,
+          color: isPositive ? const Color(0xFF1A7A4A) : const Color(0xFFC97A00),
         ),
       ),
     );
@@ -1255,7 +1184,7 @@ class _SectionLabel extends StatelessWidget {
       style: TextStyle(
         fontSize: 12,
         fontWeight: FontWeight.w600,
-        color: Theme.of(context).colorScheme.onSurfaceVariant,
+        color: AppColors.textSecondary,
         letterSpacing: 0.6,
       ),
     );
@@ -1285,20 +1214,13 @@ class _ActionTile extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
           decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.surfaceContainerLowest,
+            color: AppColors.surface,
             borderRadius: BorderRadius.circular(14),
-            border: Border.all(
-              color: Theme.of(context).colorScheme.outlineVariant,
-              width: 1,
-            ),
+            border: Border.all(color: AppColors.divider, width: 1),
           ),
           child: Row(
             children: [
-              Icon(
-                icon,
-                size: 20,
-                color: Theme.of(context).colorScheme.onSurface,
-              ),
+              Icon(icon, size: 20, color: AppColors.textPrimary),
               const SizedBox(width: 14),
               Expanded(
                 child: Text(
@@ -1306,14 +1228,14 @@ class _ActionTile extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 13.5,
                     fontWeight: FontWeight.w500,
-                    color: Theme.of(context).colorScheme.onSurface,
+                    color: AppColors.textPrimary,
                   ),
                 ),
               ),
-              Icon(
+              const Icon(
                 Icons.arrow_forward_ios_rounded,
                 size: 13,
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                color: AppColors.textSecondary,
               ),
             ],
           ),
@@ -1332,20 +1254,19 @@ class _ErrorBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: cs.errorContainer,
+        color: const Color(0xFFFEF2F2),
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: cs.error.withValues(alpha: 0.35)),
+        border: Border.all(color: const Color(0xFFFECACA)),
       ),
       child: Text(
         message,
         style: TextStyle(
           fontSize: 12.5,
-          color: cs.onErrorContainer,
+          color: const Color(0xFFB91C1C),
           fontWeight: FontWeight.w600,
         ),
       ),
@@ -1362,8 +1283,6 @@ class _LogoutButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(14),
@@ -1371,21 +1290,25 @@ class _LogoutButton extends StatelessWidget {
         width: double.infinity,
         padding: const EdgeInsets.symmetric(vertical: 16),
         decoration: BoxDecoration(
-          color: cs.surface,
+          color: AppColors.surface,
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: cs.outlineVariant, width: 1),
+          border: Border.all(color: AppColors.divider, width: 1),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.logout_rounded, size: 20, color: cs.error),
+            const Icon(
+              Icons.logout_rounded,
+              size: 20,
+              color: Color(0xFFDC2626),
+            ),
             const SizedBox(width: 10),
-            Text(
+            const Text(
               'Log out',
               style: TextStyle(
                 fontSize: 14.5,
                 fontWeight: FontWeight.w600,
-                color: cs.error,
+                color: Color(0xFFDC2626),
               ),
             ),
           ],
@@ -1409,28 +1332,21 @@ class _EditButton extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
         decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.surfaceContainerLowest,
+          color: AppColors.surface,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: Theme.of(context).colorScheme.outlineVariant,
-            width: 1,
-          ),
+          border: Border.all(color: AppColors.divider, width: 1),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              Icons.edit_rounded,
-              size: 13,
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-            ),
+            Icon(Icons.edit_rounded, size: 13, color: AppColors.textSecondary),
             const SizedBox(width: 5),
             Text(
               'Edit',
               style: TextStyle(
                 fontSize: 12.5,
                 fontWeight: FontWeight.w600,
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                color: AppColors.textSecondary,
               ),
             ),
           ],

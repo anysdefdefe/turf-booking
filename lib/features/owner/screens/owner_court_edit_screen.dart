@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:turf_booking/app/theme/app_colors.dart';
 import 'package:turf_booking/app/constants/app_constants.dart';
 import 'package:turf_booking/features/owner/data/models/court_model.dart';
 import 'package:turf_booking/features/owner/data/repositories/stadium_repository.dart';
@@ -150,7 +151,7 @@ class _OwnerCourtEditScreenState extends ConsumerState<OwnerCourtEditScreen> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message, style: const TextStyle(fontFamily: 'Poppins')),
-        backgroundColor: Theme.of(context).colorScheme.primary,
+        backgroundColor: AppColors.primary,
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppConstants.radiusM),
@@ -166,7 +167,6 @@ class _OwnerCourtEditScreenState extends ConsumerState<OwnerCourtEditScreen> {
   ) {
     showModalBottomSheet(
       context: context,
-      useSafeArea: true,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (_) =>
@@ -179,38 +179,32 @@ class _OwnerCourtEditScreenState extends ConsumerState<OwnerCourtEditScreen> {
     final stadiumAsync = ref.watch(currentStadiumProvider);
 
     return stadiumAsync.when(
-      loading: () => Scaffold(
-        backgroundColor: Theme.of(context).colorScheme.surface,
+      loading: () => const Scaffold(
+        backgroundColor: AppColors.background,
         body: Center(
-          child: CircularProgressIndicator(
-            color: Theme.of(context).colorScheme.primary,
-          ),
+          child: CircularProgressIndicator(color: AppColors.primary),
         ),
       ),
       error: (error, _) => Scaffold(
-        backgroundColor: Theme.of(context).colorScheme.surface,
+        backgroundColor: AppColors.background,
         body: Center(child: Text('Error: $error')),
       ),
       data: (stadium) {
         if (stadium == null) {
-          return Scaffold(
-            backgroundColor: Theme.of(context).colorScheme.surface,
-          );
+          return const Scaffold(backgroundColor: AppColors.background);
         }
 
         final courtsAsync = ref.watch(courtsForStadiumProvider(stadium.id));
 
         return courtsAsync.when(
-          loading: () => Scaffold(
-            backgroundColor: Theme.of(context).colorScheme.surface,
+          loading: () => const Scaffold(
+            backgroundColor: AppColors.background,
             body: Center(
-              child: CircularProgressIndicator(
-                color: Theme.of(context).colorScheme.primary,
-              ),
+              child: CircularProgressIndicator(color: AppColors.primary),
             ),
           ),
           error: (error, _) => Scaffold(
-            backgroundColor: Theme.of(context).colorScheme.surface,
+            backgroundColor: AppColors.background,
             body: Center(child: Text('Error: $error')),
           ),
           data: (courts) {
@@ -220,14 +214,14 @@ class _OwnerCourtEditScreenState extends ConsumerState<OwnerCourtEditScreen> {
 
             if (court == null) {
               return Scaffold(
-                backgroundColor: Theme.of(context).colorScheme.surface,
+                backgroundColor: AppColors.background,
                 appBar: AppBar(title: const Text('Court Not Found')),
-                body: Center(
+                body: const Center(
                   child: Text(
                     'This court no longer exists.',
                     style: TextStyle(
                       fontFamily: 'Poppins',
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      color: AppColors.textSecondary,
                     ),
                   ),
                 ),
@@ -237,17 +231,17 @@ class _OwnerCourtEditScreenState extends ConsumerState<OwnerCourtEditScreen> {
             _initFields(court);
 
             return Scaffold(
-              backgroundColor: Theme.of(context).colorScheme.surface,
+              backgroundColor: AppColors.background,
               appBar: AppBar(
-                backgroundColor: Theme.of(context).colorScheme.surface,
+                backgroundColor: AppColors.surface,
                 elevation: 0,
                 title: Text(
                   'Edit ${court.name}',
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontFamily: 'Poppins',
                     fontWeight: FontWeight.w700,
                     fontSize: 18,
-                    color: Theme.of(context).colorScheme.onSurface,
+                    color: AppColors.textPrimary,
                   ),
                 ),
               ),
@@ -333,40 +327,34 @@ class _OwnerCourtEditScreenState extends ConsumerState<OwnerCourtEditScreen> {
                         vertical: 12,
                       ),
                       decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.surface,
+                        color: AppColors.surface,
                         borderRadius: BorderRadius.circular(
                           AppConstants.radiusM,
                         ),
-                        border: Border.all(
-                          color: Theme.of(context).colorScheme.outlineVariant,
-                        ),
+                        border: Border.all(color: AppColors.divider),
                       ),
                       child: Row(
                         children: [
-                          Icon(
+                          const Icon(
                             Icons.event_available_outlined,
                             size: 18,
-                            color: Theme.of(
-                              context,
-                            ).colorScheme.onSurfaceVariant,
+                            color: AppColors.textSecondary,
                           ),
                           const SizedBox(width: 12),
-                          Expanded(
+                          const Expanded(
                             child: Text(
                               'Court Active',
                               style: TextStyle(
                                 fontFamily: 'Poppins',
                                 fontSize: 14,
-                                color: Theme.of(context).colorScheme.onSurface,
+                                color: AppColors.textPrimary,
                               ),
                             ),
                           ),
                           Switch.adaptive(
                             value: _isActive,
                             onChanged: (v) => setState(() => _isActive = v),
-                            activeThumbColor: Theme.of(
-                              context,
-                            ).colorScheme.primary,
+                            activeThumbColor: AppColors.primary,
                           ),
                         ],
                       ),
@@ -382,9 +370,7 @@ class _OwnerCourtEditScreenState extends ConsumerState<OwnerCourtEditScreen> {
                             ? null
                             : () => _save(stadium.id, court.imageUrl),
                         style: FilledButton.styleFrom(
-                          backgroundColor: Theme.of(
-                            context,
-                          ).colorScheme.primary,
+                          backgroundColor: AppColors.primary,
                           padding: const EdgeInsets.symmetric(vertical: 14),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(
@@ -416,22 +402,22 @@ class _OwnerCourtEditScreenState extends ConsumerState<OwnerCourtEditScreen> {
                     const SizedBox(height: 32),
                     const Divider(),
                     const SizedBox(height: 24),
-                    Text(
+                    const Text(
                       'Maintenance & Blocking',
                       style: TextStyle(
                         fontFamily: 'Poppins',
                         fontWeight: FontWeight.w700,
                         fontSize: 16,
-                        color: Theme.of(context).colorScheme.onSurface,
+                        color: AppColors.textPrimary,
                       ),
                     ),
                     const SizedBox(height: 8),
-                    Text(
+                    const Text(
                       'Block off specific hours so customers cannot book them. This will act as a phantom booking and will not affect your revenue.',
                       style: TextStyle(
                         fontFamily: 'Poppins',
                         fontSize: 13,
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        color: AppColors.textSecondary,
                         height: 1.5,
                       ),
                     ),
@@ -447,10 +433,8 @@ class _OwnerCourtEditScreenState extends ConsumerState<OwnerCourtEditScreen> {
                         icon: const Icon(Icons.build_circle_outlined, size: 18),
                         label: const Text('Add Maintenance Block'),
                         style: OutlinedButton.styleFrom(
-                          foregroundColor: Theme.of(context).colorScheme.error,
-                          side: BorderSide(
-                            color: Theme.of(context).colorScheme.error,
-                          ),
+                          foregroundColor: AppColors.error,
+                          side: const BorderSide(color: AppColors.error),
                           padding: const EdgeInsets.symmetric(vertical: 14),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(
@@ -483,11 +467,9 @@ class _OwnerCourtEditScreenState extends ConsumerState<OwnerCourtEditScreen> {
         height: 180,
         width: double.infinity,
         decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.surface,
+          color: AppColors.surface,
           borderRadius: BorderRadius.circular(AppConstants.radiusL),
-          border: Border.all(
-            color: Theme.of(context).colorScheme.outlineVariant,
-          ),
+          border: Border.all(color: AppColors.divider),
         ),
         child: Stack(
           children: [
@@ -499,7 +481,7 @@ class _OwnerCourtEditScreenState extends ConsumerState<OwnerCourtEditScreen> {
                     )
                   : StorageImage(
                       storagePath: court.imageUrl,
-                      bucketName: StadiumRepository.imageBucket,
+                       bucketName: StadiumRepository.imageBucket,
                       width: double.infinity,
                       height: 180,
                       borderRadius: BorderRadius.circular(AppConstants.radiusL),
@@ -514,11 +496,11 @@ class _OwnerCourtEditScreenState extends ConsumerState<OwnerCourtEditScreen> {
                             AppConstants.radiusL,
                           ),
                         ),
-                        child: Center(
+                        child: const Center(
                           child: Icon(
                             Icons.sports_tennis_rounded,
                             size: 42,
-                            color: Theme.of(context).colorScheme.primary,
+                            color: AppColors.primary,
                           ),
                         ),
                       ),
@@ -539,7 +521,7 @@ class _OwnerCourtEditScreenState extends ConsumerState<OwnerCourtEditScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
-        color: Colors.black.withValues(alpha: 0.4),
+        color: Colors.black.withOpacity(0.4),
         borderRadius: BorderRadius.circular(999),
       ),
       child: Text(
@@ -558,11 +540,11 @@ class _OwnerCourtEditScreenState extends ConsumerState<OwnerCourtEditScreen> {
     padding: const EdgeInsets.only(bottom: 6),
     child: Text(
       label,
-      style: TextStyle(
+      style: const TextStyle(
         fontFamily: 'Poppins',
         fontSize: 13,
         fontWeight: FontWeight.w500,
-        color: Theme.of(context).colorScheme.onSurfaceVariant,
+        color: AppColors.textSecondary,
       ),
     ),
   );
@@ -576,39 +558,32 @@ class _OwnerCourtEditScreenState extends ConsumerState<OwnerCourtEditScreen> {
     controller: controller,
     keyboardType: keyboardType,
     maxLines: maxLines,
-    style: TextStyle(
+    style: const TextStyle(
       fontFamily: 'Poppins',
       fontSize: 14,
-      color: Theme.of(context).colorScheme.onSurface,
+      color: AppColors.textPrimary,
     ),
     decoration: InputDecoration(
       hintText: hint,
-      hintStyle: TextStyle(
+      hintStyle: const TextStyle(
         fontFamily: 'Poppins',
         fontSize: 14,
-        color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.3),
+        color: AppColors.textMuted,
       ),
       filled: true,
-      fillColor: Theme.of(context).colorScheme.surface,
+      fillColor: AppColors.surface,
       contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(AppConstants.radiusM),
-        borderSide: BorderSide(
-          color: Theme.of(context).colorScheme.outlineVariant,
-        ),
+        borderSide: const BorderSide(color: AppColors.divider),
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(AppConstants.radiusM),
-        borderSide: BorderSide(
-          color: Theme.of(context).colorScheme.outlineVariant,
-        ),
+        borderSide: const BorderSide(color: AppColors.divider),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(AppConstants.radiusM),
-        borderSide: BorderSide(
-          color: Theme.of(context).colorScheme.primary,
-          width: 1.5,
-        ),
+        borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
       ),
     ),
   );
@@ -654,11 +629,10 @@ class _MaintenanceBlockSheetState
     );
     if (time != null && mounted) {
       setState(() {
-        if (isStart) {
+        if (isStart)
           _startTime = time;
-        } else {
+        else
           _endTime = time;
-        }
       });
     }
   }
@@ -693,7 +667,7 @@ class _MaintenanceBlockSheetState
               'Maintenance block added successfully',
               style: TextStyle(fontFamily: 'Poppins'),
             ),
-            backgroundColor: Theme.of(context).colorScheme.primary,
+            backgroundColor: AppColors.primary,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(10),
             ),
@@ -713,7 +687,7 @@ class _MaintenanceBlockSheetState
               'Error: $e',
               style: const TextStyle(fontFamily: 'Poppins'),
             ),
-            backgroundColor: Theme.of(context).colorScheme.error,
+            backgroundColor: AppColors.error,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(10),
             ),
@@ -727,8 +701,6 @@ class _MaintenanceBlockSheetState
 
   @override
   Widget build(BuildContext context) {
-    final mediaQuery = MediaQuery.of(context);
-
     return Container(
       decoration: const BoxDecoration(
         color: Colors.white,
@@ -738,7 +710,7 @@ class _MaintenanceBlockSheetState
         left: 24,
         right: 24,
         top: 24,
-        bottom: mediaQuery.viewInsets.bottom + mediaQuery.padding.bottom + 24,
+        bottom: MediaQuery.of(context).viewInsets.bottom + 24,
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -816,7 +788,7 @@ class _MaintenanceBlockSheetState
           FilledButton(
             onPressed: _isSaving ? null : _submit,
             style: FilledButton.styleFrom(
-              backgroundColor: Theme.of(context).colorScheme.error,
+              backgroundColor: AppColors.error,
               padding: const EdgeInsets.symmetric(vertical: 16),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),

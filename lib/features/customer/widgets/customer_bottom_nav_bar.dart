@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../app/theme/app_colors.dart';
 import '../data/models/booking_cart_item.dart';
 import '../data/repositories/customer_cart_repository.dart';
 
@@ -16,14 +17,9 @@ class CustomerBottomNavBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final cartRepo = CustomerCartRepository.instance;
     return Container(
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
-        border: Border(
-          top: BorderSide(
-            color: Theme.of(context).colorScheme.outlineVariant,
-            width: 1,
-          ),
-        ),
+      decoration: const BoxDecoration(
+        color: AppColors.surface,
+        border: Border(top: BorderSide(color: AppColors.divider, width: 1)),
       ),
       child: SafeArea(
         child: Padding(
@@ -98,9 +94,7 @@ class _NavItem extends StatelessWidget {
                 Icon(
                   icon,
                   size: 24,
-                  color: isSelected
-                      ? Theme.of(context).colorScheme.primary
-                      : Theme.of(context).colorScheme.onSurfaceVariant,
+                  color: isSelected ? AppColors.primary : AppColors.textSecondary,
                 ),
                 const SizedBox(height: 4),
                 Text(
@@ -109,9 +103,7 @@ class _NavItem extends StatelessWidget {
                     fontFamily: 'Poppins',
                     fontSize: 11,
                     fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
-                    color: isSelected
-                        ? Theme.of(context).colorScheme.primary
-                        : Theme.of(context).colorScheme.onSurfaceVariant,
+                    color: isSelected ? AppColors.primary : AppColors.textSecondary,
                   ),
                 ),
               ],
@@ -127,7 +119,7 @@ class _NavItem extends StatelessWidget {
                     vertical: 2,
                   ),
                   decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.error,
+                    color: AppColors.error,
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Text(

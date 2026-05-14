@@ -8,27 +8,38 @@ class AdminSettingsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final cs = Theme.of(context).colorScheme;
+    // Get real logged in user
     final currentUser = Supabase.instance.client.auth.currentUser;
     final email = currentUser?.email ?? 'admin@courtly.com';
     final name = currentUser?.userMetadata?['full_name'] ?? 'Admin';
 
     return Scaffold(
-      backgroundColor: cs.surface,
-      appBar: AppBar(title: const Text('Settings')),
+      backgroundColor: const Color(0xFFF5F5F5),
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        elevation: 0,
+        automaticallyImplyLeading: false,
+        title: const Text(
+          'Settings',
+          style: TextStyle(
+            color: Color(0xFF1A1A1A),
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ),
       body: Padding(
         padding: const EdgeInsets.all(20),
         child: Column(
           children: [
+            // Admin profile card
             Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                color: cs.surfaceContainerLowest,
+                color: Colors.white,
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: cs.outlineVariant),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.05),
+                    color: Colors.black.withOpacity(0.05),
                     blurRadius: 8,
                   ),
                 ],
@@ -37,11 +48,12 @@ class AdminSettingsScreen extends ConsumerWidget {
                 children: [
                   CircleAvatar(
                     radius: 28,
-                    backgroundColor: cs.primaryContainer,
+                    backgroundColor:
+                        const Color(0xFF4CAF50).withOpacity(0.15),
                     child: Text(
-                      name.isNotEmpty ? name[0].toUpperCase() : 'A',
-                      style: TextStyle(
-                        color: cs.onPrimaryContainer,
+                      name[0].toUpperCase(),
+                      style: const TextStyle(
+                        color: Color(0xFF4CAF50),
                         fontWeight: FontWeight.bold,
                         fontSize: 22,
                       ),
@@ -54,10 +66,9 @@ class AdminSettingsScreen extends ConsumerWidget {
                       children: [
                         Text(
                           name,
-                          style: TextStyle(
+                          style: const TextStyle(
                             fontSize: 17,
                             fontWeight: FontWeight.bold,
-                            color: cs.onSurface,
                           ),
                         ),
                         const SizedBox(height: 2),
@@ -65,24 +76,22 @@ class AdminSettingsScreen extends ConsumerWidget {
                           email,
                           style: TextStyle(
                             fontSize: 13,
-                            color: cs.onSurfaceVariant,
+                            color: Colors.grey[500],
                           ),
                         ),
                         const SizedBox(height: 6),
                         Container(
                           padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 3,
-                          ),
+                              horizontal: 8, vertical: 3),
                           decoration: BoxDecoration(
-                            color: cs.surfaceContainerHighest,
+                            color: const Color(0xFF4CAF50)
+                                .withOpacity(0.1),
                             borderRadius: BorderRadius.circular(6),
-                            border: Border.all(color: cs.outlineVariant),
                           ),
-                          child: Text(
+                          child: const Text(
                             'Administrator',
                             style: TextStyle(
-                              color: cs.onSurfaceVariant,
+                              color: Color(0xFF4CAF50),
                               fontSize: 11,
                               fontWeight: FontWeight.w600,
                             ),
@@ -97,71 +106,71 @@ class AdminSettingsScreen extends ConsumerWidget {
 
             const SizedBox(height: 16),
 
+            // App Info Card
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: cs.surfaceContainerLowest,
+                color: Colors.white,
                 borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: cs.outlineVariant),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.05),
+                    color: Colors.black.withOpacity(0.05),
                     blurRadius: 8,
                   ),
                 ],
               ),
               child: Column(
                 children: [
-                  _infoRow(
-                    context,
-                    Icons.app_settings_alt,
-                    'App Name',
-                    'Courtly',
-                  ),
+                  _infoRow(Icons.app_settings_alt, 'App Name', 'Courtly'),
+                  
                 ],
               ),
             ),
 
             const Spacer(),
 
+            // Logout button
             SizedBox(
               width: double.infinity,
-              child: FilledButton.icon(
+              child: ElevatedButton.icon(
                 onPressed: () async {
                   final confirm = await showDialog<bool>(
                     context: context,
-                    builder: (context) {
-                      final dcs = Theme.of(context).colorScheme;
-                      return AlertDialog(
-                        title: const Text('Logout'),
-                        content: const Text('Are you sure you want to logout?'),
-                        actions: [
-                          TextButton(
-                            onPressed: () => Navigator.pop(context, false),
-                            child: const Text('Cancel'),
+                    builder: (context) => AlertDialog(
+                      title: const Text('Logout'),
+                      content: const Text(
+                        'Are you sure you want to logout?',
+                      ),
+                      actions: [
+                        TextButton(
+                          onPressed: () =>
+                              Navigator.pop(context, false),
+                          child: const Text('Cancel'),
+                        ),
+                        ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.red,
+                            foregroundColor: Colors.white,
                           ),
-                          FilledButton(
-                            style: FilledButton.styleFrom(
-                              backgroundColor: dcs.error,
-                              foregroundColor: dcs.onError,
-                            ),
-                            onPressed: () => Navigator.pop(context, true),
-                            child: const Text('Logout'),
-                          ),
-                        ],
-                      );
-                    },
+                          onPressed: () =>
+                              Navigator.pop(context, true),
+                          child: const Text('Logout'),
+                        ),
+                      ],
+                    ),
                   );
 
                   if (confirm != true) return;
 
-                  await ref.read(authControllerProvider.notifier).signOut();
+                  await ref
+                      .read(authControllerProvider.notifier)
+                      .signOut();
                 },
-                icon: const Icon(Icons.logout_rounded),
+                icon: const Icon(Icons.logout),
                 label: const Text('Logout'),
-                style: FilledButton.styleFrom(
-                  backgroundColor: cs.error,
-                  foregroundColor: cs.onError,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.red,
+                  foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 14),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
@@ -175,25 +184,21 @@ class AdminSettingsScreen extends ConsumerWidget {
     );
   }
 
-  Widget _infoRow(
-    BuildContext context,
-    IconData icon,
-    String label,
-    String value,
-  ) {
-    final cs = Theme.of(context).colorScheme;
+  Widget _infoRow(IconData icon, String label, String value) {
     return Row(
       children: [
-        Icon(icon, size: 18, color: cs.onSurfaceVariant),
+        Icon(icon, size: 18, color: Colors.grey[400]),
         const SizedBox(width: 12),
-        Text(label, style: TextStyle(fontSize: 13, color: cs.onSurfaceVariant)),
+        Text(
+          label,
+          style: TextStyle(fontSize: 13, color: Colors.grey[500]),
+        ),
         const Spacer(),
         Text(
           value,
-          style: TextStyle(
+          style: const TextStyle(
             fontSize: 13,
             fontWeight: FontWeight.w600,
-            color: cs.onSurface,
           ),
         ),
       ],

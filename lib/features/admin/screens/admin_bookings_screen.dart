@@ -7,29 +7,33 @@ class AdminBookingsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final cs = Theme.of(context).colorScheme;
     final bookingsAsync = ref.watch(allBookingsProvider);
+  
 
     return Scaffold(
-      backgroundColor: cs.surface,
+      backgroundColor: const Color(0xFFF5F5F5),
       appBar: AppBar(
-        backgroundColor: cs.surface,
+        backgroundColor: Colors.white,
         elevation: 0,
         automaticallyImplyLeading: false,
         title: const Text(
           'All Bookings',
-          style: TextStyle(fontWeight: FontWeight.bold),
+          style: TextStyle(
+            color: Color(0xFF1A1A1A),
+            fontWeight: FontWeight.bold,
+          ),
         ),
       ),
       body: bookingsAsync.when(
-        loading: () => Center(
-          child: CircularProgressIndicator(color: cs.primary),
+        loading: () => const Center(
+          child: CircularProgressIndicator(color: Color(0xFF4CAF50)),
         ),
         error: (e, _) => Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Text('Error: $e', style: TextStyle(color: cs.error)),
+              Text('Error: $e',
+                  style: const TextStyle(color: Colors.red)),
               ElevatedButton(
                 onPressed: () => ref.invalidate(allBookingsProvider),
                 child: const Text('Retry'),
@@ -38,8 +42,8 @@ class AdminBookingsScreen extends ConsumerWidget {
           ),
         ),
         data: (bookings) => RefreshIndicator(
-          color: cs.primary,
-          onRefresh: () async => ref.refresh(allBookingsProvider),
+          color: const Color(0xFF4CAF50),
+          onRefresh: () async => ref.invalidate(allBookingsProvider),
           child: bookings.isEmpty
               ? const Center(
                   child: Text(
@@ -113,7 +117,6 @@ class _BookingCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
     final status = booking['status'] ?? 'unknown';
     final paymentStatus = booking['payment_status'] ?? 'unknown';
     final userName = booking['users']?['full_name'] ?? 'Unknown User';
@@ -123,11 +126,11 @@ class _BookingCard extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: cs.surfaceContainer,
+        color: Colors.white,
         borderRadius: BorderRadius.circular(14),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
+            color: Colors.black.withOpacity(0.05),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -148,9 +151,10 @@ class _BookingCard extends StatelessWidget {
                 ),
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: _statusColor(status).withValues(alpha: 0.1),
+                  color: _statusColor(status).withOpacity(0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
@@ -166,55 +170,53 @@ class _BookingCard extends StatelessWidget {
           ),
 
           const Divider(height: 20),
-          Row(
-            children: [
-              CircleAvatar(
-                radius: 16,
-                backgroundColor: cs.primary.withValues(alpha: 0.15),
-                child: Text(
-                  userName[0].toUpperCase(),
-                  style: TextStyle(
-                    color: cs.primary,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 12,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 8),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    userName,
+             Row(
+              children: [
+                CircleAvatar(
+                  radius: 16,
+                  backgroundColor: const Color(0xFF4CAF50).withOpacity(0.15),
+                  child: Text(
+                    userName[0].toUpperCase(),
                     style: const TextStyle(
-                      fontWeight: FontWeight.w600,
-                      fontSize: 13,
+                      color: Color(0xFF4CAF50),
+                      fontWeight: FontWeight.bold,
+                      fontSize: 12,
                     ),
                   ),
-                  Text(
-                    userEmail,
-                    style: TextStyle(fontSize: 11, color: cs.onSurfaceVariant),
-                  ),
-                ],
-              ),
-            ],
-          ),
+                ),
+                const SizedBox(width: 8),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      userName,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 13,
+                      ),
+                    ),
+                    Text(
+                      userEmail,
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: Colors.grey[500],
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
 
-          const SizedBox(height: 10),
+        const SizedBox(height: 10),
           // Details
-          _infoRow(
-            context,
-            Icons.calendar_today_outlined,
-            'Date',
-            booking['booking_date'] ?? '-',
-          ),
+          _infoRow(Icons.calendar_today_outlined, 'Date', booking['booking_date'] ?? '-'),
           const SizedBox(height: 6),
           // Show slots as chips similar to owner view. If slots are present, list them,
           // otherwise show a single time chip using start/end time.
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             decoration: BoxDecoration(
-              color: cs.surface,
+              color: const Color(0xFFF5F5F5),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Column(
@@ -222,126 +224,80 @@ class _BookingCard extends StatelessWidget {
               children: [
                 Row(
                   children: [
-                    Icon(
-                      Icons.access_time_outlined,
-                      size: 14,
-                      color: cs.onSurfaceVariant,
-                    ),
+                    Icon(Icons.access_time_outlined, size: 14, color: Colors.grey[500]),
                     const SizedBox(width: 6),
                     Text(
                       'Time',
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: cs.onSurface,
-                        fontWeight: FontWeight.w500,
-                      ),
+                      style: TextStyle(fontSize: 13, color: Colors.grey[700], fontWeight: FontWeight.w500),
                     ),
                   ],
                 ),
                 const SizedBox(height: 6),
-                Builder(
-                  builder: (_) {
-                    final slots = booking['slots'];
-                    if (slots is List && slots.isNotEmpty) {
-                      return Wrap(
-                        spacing: 6,
-                        runSpacing: 4,
-                        children: slots.map<Widget>((s) {
-                          final st =
-                              s['start_time']?.toString() ??
-                              booking['start_time']?.toString() ??
-                              '';
-                          final et =
-                              s['end_time']?.toString() ??
-                              booking['end_time']?.toString() ??
-                              '';
-                          return Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 4,
-                            ),
-                            decoration: BoxDecoration(
-                              color: cs.primary.withValues(alpha: 0.08),
-                              borderRadius: BorderRadius.circular(20),
-                              border: Border.all(
-                                color: cs.primary.withValues(alpha: 0.2),
-                              ),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(
-                                  Icons.access_time_outlined,
-                                  size: 12,
-                                  color: cs.primary,
-                                ),
-                                const SizedBox(width: 6),
-                                Text(
-                                  '${_formatTimeStr(st)} – ${_formatTimeStr(et)}',
-                                  style: const TextStyle(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w600,
-                                    color: Color(0xFF2E7D32),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          );
-                        }).toList(),
-                      );
-                    }
-
-                    // fallback single range styled as a chip
-                    final st = booking['start_time']?.toString() ?? '';
-                    final et = booking['end_time']?.toString() ?? '';
-                    return Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 4,
-                          ),
+                Builder(builder: (_) {
+                  final slots = booking['slots'];
+                  if (slots is List && slots.isNotEmpty) {
+                    return Wrap(
+                      spacing: 6,
+                      runSpacing: 4,
+                      children: slots.map<Widget>((s) {
+                        final st = s['start_time']?.toString() ?? booking['start_time']?.toString() ?? '';
+                        final et = s['end_time']?.toString() ?? booking['end_time']?.toString() ?? '';
+                        return Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                           decoration: BoxDecoration(
-                            color: cs.primary.withValues(alpha: 0.08),
+                            color: const Color(0xFFF0FFF4),
                             borderRadius: BorderRadius.circular(20),
-                            border: Border.all(
-                              color: cs.primary.withValues(alpha: 0.2),
-                            ),
+                            border: Border.all(color: const Color(0xFF4CAF50).withOpacity(0.2)),
                           ),
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              Icon(
-                                Icons.access_time_outlined,
-                                size: 12,
-                                color: cs.primary,
-                              ),
+                              const Icon(Icons.access_time_outlined, size: 12, color: Color(0xFF4CAF50)),
                               const SizedBox(width: 6),
                               Text(
                                 '${_formatTimeStr(st)} – ${_formatTimeStr(et)}',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w600,
-                                  color: cs.primary,
-                                ),
+                                style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF2E7D32)),
                               ),
                             ],
                           ),
-                        ),
-                      ],
+                        );
+                      }).toList(),
                     );
-                  },
-                ),
+                  }
+
+                  // fallback single range styled as a chip
+                  final st = booking['start_time']?.toString() ?? '';
+                  final et = booking['end_time']?.toString() ?? '';
+                  return Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF0FFF4),
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(color: const Color(0xFF4CAF50).withOpacity(0.2)),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(Icons.access_time_outlined, size: 12, color: Color(0xFF4CAF50)),
+                            const SizedBox(width: 6),
+                            Text(
+                              '${_formatTimeStr(st)} – ${_formatTimeStr(et)}',
+                              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF2E7D32)),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  );
+                }),
               ],
             ),
           ),
           const SizedBox(height: 6),
-          _infoRow(
-            context,
-            Icons.currency_rupee,
-            'Amount',
-            '₹${booking['total_amount']}',
-          ),
+          _infoRow(Icons.currency_rupee,
+              'Amount', '₹${booking['total_amount']}'),
 
           const SizedBox(height: 10),
 
@@ -351,14 +307,12 @@ class _BookingCard extends StatelessWidget {
             children: [
               Container(
                 padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 4,
-                ),
+                    horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
-                  color: _paymentColor(paymentStatus).withValues(alpha: 0.1),
+                  color: _paymentColor(paymentStatus).withOpacity(0.1),
                   borderRadius: BorderRadius.circular(8),
                   border: Border.all(
-                    color: _paymentColor(paymentStatus).withValues(alpha: 0.3),
+                    color: _paymentColor(paymentStatus).withOpacity(0.3),
                   ),
                 ),
                 child: Row(
@@ -387,19 +341,19 @@ class _BookingCard extends StatelessWidget {
     );
   }
 
-  Widget _infoRow(BuildContext context, IconData icon, String label, String value) {
-    final cs = Theme.of(context).colorScheme;
+  Widget _infoRow(IconData icon, String label, String value) {
     return Row(
       children: [
-        Icon(icon, size: 14, color: cs.onSurfaceVariant),
+        Icon(icon, size: 14, color: Colors.grey[500]),
         const SizedBox(width: 6),
         Text(
           '$label: ',
-          style: TextStyle(fontSize: 12, color: cs.onSurfaceVariant),
+          style: TextStyle(fontSize: 12, color: Colors.grey[500]),
         ),
         Text(
           value,
-          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+          style: const TextStyle(
+              fontSize: 12, fontWeight: FontWeight.w600),
         ),
       ],
     );

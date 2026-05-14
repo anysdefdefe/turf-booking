@@ -21,9 +21,7 @@ class OwnerBookingsRepository {
   Future<List<BookingModel>> getBookingsForStadium(String stadiumId) async {
     try {
       // ── 1. Bookings ──────────────────────────────────────────────────────────
-      final response = await _client
-          .from('bookings')
-          .select('''
+      final response = await _client.from('bookings').select('''
         *,
         courts!inner (
           name,
@@ -37,9 +35,9 @@ class OwnerBookingsRepository {
           phone
         )
       ''')
-          .eq('courts.stadium_id', stadiumId)
-          .order('booking_date', ascending: false)
-          .order('start_time', ascending: false);
+      .eq('courts.stadium_id', stadiumId)
+      .order('booking_date', ascending: false)
+      .order('start_time', ascending: false);
 
       final rows = response as List<dynamic>;
 
@@ -87,8 +85,7 @@ class OwnerBookingsRepository {
         final bookingId = map['id'] as String;
 
         // Attach the slot rows for this booking (empty list if none / RLS blocked).
-        map['slots'] =
-            slotsByBooking[bookingId] ?? const <Map<String, dynamic>>[];
+        map['slots'] = slotsByBooking[bookingId] ?? const <Map<String, dynamic>>[];
 
         return BookingModel.fromJson(map);
       }).toList();

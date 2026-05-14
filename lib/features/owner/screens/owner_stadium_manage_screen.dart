@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:turf_booking/app/theme/app_colors.dart';
 import 'package:turf_booking/app/constants/app_constants.dart';
 import 'package:turf_booking/features/owner/data/models/court_model.dart';
 import 'package:turf_booking/features/owner/data/repositories/stadium_repository.dart';
@@ -45,6 +46,7 @@ const _kSportOptions = [
   'Padel',
 ];
 
+
 // ── Root screen ───────────────────────────────────────────────────────────────
 
 class OwnerStadiumManageScreen extends ConsumerWidget {
@@ -53,40 +55,35 @@ class OwnerStadiumManageScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final stadiumAsync = ref.watch(currentStadiumProvider);
-    final cs = Theme.of(context).colorScheme;
 
     return stadiumAsync.when(
-      loading: () => Scaffold(
-        backgroundColor: cs.surface,
+      loading: () => const Scaffold(
+        backgroundColor: Colors.white,
         body: Center(
-          child: CircularProgressIndicator(
-            color: Theme.of(context).colorScheme.primary,
-          ),
+          child: CircularProgressIndicator(color: AppColors.primary),
         ),
       ),
       error: (error, _) => Scaffold(
-        backgroundColor: Theme.of(context).colorScheme.surface,
+        backgroundColor: AppColors.background,
         body: Center(
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 32),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(
+                const Icon(
                   Icons.error_outline_rounded,
                   size: 48,
-                  color: Theme.of(
-                    context,
-                  ).colorScheme.onSurface.withValues(alpha: 0.3),
+                  color: AppColors.textMuted,
                 ),
                 const SizedBox(height: 16),
                 Text(
                   error.toString(),
                   textAlign: TextAlign.center,
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontFamily: 'Poppins',
                     fontSize: 14,
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    color: AppColors.textSecondary,
                   ),
                 ),
                 const SizedBox(height: 24),
@@ -95,7 +92,7 @@ class OwnerStadiumManageScreen extends ConsumerWidget {
                   icon: const Icon(Icons.refresh_rounded),
                   label: const Text('Retry'),
                   style: FilledButton.styleFrom(
-                    backgroundColor: Theme.of(context).colorScheme.primary,
+                    backgroundColor: AppColors.primary,
                     foregroundColor: Colors.white,
                   ),
                 ),
@@ -109,24 +106,20 @@ class OwnerStadiumManageScreen extends ConsumerWidget {
           WidgetsBinding.instance.addPostFrameCallback((_) {
             if (context.mounted) context.go('/owner/add-stadium');
           });
-          return Scaffold(
-            backgroundColor: Theme.of(context).colorScheme.surface,
-          );
+          return const Scaffold(backgroundColor: AppColors.background);
         }
 
         final courtsAsync = ref.watch(courtsForStadiumProvider(stadium.id));
 
         return courtsAsync.when(
-          loading: () => Scaffold(
-            backgroundColor: cs.surface,
+          loading: () => const Scaffold(
+            backgroundColor: Colors.white,
             body: Center(
-              child: CircularProgressIndicator(
-                color: cs.primary,
-              ),
+              child: CircularProgressIndicator(color: AppColors.primary),
             ),
           ),
           error: (err, _) => Scaffold(
-            backgroundColor: Theme.of(context).colorScheme.surface,
+            backgroundColor: AppColors.background,
             body: Center(child: Text('Failed to load courts: $err')),
           ),
           data: (courts) {
@@ -146,7 +139,7 @@ class OwnerStadiumManageScreen extends ConsumerWidget {
             return AnnotatedRegion<SystemUiOverlayStyle>(
               value: SystemUiOverlayStyle.light,
               child: Scaffold(
-                backgroundColor: cs.surface,
+                backgroundColor: Colors.white,
                 bottomNavigationBar: const OwnerBottomNavBar(selectedIndex: 1),
                 body: Column(
                   children: [
@@ -258,7 +251,7 @@ class _HeroImage extends StatelessWidget {
             },
             child: _CircleButton(
               icon: Icons.chevron_left_rounded,
-              iconColor: Theme.of(context).colorScheme.onSurface,
+              iconColor: Colors.black87,
             ),
           ),
         ),
@@ -269,10 +262,10 @@ class _HeroImage extends StatelessWidget {
           child: GestureDetector(
             onTap: onEdit,
             child: _CircleButton(
-                  icon: Icons.edit_outlined,
-                  iconColor: Theme.of(context).colorScheme.primary,
-                  iconSize: 18,
-                ),
+              icon: Icons.edit_outlined,
+              iconColor: AppColors.primary,
+              iconSize: 18,
+            ),
           ),
         ),
       ],
@@ -297,7 +290,7 @@ class _CircleButton extends StatelessWidget {
       width: 38,
       height: 38,
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceContainer,
+        color: Colors.white,
         shape: BoxShape.circle,
         boxShadow: [
           BoxShadow(color: Colors.black.withValues(alpha: 0.12), blurRadius: 8),
@@ -313,12 +306,8 @@ class _PlaceholderHero extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       color: const Color(0xFFD0EED8),
-      child: Center(
-        child: Icon(
-          Icons.stadium_rounded,
-          size: 64,
-          color: Theme.of(context).colorScheme.primary,
-        ),
+      child: const Center(
+        child: Icon(Icons.stadium_rounded, size: 64, color: AppColors.primary),
       ),
     );
   }
@@ -357,11 +346,11 @@ class _VenueDetails extends StatelessWidget {
         children: [
           Text(
             name,
-            style: TextStyle(
+            style: const TextStyle(
               fontFamily: 'Poppins',
               fontSize: 24,
               fontWeight: FontWeight.w800,
-              color: Theme.of(context).colorScheme.onSurface,
+              color: AppColors.textPrimary,
               height: 1.2,
             ),
           ),
@@ -369,42 +358,42 @@ class _VenueDetails extends StatelessWidget {
           if (minPrice != null)
             Text(
               '₹ ${minPrice!.toStringAsFixed(0)} onwards',
-              style: TextStyle(
+              style: const TextStyle(
                 fontFamily: 'Poppins',
                 fontSize: 14,
                 fontWeight: FontWeight.w700,
-                color: Theme.of(context).colorScheme.onSurface,
+                color: AppColors.textPrimary,
               ),
             ),
           const SizedBox(height: 6),
           Row(
             children: [
-              Icon(
+              const Icon(
                 Icons.location_on_outlined,
                 size: 15,
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                color: AppColors.textSecondary,
               ),
               const SizedBox(width: 4),
               Expanded(
                 child: Text(
                   '$address, $city',
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontFamily: 'Poppins',
                     fontSize: 13,
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    color: AppColors.textSecondary,
                   ),
                 ),
               ),
             ],
           ),
           const SizedBox(height: 20),
-          Text(
+          const Text(
             'About Venue',
             style: TextStyle(
               fontFamily: 'Poppins',
               fontSize: 16,
               fontWeight: FontWeight.w700,
-              color: Theme.of(context).colorScheme.onSurface,
+              color: AppColors.textPrimary,
             ),
           ),
           const SizedBox(height: 6),
@@ -412,22 +401,22 @@ class _VenueDetails extends StatelessWidget {
             (description != null && description!.trim().isNotEmpty)
                 ? description!
                 : 'No description provided for this venue yet.',
-            style: TextStyle(
+            style: const TextStyle(
               fontFamily: 'Poppins',
               fontSize: 13,
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
+              color: AppColors.textSecondary,
               height: 1.5,
             ),
           ),
           if (amenities.isNotEmpty) ...[
             const SizedBox(height: 20),
-            Text(
+            const Text(
               'Amenities',
               style: TextStyle(
                 fontFamily: 'Poppins',
                 fontSize: 16,
                 fontWeight: FontWeight.w700,
-                color: Theme.of(context).colorScheme.onSurface,
+                color: AppColors.textPrimary,
               ),
             ),
             const SizedBox(height: 10),
@@ -464,13 +453,13 @@ class _SportTypesSection extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
+          const Text(
             'Sport Types',
             style: TextStyle(
               fontFamily: 'Poppins',
               fontSize: 16,
               fontWeight: FontWeight.w700,
-              color: Theme.of(context).colorScheme.onSurface,
+              color: AppColors.textPrimary,
             ),
           ),
           const SizedBox(height: 10),
@@ -507,18 +496,18 @@ class _CourtsSection extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
+          const Text(
             'Courts',
             style: TextStyle(
               fontFamily: 'Poppins',
               fontSize: 16,
               fontWeight: FontWeight.w700,
-              color: Theme.of(context).colorScheme.onSurface,
+              color: AppColors.textPrimary,
             ),
           ),
           const SizedBox(height: 12),
           if (courts.isEmpty)
-            Center(
+            const Center(
               child: Padding(
                 padding: EdgeInsets.symmetric(vertical: 24),
                 child: Text(
@@ -527,9 +516,7 @@ class _CourtsSection extends ConsumerWidget {
                   style: TextStyle(
                     fontFamily: 'Poppins',
                     fontSize: 13,
-                    color: Theme.of(
-                      context,
-                    ).colorScheme.onSurface.withValues(alpha: 0.3),
+                    color: AppColors.textMuted,
                   ),
                 ),
               ),
@@ -558,7 +545,7 @@ class _CtaBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: Theme.of(context).colorScheme.surface,
+      color: Colors.white,
       padding: EdgeInsets.only(
         left: AppConstants.paddingL,
         right: AppConstants.paddingL,
@@ -596,8 +583,8 @@ class _CtaBar extends StatelessWidget {
             ),
           ),
           style: FilledButton.styleFrom(
-            backgroundColor: Theme.of(context).colorScheme.primary,
-            foregroundColor: Theme.of(context).colorScheme.onPrimary,
+            backgroundColor: const Color(0xFF1A1A1A),
+            foregroundColor: Colors.white,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12),
             ),
@@ -629,11 +616,9 @@ class _CourtTile extends ConsumerWidget {
         child: Container(
           padding: const EdgeInsets.fromLTRB(20, 22, 20, 18),
           decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.surface,
+            color: AppColors.surface,
             borderRadius: BorderRadius.circular(24),
-            border: Border.all(
-              color: Theme.of(context).colorScheme.outlineVariant,
-            ),
+            border: Border.all(color: AppColors.divider),
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withValues(alpha: 0.12),
@@ -659,25 +644,25 @@ class _CourtTile extends ConsumerWidget {
                 ),
               ),
               const SizedBox(height: 14),
-              Text(
+              const Text(
                 'Deactivate court?',
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontFamily: 'Poppins',
                   fontSize: 18,
                   fontWeight: FontWeight.w700,
-                  color: Theme.of(context).colorScheme.onSurface,
+                  color: AppColors.textPrimary,
                 ),
               ),
               const SizedBox(height: 8),
               Text(
                 '"${court.name}" will be hidden from customers, but all existing bookings will remain safe.',
                 textAlign: TextAlign.center,
-                style: TextStyle(
+                style: const TextStyle(
                   fontFamily: 'Poppins',
                   fontSize: 13,
                   height: 1.45,
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  color: AppColors.textSecondary,
                 ),
               ),
               const SizedBox(height: 20),
@@ -691,13 +676,11 @@ class _CourtTile extends ConsumerWidget {
                       horizontal: 18,
                       vertical: 14,
                     ),
-                    side: BorderSide(
-                      color: Theme.of(context).colorScheme.outlineVariant,
-                    ),
+                    side: const BorderSide(color: AppColors.divider),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(14),
                     ),
-                    foregroundColor: Theme.of(context).colorScheme.onSurface,
+                    foregroundColor: AppColors.textPrimary,
                   ),
                   child: const Text(
                     'Cancel',
@@ -720,8 +703,8 @@ class _CourtTile extends ConsumerWidget {
                       horizontal: 18,
                       vertical: 14,
                     ),
-                    backgroundColor: Theme.of(context).colorScheme.error,
-                    foregroundColor: Theme.of(context).colorScheme.onError,
+                    backgroundColor: AppColors.error,
+                    foregroundColor: Colors.white,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(14),
                     ),
@@ -756,7 +739,7 @@ class _CourtTile extends ConsumerWidget {
             '"${court.name}" deactivated — hidden from customers',
             style: const TextStyle(fontFamily: 'Poppins'),
           ),
-          backgroundColor: Theme.of(context).colorScheme.primary,
+          backgroundColor: AppColors.primary,
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(10),
@@ -770,7 +753,7 @@ class _CourtTile extends ConsumerWidget {
             'Failed: $e',
             style: const TextStyle(fontFamily: 'Poppins'),
           ),
-          backgroundColor: Theme.of(context).colorScheme.error,
+          backgroundColor: AppColors.error,
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(10),
@@ -793,11 +776,9 @@ class _CourtTile extends ConsumerWidget {
         child: Container(
           padding: const EdgeInsets.fromLTRB(20, 22, 20, 18),
           decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.surface,
+            color: AppColors.surface,
             borderRadius: BorderRadius.circular(24),
-            border: Border.all(
-              color: Theme.of(context).colorScheme.outlineVariant,
-            ),
+            border: Border.all(color: AppColors.divider),
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withValues(alpha: 0.12),
@@ -823,25 +804,25 @@ class _CourtTile extends ConsumerWidget {
                 ),
               ),
               const SizedBox(height: 14),
-              Text(
+              const Text(
                 'Activate court?',
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontFamily: 'Poppins',
                   fontSize: 18,
                   fontWeight: FontWeight.w700,
-                  color: Theme.of(context).colorScheme.onSurface,
+                  color: AppColors.textPrimary,
                 ),
               ),
               const SizedBox(height: 8),
               Text(
                 '"${court.name}" will be visible to customers again and available for new bookings.',
                 textAlign: TextAlign.center,
-                style: TextStyle(
+                style: const TextStyle(
                   fontFamily: 'Poppins',
                   fontSize: 13,
                   height: 1.45,
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  color: AppColors.textSecondary,
                 ),
               ),
               const SizedBox(height: 20),
@@ -855,13 +836,11 @@ class _CourtTile extends ConsumerWidget {
                       horizontal: 18,
                       vertical: 14,
                     ),
-                    side: BorderSide(
-                      color: Theme.of(context).colorScheme.outlineVariant,
-                    ),
+                    side: const BorderSide(color: AppColors.divider),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(14),
                     ),
-                    foregroundColor: Theme.of(context).colorScheme.onSurface,
+                    foregroundColor: AppColors.textPrimary,
                   ),
                   child: const Text(
                     'Cancel',
@@ -934,7 +913,7 @@ class _CourtTile extends ConsumerWidget {
             'Failed: $e',
             style: const TextStyle(fontFamily: 'Poppins'),
           ),
-          backgroundColor: Theme.of(context).colorScheme.error,
+          backgroundColor: AppColors.error,
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(10),
@@ -950,9 +929,9 @@ class _CourtTile extends ConsumerWidget {
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
+        color: AppColors.background,
         borderRadius: BorderRadius.circular(AppConstants.radiusM),
-        border: Border.all(color: Theme.of(context).colorScheme.outlineVariant),
+        border: Border.all(color: AppColors.divider),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
@@ -967,13 +946,13 @@ class _CourtTile extends ConsumerWidget {
             placeholder: Container(
               width: 40,
               height: 40,
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.secondaryContainer,
+              decoration: const BoxDecoration(
+                color: AppColors.badgeBg,
                 shape: BoxShape.circle,
               ),
               child: Icon(
                 _sportIcon(court.sportType),
-                color: Theme.of(context).colorScheme.primary,
+                color: AppColors.primary,
                 size: 20,
               ),
             ),
@@ -987,11 +966,11 @@ class _CourtTile extends ConsumerWidget {
               children: [
                 Text(
                   court.name,
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontFamily: 'Poppins',
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
-                    color: Theme.of(context).colorScheme.onSurface,
+                    color: AppColors.textPrimary,
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
@@ -999,10 +978,10 @@ class _CourtTile extends ConsumerWidget {
                 const SizedBox(height: 2),
                 Text(
                   '${court.sportType} · ₹${court.pricePerHour.toStringAsFixed(0)}/hr  ·  ${court.openTime.substring(0, 5)}–${court.closeTime.substring(0, 5)}',
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontFamily: 'Poppins',
                     fontSize: 11,
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    color: AppColors.textSecondary,
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
@@ -1021,13 +1000,13 @@ class _CourtTile extends ConsumerWidget {
             child: Container(
               padding: const EdgeInsets.all(7),
               decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.outlineVariant,
+                color: AppColors.divider,
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: Icon(
+              child: const Icon(
                 Icons.edit_outlined,
                 size: 15,
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                color: AppColors.textSecondary,
               ),
             ),
           ),
@@ -1042,9 +1021,7 @@ class _CourtTile extends ConsumerWidget {
               padding: const EdgeInsets.all(7),
               decoration: BoxDecoration(
                 color: court.isActive
-                    ? Theme.of(
-                        context,
-                      ).colorScheme.error.withValues(alpha: 0.08)
+                    ? AppColors.error.withValues(alpha: 0.08)
                     : Colors.green.withValues(alpha: 0.10),
                 borderRadius: BorderRadius.circular(8),
               ),
@@ -1053,9 +1030,7 @@ class _CourtTile extends ConsumerWidget {
                     ? Icons.block_rounded
                     : Icons.check_circle_outline_rounded,
                 size: 15,
-                color: court.isActive
-                    ? Theme.of(context).colorScheme.error
-                    : Colors.green.shade600,
+                color: court.isActive ? AppColors.error : Colors.green.shade600,
               ),
             ),
           ),
@@ -1207,7 +1182,7 @@ class _AddCourtSheetState extends ConsumerState<_AddCourtSheet> {
               '✓ Court added',
               style: TextStyle(fontFamily: 'Poppins'),
             ),
-            backgroundColor: Theme.of(context).colorScheme.primary,
+            backgroundColor: AppColors.primary,
             behavior: SnackBarBehavior.floating,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(10),
@@ -1226,7 +1201,7 @@ class _AddCourtSheetState extends ConsumerState<_AddCourtSheet> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(msg, style: const TextStyle(fontFamily: 'Poppins')),
-        backgroundColor: Theme.of(context).colorScheme.error,
+        backgroundColor: AppColors.error,
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       ),
@@ -1236,11 +1211,10 @@ class _AddCourtSheetState extends ConsumerState<_AddCourtSheet> {
   @override
   Widget build(BuildContext context) {
     final bottomInset = MediaQuery.of(context).viewInsets.bottom;
-    final cs = Theme.of(context).colorScheme;
 
     return Container(
-      decoration: BoxDecoration(
-        color: cs.surfaceContainer,
+      decoration: const BoxDecoration(
+        color: Colors.white,
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       padding: EdgeInsets.fromLTRB(24, 20, 24, bottomInset + 24),
@@ -1256,7 +1230,7 @@ class _AddCourtSheetState extends ConsumerState<_AddCourtSheet> {
                 width: 40,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.outlineVariant,
+                  color: AppColors.divider,
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -1264,13 +1238,13 @@ class _AddCourtSheetState extends ConsumerState<_AddCourtSheet> {
             const SizedBox(height: 18),
 
             // Title
-            Text(
+            const Text(
               'Add New Court',
               style: TextStyle(
                 fontFamily: 'Poppins',
                 fontSize: 18,
                 fontWeight: FontWeight.w800,
-                color: Theme.of(context).colorScheme.onSurface,
+                color: AppColors.textPrimary,
               ),
             ),
             const SizedBox(height: 20),
@@ -1296,22 +1270,18 @@ class _AddCourtSheetState extends ConsumerState<_AddCourtSheet> {
                 height: 150,
                 width: double.infinity,
                 decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.surface,
+                  color: AppColors.background,
                   borderRadius: BorderRadius.circular(AppConstants.radiusM),
-                  border: Border.all(
-                    color: Theme.of(context).colorScheme.outlineVariant,
-                  ),
+                  border: Border.all(color: AppColors.divider),
                 ),
                 child: _selectedImage == null
-                    ? Column(
+                    ? const Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Icon(
                             Icons.add_a_photo_outlined,
                             size: 30,
-                            color: Theme.of(
-                              context,
-                            ).colorScheme.onSurface.withValues(alpha: 0.3),
+                            color: AppColors.textMuted,
                           ),
                           SizedBox(height: 8),
                           Text(
@@ -1319,9 +1289,7 @@ class _AddCourtSheetState extends ConsumerState<_AddCourtSheet> {
                             style: TextStyle(
                               fontFamily: 'Poppins',
                               fontSize: 12,
-                              color: Theme.of(
-                                context,
-                              ).colorScheme.onSurfaceVariant,
+                              color: AppColors.textSecondary,
                             ),
                           ),
                         ],
@@ -1366,14 +1334,10 @@ class _AddCourtSheetState extends ConsumerState<_AddCourtSheet> {
                       vertical: 8,
                     ),
                     decoration: BoxDecoration(
-                      color: selected
-                          ? Theme.of(context).colorScheme.primary
-                          : cs.surface,
+                      color: selected ? AppColors.primary : Colors.white,
                       borderRadius: BorderRadius.circular(50),
                       border: Border.all(
-                        color: selected
-                            ? Theme.of(context).colorScheme.primary
-                            : Theme.of(context).colorScheme.outlineVariant,
+                        color: selected ? AppColors.primary : AppColors.divider,
                         width: 1.5,
                       ),
                     ),
@@ -1384,8 +1348,8 @@ class _AddCourtSheetState extends ConsumerState<_AddCourtSheet> {
                           _sportIcon(sport),
                           size: 13,
                           color: selected
-                              ? cs.onPrimary
-                              : cs.onSurfaceVariant,
+                              ? Colors.white
+                              : AppColors.textSecondary,
                         ),
                         const SizedBox(width: 5),
                         Text(
@@ -1395,8 +1359,8 @@ class _AddCourtSheetState extends ConsumerState<_AddCourtSheet> {
                             fontSize: 12,
                             fontWeight: FontWeight.w600,
                             color: selected
-                              ? cs.onPrimary
-                              : cs.onSurface,
+                                ? Colors.white
+                                : AppColors.textPrimary,
                           ),
                         ),
                       ],
@@ -1452,43 +1416,37 @@ class _AddCourtSheetState extends ConsumerState<_AddCourtSheet> {
                     onSubmitted: (_) => _addEquipment(),
                     decoration: InputDecoration(
                       hintText: 'e.g. Rackets, Balls…',
-                      hintStyle: TextStyle(
+                      hintStyle: const TextStyle(
                         fontFamily: 'Poppins',
                         fontSize: 13,
-                        color: Theme.of(
-                          context,
-                        ).colorScheme.onSurface.withValues(alpha: 0.3),
+                        color: AppColors.textMuted,
                       ),
                       contentPadding: const EdgeInsets.symmetric(
                         horizontal: 14,
                         vertical: 12,
                       ),
                       filled: true,
-                      fillColor: Theme.of(context).colorScheme.surface,
+                      fillColor: AppColors.background,
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(10),
-                        borderSide: BorderSide(
-                          color: Theme.of(context).colorScheme.outlineVariant,
-                        ),
+                        borderSide: const BorderSide(color: AppColors.divider),
                       ),
                       enabledBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(10),
-                        borderSide: BorderSide(
-                          color: Theme.of(context).colorScheme.outlineVariant,
-                        ),
+                        borderSide: const BorderSide(color: AppColors.divider),
                       ),
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(10),
                         borderSide: BorderSide(
-                          color: Theme.of(context).colorScheme.primary,
+                          color: AppColors.primary,
                           width: 1.5,
                         ),
                       ),
                     ),
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontFamily: 'Poppins',
                       fontSize: 13,
-                      color: Theme.of(context).colorScheme.onSurface,
+                      color: AppColors.textPrimary,
                     ),
                   ),
                 ),
@@ -1499,12 +1457,12 @@ class _AddCourtSheetState extends ConsumerState<_AddCourtSheet> {
                     height: 46,
                     width: 46,
                     decoration: BoxDecoration(
-                      color: Theme.of(context).colorScheme.primary,
+                      color: AppColors.primary,
                       borderRadius: BorderRadius.circular(10),
                     ),
-                    child: Icon(
+                    child: const Icon(
                       Icons.add_rounded,
-                      color: Theme.of(context).colorScheme.onPrimary,
+                      color: Colors.white,
                       size: 22,
                     ),
                   ),
@@ -1524,14 +1482,10 @@ class _AddCourtSheetState extends ConsumerState<_AddCourtSheet> {
                       vertical: 6,
                     ),
                     decoration: BoxDecoration(
-                      color: Theme.of(
-                        context,
-                      ).colorScheme.primary.withValues(alpha: 0.08),
+                      color: AppColors.primary.withValues(alpha: 0.08),
                       borderRadius: BorderRadius.circular(50),
                       border: Border.all(
-                        color: Theme.of(
-                          context,
-                        ).colorScheme.primary.withValues(alpha: 0.3),
+                        color: AppColors.primary.withValues(alpha: 0.3),
                       ),
                     ),
                     child: Row(
@@ -1539,20 +1493,21 @@ class _AddCourtSheetState extends ConsumerState<_AddCourtSheet> {
                       children: [
                         Text(
                           eq,
-                          style: TextStyle(
+                          style: const TextStyle(
                             fontFamily: 'Poppins',
                             fontSize: 12,
                             fontWeight: FontWeight.w500,
-                            color: Theme.of(context).colorScheme.primary,
+                            color: AppColors.primary,
                           ),
                         ),
                         const SizedBox(width: 4),
                         GestureDetector(
-                          onTap: () => setState(() => _equipments.remove(eq)),
-                          child: Icon(
+                          onTap: () =>
+                              setState(() => _equipments.remove(eq)),
+                          child: const Icon(
                             Icons.close_rounded,
                             size: 14,
-                            color: Theme.of(context).colorScheme.primary,
+                            color: AppColors.primary,
                           ),
                         ),
                       ],
@@ -1570,27 +1525,27 @@ class _AddCourtSheetState extends ConsumerState<_AddCourtSheet> {
               child: FilledButton(
                 onPressed: _isSaving ? null : _submit,
                 style: FilledButton.styleFrom(
-                  backgroundColor: Theme.of(context).colorScheme.primary,
+                  backgroundColor: AppColors.primary,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
                 ),
-                      child: _isSaving
-                    ? SizedBox(
+                child: _isSaving
+                    ? const SizedBox(
                         height: 20,
                         width: 20,
                         child: CircularProgressIndicator(
                           strokeWidth: 2,
-                          color: cs.onPrimary,
+                          color: Colors.white,
                         ),
                       )
-                    : Text(
+                    : const Text(
                         'Add Court',
                         style: TextStyle(
                           fontFamily: 'Poppins',
                           fontWeight: FontWeight.w700,
                           fontSize: 15,
-                          color: cs.onPrimary,
+                          color: Colors.white,
                         ),
                       ),
               ),
@@ -1605,11 +1560,11 @@ class _AddCourtSheetState extends ConsumerState<_AddCourtSheet> {
     padding: const EdgeInsets.only(bottom: 6),
     child: Text(
       text,
-      style: TextStyle(
+      style: const TextStyle(
         fontFamily: 'Poppins',
         fontSize: 13,
         fontWeight: FontWeight.w500,
-        color: Theme.of(context).colorScheme.onSurfaceVariant,
+        color: AppColors.textSecondary,
       ),
     ),
   );
@@ -1623,39 +1578,32 @@ class _AddCourtSheetState extends ConsumerState<_AddCourtSheet> {
     controller: controller,
     keyboardType: keyboardType,
     maxLines: maxLines,
-    style: TextStyle(
+    style: const TextStyle(
       fontFamily: 'Poppins',
       fontSize: 14,
-      color: Theme.of(context).colorScheme.onSurface,
+      color: AppColors.textPrimary,
     ),
     decoration: InputDecoration(
       hintText: hint,
-      hintStyle: TextStyle(
+      hintStyle: const TextStyle(
         fontFamily: 'Poppins',
         fontSize: 14,
-        color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.3),
+        color: AppColors.textMuted,
       ),
       filled: true,
-      fillColor: Theme.of(context).colorScheme.surface,
+      fillColor: AppColors.background,
       contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(AppConstants.radiusM),
-        borderSide: BorderSide(
-          color: Theme.of(context).colorScheme.outlineVariant,
-        ),
+        borderSide: const BorderSide(color: AppColors.divider),
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(AppConstants.radiusM),
-        borderSide: BorderSide(
-          color: Theme.of(context).colorScheme.outlineVariant,
-        ),
+        borderSide: const BorderSide(color: AppColors.divider),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(AppConstants.radiusM),
-        borderSide: BorderSide(
-          color: Theme.of(context).colorScheme.primary,
-          width: 1.5,
-        ),
+        borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
       ),
     ),
   );
@@ -1689,31 +1637,29 @@ class _AddCourtSheetState extends ConsumerState<_AddCourtSheet> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
         decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.surface,
+          color: AppColors.background,
           borderRadius: BorderRadius.circular(AppConstants.radiusM),
-          border: Border.all(
-            color: Theme.of(context).colorScheme.outlineVariant,
-          ),
+          border: Border.all(color: AppColors.divider),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
               label,
-              style: TextStyle(
+              style: const TextStyle(
                 fontFamily: 'Poppins',
                 fontSize: 11,
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                color: AppColors.textSecondary,
               ),
             ),
             const SizedBox(height: 4),
             Text(
               time.format(context),
-              style: TextStyle(
+              style: const TextStyle(
                 fontFamily: 'Poppins',
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
-                color: Theme.of(context).colorScheme.onSurface,
+                color: AppColors.textPrimary,
               ),
             ),
           ],
@@ -1731,24 +1677,20 @@ class _AmenityChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
       decoration: BoxDecoration(
-        color: cs.surfaceContainerHighest,
+        color: Colors.white,
         borderRadius: BorderRadius.circular(50),
-        border: Border.all(
-          color: cs.primary.withValues(alpha: 0.28),
-          width: 1,
-        ),
+        border: Border.all(color: AppColors.divider, width: 1.2),
       ),
       child: Text(
         label,
-        style: TextStyle(
+        style: const TextStyle(
           fontFamily: 'Poppins',
           fontSize: 12,
           fontWeight: FontWeight.w500,
-          color: cs.onSurface,
+          color: AppColors.textPrimary,
         ),
       ),
     );
@@ -1763,32 +1705,25 @@ class _SportChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
       decoration: BoxDecoration(
-        color: cs.surfaceContainerHighest,
+        color: Colors.white,
         borderRadius: BorderRadius.circular(50),
-        border: Border.all(
-          color: cs.primary.withValues(alpha: 0.5),
-        ),
+        border: Border.all(color: AppColors.primary.withValues(alpha: 0.5)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(
-            _sportIcon(sport),
-            size: 14,
-            color: cs.primary,
-          ),
+          Icon(_sportIcon(sport), size: 14, color: AppColors.primary),
           const SizedBox(width: 6),
           Text(
             sport,
-            style: TextStyle(
+            style: const TextStyle(
               fontFamily: 'Poppins',
               fontSize: 12,
               fontWeight: FontWeight.w500,
-              color: cs.onSurface,
+              color: AppColors.textPrimary,
             ),
           ),
         ],

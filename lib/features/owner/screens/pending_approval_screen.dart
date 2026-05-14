@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:turf_booking/app/theme/app_colors.dart';
 import 'package:turf_booking/features/auth/providers/auth_controller.dart';
 
 class PendingApprovalScreen extends ConsumerWidget {
@@ -9,7 +10,7 @@ class PendingApprovalScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
-      backgroundColor: Theme.of(context).colorScheme.surface,
+      backgroundColor: AppColors.background,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         automaticallyImplyLeading: false,
@@ -20,9 +21,7 @@ class PendingApprovalScreen extends ConsumerWidget {
             },
             icon: const Icon(Icons.logout_rounded, size: 18),
             label: const Text('Logout'),
-            style: TextButton.styleFrom(
-              foregroundColor: Theme.of(context).colorScheme.error,
-            ),
+            style: TextButton.styleFrom(foregroundColor: AppColors.error),
           ),
           const SizedBox(width: 8),
         ],
@@ -40,34 +39,34 @@ class PendingApprovalScreen extends ConsumerWidget {
                   width: 100,
                   height: 100,
                   decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.secondaryContainer,
+                    color: AppColors.badgeBg,
                     borderRadius: BorderRadius.circular(28),
                   ),
-                  child: Icon(
+                  child: const Icon(
                     Icons.hourglass_empty_rounded,
                     size: 52,
-                    color: Theme.of(context).colorScheme.primary,
+                    color: AppColors.primary,
                   ),
                 ),
               ),
               const SizedBox(height: 32),
-              Text(
+              const Text(
                 'Pending Approval',
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 26,
                   fontWeight: FontWeight.w800,
-                  color: Theme.of(context).colorScheme.onSurface,
+                  color: AppColors.textPrimary,
                   letterSpacing: -0.5,
                 ),
               ),
               const SizedBox(height: 12),
-              Text(
+              const Text(
                 'Your stadium owner account is under review. Please wait until an admin approves your profile to start creating venues.',
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 15,
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  color: AppColors.textSecondary,
                   height: 1.5,
                 ),
               ),

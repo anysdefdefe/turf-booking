@@ -1,4 +1,5 @@
 import 'dart:typed_data';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:turf_booking/features/owner/data/repositories/application_repository.dart';
 
@@ -18,7 +19,7 @@ class ApplicationController extends _$ApplicationController {
     required Uint8List documentBytes,
   }) async {
     state = const AsyncValue.loading();
-
+    
     state = await AsyncValue.guard(() async {
       final repository = ref.read(applicationRepositoryProvider);
       await repository.submitApplication(

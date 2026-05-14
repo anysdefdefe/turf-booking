@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../app/theme/app_colors.dart';
 import '../data/models/customer_booking.dart';
 
 class CourtCompactCard extends StatelessWidget {
@@ -24,12 +25,9 @@ class CourtCompactCard extends StatelessWidget {
         margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.surface,
+          color: AppColors.surface,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: Theme.of(context).colorScheme.outlineVariant,
-            width: 1,
-          ),
+          border: Border.all(color: AppColors.divider, width: 1),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -39,11 +37,11 @@ class CourtCompactCard extends StatelessWidget {
                 Expanded(
                   child: Text(
                     court.name,
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontFamily: 'Poppins',
                       fontSize: 15,
                       fontWeight: FontWeight.w700,
-                      color: Theme.of(context).colorScheme.onSurface,
+                      color: AppColors.textPrimary,
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -52,11 +50,11 @@ class CourtCompactCard extends StatelessWidget {
                 const SizedBox(width: 10),
                 Text(
                   '₹${booking.totalAmount.toInt()}',
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontFamily: 'Poppins',
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
-                    color: Theme.of(context).colorScheme.onSurface,
+                    color: AppColors.textPrimary,
                   ),
                 ),
               ],
@@ -64,38 +62,38 @@ class CourtCompactCard extends StatelessWidget {
             const SizedBox(height: 8),
             Text(
               court.stadiumName,
-              style: TextStyle(
+              style: const TextStyle(
                 fontFamily: 'Poppins',
                 fontSize: 12.5,
                 fontWeight: FontWeight.w600,
-                color: Theme.of(context).colorScheme.onSurface,
+                color: AppColors.textPrimary,
               ),
             ),
             const SizedBox(height: 4),
             Text(
               '${court.place}, ${court.city}',
-              style: TextStyle(
+              style: const TextStyle(
                 fontFamily: 'Poppins',
                 fontSize: 12.5,
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                color: AppColors.textSecondary,
               ),
             ),
             const SizedBox(height: 6),
             Text(
               'Sports: ${court.courtTypes.join(', ')}',
-              style: TextStyle(
+              style: const TextStyle(
                 fontFamily: 'Poppins',
                 fontSize: 12.5,
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                color: AppColors.textSecondary,
               ),
             ),
             const SizedBox(height: 4),
             Text(
               '${booking.durationHours} slot${booking.durationHours > 1 ? 's' : ''}',
-              style: TextStyle(
+              style: const TextStyle(
                 fontFamily: 'Poppins',
                 fontSize: 12.5,
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                color: AppColors.textSecondary,
               ),
             ),
             const SizedBox(height: 8),
@@ -110,18 +108,16 @@ class CourtCompactCard extends StatelessWidget {
                         vertical: 4,
                       ),
                       decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.surface,
+                        color: AppColors.background,
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: Theme.of(context).colorScheme.outlineVariant,
-                        ),
+                        border: Border.all(color: AppColors.divider),
                       ),
                       child: Text(
                         slot,
-                        style: TextStyle(
+                        style: const TextStyle(
                           fontFamily: 'Poppins',
                           fontSize: 11,
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                          color: AppColors.textSecondary,
                         ),
                       ),
                     ),
@@ -135,10 +131,10 @@ class CourtCompactCard extends StatelessWidget {
                 const Spacer(),
                 Text(
                   _formatBookingDate(booking.date),
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontFamily: 'Poppins',
                     fontSize: 12,
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    color: AppColors.textSecondary,
                   ),
                 ),
               ],
@@ -204,12 +200,12 @@ class _StatusChip extends StatelessWidget {
     final isCancelled = status == BookingStatus.cancelled;
     final isUnpaid = status == BookingStatus.unpaid;
 
-    Color bgColor = Theme.of(context).colorScheme.surface;
-    Color borderColor = Theme.of(context).colorScheme.primary;
+    Color bgColor = AppColors.surface;
+    Color borderColor = AppColors.primary;
     String label = 'Booked';
 
     if (isCancelled) {
-      bgColor = Theme.of(context).colorScheme.surface;
+      bgColor = AppColors.surface;
       borderColor = Colors.red.shade200;
       label = 'Cancelled';
     } else if (isUnpaid) {
@@ -227,11 +223,11 @@ class _StatusChip extends StatelessWidget {
       ),
       child: Text(
         label,
-        style: TextStyle(
+        style: const TextStyle(
           fontFamily: 'Poppins',
           fontSize: 11.5,
           fontWeight: FontWeight.w600,
-          color: Theme.of(context).colorScheme.onSurface,
+          color: AppColors.textPrimary,
         ),
       ),
     );
