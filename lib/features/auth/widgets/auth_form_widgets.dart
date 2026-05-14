@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:turf_booking/app/theme/app_colors.dart';
 
 class AuthFieldLabel extends StatelessWidget {
   final String text;
@@ -8,13 +7,15 @@ class AuthFieldLabel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+
     return Text(
       text,
-      style: const TextStyle(
+      style: TextStyle(
         fontFamily: 'Poppins',
         fontSize: 13,
         fontWeight: FontWeight.w600,
-        color: AppColors.textPrimary,
+        color: cs.onSurface,
       ),
     );
   }
@@ -27,24 +28,44 @@ class GoogleAuthButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+
     return SizedBox(
       width: double.infinity,
-      height: 52,
+      height: 56,
       child: OutlinedButton(
         onPressed: onPressed,
         style: OutlinedButton.styleFrom(
-          backgroundColor: Colors.white,
-          foregroundColor: Colors.black87,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
-          side: const BorderSide(color: Color(0xFFECECEC)),
+          backgroundColor: cs.surface,
+          foregroundColor: cs.onSurface,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(30),
+          ),
+          side: BorderSide(color: cs.outlineVariant, width: 1.5),
+          padding: const EdgeInsets.symmetric(horizontal: 18),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Image.network(
-              'https://developers.google.com/identity/images/g-logo.png',
-              width: 20,
-              height: 20,
+            Container(
+              width: 28,
+              height: 28,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: cs.primaryContainer.withValues(alpha: 0.6),
+              ),
+              child: Center(
+                child: Image.network(
+                  'https://developers.google.com/identity/images/g-logo.png',
+                  width: 16,
+                  height: 16,
+                  errorBuilder: (_, _, _) => Icon(
+                    Icons.g_mobiledata_rounded,
+                    size: 16,
+                    color: cs.primary,
+                  ),
+                ),
+              ),
             ),
             const SizedBox(width: 12),
             const Text(
@@ -53,7 +74,6 @@ class GoogleAuthButton extends StatelessWidget {
                 fontFamily: 'Poppins',
                 fontSize: 15,
                 fontWeight: FontWeight.w600,
-                color: Colors.black87,
               ),
             ),
           ],
@@ -77,18 +97,20 @@ class AuthRingButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+
     return SizedBox(
       width: double.infinity,
       height: 56,
       child: FilledButton(
         onPressed: isLoading ? null : onPressed,
         style: FilledButton.styleFrom(
-          backgroundColor: AppColors.textPrimary,
-          foregroundColor: Colors.white,
+          backgroundColor: cs.primary,
+          foregroundColor: cs.onPrimary,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(30),
           ),
-          disabledBackgroundColor: AppColors.divider,
+          disabledBackgroundColor: cs.outlineVariant,
         ),
         child: isLoading
             ? const SizedBox(
@@ -112,21 +134,27 @@ class AuthRingButton extends StatelessWidget {
   }
 }
 
-InputDecoration authPillInputDecoration(String hint, [Widget? suffixIcon]) {
+InputDecoration authPillInputDecoration(
+  BuildContext context,
+  String hint, [
+  Widget? suffixIcon,
+]) {
+  final cs = Theme.of(context).colorScheme;
+
   final border = OutlineInputBorder(
     borderRadius: BorderRadius.circular(16),
-    borderSide: const BorderSide(color: AppColors.divider, width: 1),
+    borderSide: BorderSide(color: cs.outlineVariant, width: 1),
   );
 
   return InputDecoration(
     hintText: hint,
-    hintStyle: const TextStyle(
+    hintStyle: TextStyle(
       fontFamily: 'Poppins',
-      fontSize: 14, 
-      color: AppColors.textMuted,
+      fontSize: 14,
+      color: cs.onSurfaceVariant,
     ),
     filled: true,
-    fillColor: AppColors.surface,
+    fillColor: cs.surface,
     suffixIcon: suffixIcon != null
         ? Padding(padding: const EdgeInsets.only(right: 12), child: suffixIcon)
         : null,
@@ -135,13 +163,13 @@ InputDecoration authPillInputDecoration(String hint, [Widget? suffixIcon]) {
     border: border,
     enabledBorder: border,
     focusedBorder: border.copyWith(
-      borderSide: const BorderSide(color: AppColors.textPrimary, width: 1.5),
+      borderSide: BorderSide(color: cs.primary, width: 1.5),
     ),
     errorBorder: border.copyWith(
-      borderSide: const BorderSide(color: AppColors.error, width: 1),
+      borderSide: BorderSide(color: cs.error, width: 1),
     ),
     focusedErrorBorder: border.copyWith(
-      borderSide: const BorderSide(color: AppColors.error, width: 1.5),
+      borderSide: BorderSide(color: cs.error, width: 1.5),
     ),
   );
 }

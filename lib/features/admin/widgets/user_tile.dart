@@ -14,6 +14,7 @@ class UserTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     final bool isBlocked = user['is_blocked'] ?? false;
     final name = user['full_name'] ?? 'User';
     final email = user['email'] ?? '';
@@ -28,11 +29,11 @@ class UserTile extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: cs.surfaceContainer,
         borderRadius: BorderRadius.circular(14),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -47,12 +48,12 @@ class UserTile extends StatelessWidget {
               CircleAvatar(
                 radius: 22,
                 backgroundColor: isBlocked
-                    ? Colors.red.withOpacity(0.15)
-                    : const Color(0xFF4CAF50).withOpacity(0.15),
+                    ? cs.error.withValues(alpha: 0.15)
+                    : cs.primary.withValues(alpha: 0.15),
                 child: Text(
                   name[0].toUpperCase(),
                   style: TextStyle(
-                    color: isBlocked ? Colors.red : const Color(0xFF4CAF50),
+                    color: isBlocked ? cs.error : cs.primary,
                     fontWeight: FontWeight.bold,
                     fontSize: 16,
                   ),
@@ -72,10 +73,7 @@ class UserTile extends StatelessWidget {
                     ),
                     Text(
                       email,
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.grey[500],
-                      ),
+                      style: TextStyle(fontSize: 12, color: cs.onSurfaceVariant),
                     ),
                   ],
                 ),
@@ -84,9 +82,11 @@ class UserTile extends StatelessWidget {
               if (isBlocked)
                 Container(
                   padding: const EdgeInsets.symmetric(
-                      horizontal: 8, vertical: 4),
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
-                    color: Colors.red.withOpacity(0.1),
+                    color: cs.error.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: const Text(
@@ -106,15 +106,10 @@ class UserTile extends StatelessWidget {
           // Details
           Row(
             children: [
+              Expanded(child: _infoItem(context, Icons.phone_outlined, 'Phone', phone)),
               Expanded(
                 child: _infoItem(
-                  Icons.phone_outlined,
-                  'Phone',
-                  phone,
-                ),
-              ),
-              Expanded(
-                child: _infoItem(
+                  context,
                   Icons.calendar_today_outlined,
                   'Joined',
                   createdAt,
@@ -130,18 +125,17 @@ class UserTile extends StatelessWidget {
             children: [
               // Role badge
               Container(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 8, vertical: 4),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
                   color: isOwner
-                      ? Colors.blue.withOpacity(0.1)
-                      : Colors.grey.withOpacity(0.1),
+                      ? cs.primary.withValues(alpha: 0.1)
+                      : cs.surfaceContainerHighest,
                   borderRadius: BorderRadius.circular(6),
                 ),
                 child: Text(
                   isOwner ? 'Owner' : 'Customer',
                   style: TextStyle(
-                    color: isOwner ? Colors.blue : Colors.grey[600],
+                    color: isOwner ? cs.primary : cs.onSurfaceVariant,
                     fontSize: 11,
                     fontWeight: FontWeight.w600,
                   ),
@@ -154,17 +148,19 @@ class UserTile extends StatelessWidget {
               if (isOwner)
                 Container(
                   padding: const EdgeInsets.symmetric(
-                      horizontal: 8, vertical: 4),
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: isApproved
-                        ? Colors.green.withOpacity(0.1)
-                        : Colors.orange.withOpacity(0.1),
+                        ? cs.primary.withValues(alpha: 0.1)
+                        : cs.secondary.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(6),
                   ),
                   child: Text(
                     isApproved ? 'Approved' : 'Pending',
                     style: TextStyle(
-                      color: isApproved ? Colors.green : Colors.orange,
+                      color: isApproved ? cs.primary : cs.secondary,
                       fontSize: 11,
                       fontWeight: FontWeight.w600,
                     ),
@@ -178,10 +174,12 @@ class UserTile extends StatelessWidget {
                 onPressed: isBlocked ? onUnblock : onBlock,
                 style: TextButton.styleFrom(
                   padding: const EdgeInsets.symmetric(
-                      horizontal: 12, vertical: 6),
+                    horizontal: 12,
+                    vertical: 6,
+                  ),
                   backgroundColor: isBlocked
-                      ? Colors.green.withOpacity(0.1)
-                      : Colors.red.withOpacity(0.1),
+                      ? cs.primary.withValues(alpha: 0.1)
+                      : cs.error.withValues(alpha: 0.1),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8),
                   ),
@@ -189,7 +187,7 @@ class UserTile extends StatelessWidget {
                 child: Text(
                   isBlocked ? 'Unblock' : 'Block',
                   style: TextStyle(
-                    color: isBlocked ? Colors.green : Colors.red,
+                    color: isBlocked ? cs.primary : cs.error,
                     fontSize: 12,
                     fontWeight: FontWeight.w600,
                   ),
@@ -202,10 +200,11 @@ class UserTile extends StatelessWidget {
     );
   }
 
-  Widget _infoItem(IconData icon, String label, String value) {
+  Widget _infoItem(BuildContext context, IconData icon, String label, String value) {
+    final cs = Theme.of(context).colorScheme;
     return Row(
       children: [
-        Icon(icon, size: 13, color: Colors.grey[400]),
+        Icon(icon, size: 13, color: cs.onSurfaceVariant),
         const SizedBox(width: 4),
         Expanded(
           child: Column(
@@ -213,10 +212,7 @@ class UserTile extends StatelessWidget {
             children: [
               Text(
                 label,
-                style: TextStyle(
-                  fontSize: 10,
-                  color: Colors.grey[400],
-                ),
+                style: TextStyle(fontSize: 10, color: cs.onSurfaceVariant),
               ),
               Text(
                 value,

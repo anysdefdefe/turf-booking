@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../../app/theme/app_colors.dart';
 
 class CourtSearchBar extends StatefulWidget {
   final ValueChanged<String> onChanged;
@@ -34,36 +33,38 @@ class _CourtSearchBarState extends State<CourtSearchBar> {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return Container(
       decoration: BoxDecoration(
-        color: const Color(0xFFEFEFF0), // iOS like grey search background
+        color: cs.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: cs.outlineVariant),
       ),
       child: TextField(
         controller: _controller,
         onChanged: widget.onChanged,
-        style: const TextStyle(
-          color: AppColors.textPrimary,
+        style: TextStyle(
+          color: cs.onSurface,
           fontSize: 14,
           fontFamily: 'Poppins',
         ),
         decoration: InputDecoration(
           hintText: 'Search venues, courts, sports...',
-          hintStyle: const TextStyle(
-            color: AppColors.textMuted,
+          hintStyle: TextStyle(
+            color: cs.onSurfaceVariant,
             fontSize: 14,
             fontFamily: 'Poppins',
           ),
-          prefixIcon: const Icon(
+          prefixIcon: Icon(
             Icons.search_rounded,
-            color: AppColors.textSecondary,
+            color: cs.onSurfaceVariant,
             size: 22,
           ),
           suffixIcon: _controller.text.isNotEmpty
               ? IconButton(
-                  icon: const Icon(
+                  icon: Icon(
                     Icons.close_rounded,
-                    color: AppColors.textSecondary,
+                    color: cs.onSurfaceVariant,
                     size: 20,
                   ),
                   onPressed: () {

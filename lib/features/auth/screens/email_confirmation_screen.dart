@@ -8,12 +8,13 @@ class EmailConfirmationScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return Scaffold(
-      backgroundColor: const Color(0xFFF6F6F7),
+      backgroundColor: cs.surface,
       appBar: AppBar(
-        backgroundColor: const Color(0xFFF6F6F7),
+        backgroundColor: cs.surface,
         elevation: 0,
-        surfaceTintColor: const Color(0xFFF6F6F7),
+        surfaceTintColor: Colors.transparent,
         automaticallyImplyLeading: false,
       ),
       body: SafeArea(
@@ -28,47 +29,47 @@ class EmailConfirmationScreen extends StatelessWidget {
                   width: 76,
                   height: 76,
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: cs.surfaceContainerLowest,
                     borderRadius: BorderRadius.circular(22),
-                    border: Border.all(color: const Color(0xFFE4E4E7)),
+                    border: Border.all(color: cs.outlineVariant),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.04),
+                        color: Colors.black.withValues(alpha: 0.04),
                         blurRadius: 16,
                         offset: const Offset(0, 6),
                       ),
                     ],
                   ),
-                  child: const Icon(
+                  child: Icon(
                     Icons.mark_email_unread_outlined,
                     size: 34,
-                    color: Color(0xFF0A0A0B),
+                    color: cs.onSurface,
                   ),
                 ),
               ),
               const SizedBox(height: 28),
-              const Text(
+              Text(
                 'Check your\nemail',
                 style: TextStyle(
                   fontSize: 32,
                   fontWeight: FontWeight.w800,
-                  color: Color(0xFF0A0A0B),
+                  color: cs.onSurface,
                   height: 1.08,
                   letterSpacing: -0.6,
                 ),
               ),
               const SizedBox(height: 10),
-              const Text(
+              Text(
                 'We sent a verification link to',
-                style: TextStyle(fontSize: 14, color: Color(0xFF71717A)),
+                style: TextStyle(fontSize: 14, color: cs.onSurfaceVariant),
               ),
               const SizedBox(height: 4),
               Text(
                 email,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w700,
-                  color: Color(0xFF0A0A0B),
+                  color: cs.onSurface,
                 ),
               ),
               const SizedBox(height: 28),
@@ -76,16 +77,16 @@ class EmailConfirmationScreen extends StatelessWidget {
                 width: double.infinity,
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: cs.surfaceContainerLowest,
                   borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: const Color(0xFFE4E4E7)),
+                  border: Border.all(color: cs.outlineVariant),
                 ),
-                child: const Text(
+                child: Text(
                   'Your account is created. Open the link from your inbox to verify your email address, then return here to sign in.',
                   style: TextStyle(
                     fontSize: 13.5,
                     height: 1.55,
-                    color: Color(0xFF3F3F46),
+                    color: cs.onSurfaceVariant,
                   ),
                 ),
               ),
@@ -97,21 +98,26 @@ class EmailConfirmationScreen extends StatelessWidget {
                   onPressed: () {
                     context.go('/login');
                   },
-                  style: OutlinedButton.styleFrom(
-                    side: const BorderSide(color: Color(0xFF0E0E10), width: 1.5),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                    foregroundColor: const Color(0xFF0E0E10),
-                    backgroundColor: Colors.transparent,
-                  ).copyWith(
-                    overlayColor: WidgetStateProperty.all(
-                      const Color(0xFF0E0E10).withOpacity(0.05),
-                    ),
-                  ),
-                  child: const Text(
+                  style:
+                      OutlinedButton.styleFrom(
+                        side: BorderSide(color: cs.outline, width: 1.5),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                        foregroundColor: cs.onSurface,
+                        backgroundColor: Colors.transparent,
+                      ).copyWith(
+                        overlayColor: WidgetStateProperty.all(
+                          cs.onSurface.withValues(alpha: 0.05),
+                        ),
+                      ),
+                  child: Text(
                     'Back to login',
-                    style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w700,
+                      color: cs.onSurface,
+                    ),
                   ),
                 ),
               ),

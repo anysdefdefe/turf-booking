@@ -20,4 +20,4 @@ abstract class AdminRepository {
   Future<Map<String, dynamic>> getDashboardStats();
   // Bookings
   Future<List<Map<String, dynamic>>> getAllBookings();
-  }
+}

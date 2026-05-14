@@ -8,7 +8,6 @@ import 'package:latlong2/latlong.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:turf_booking/app/constants/app_constants.dart';
-import 'package:turf_booking/app/theme/app_colors.dart';
 import 'package:turf_booking/features/owner/data/repositories/stadium_repository.dart';
 import 'package:turf_booking/features/owner/providers/stadium_providers.dart';
 import '../widgets/owner_bottom_nav_bar.dart';
@@ -126,23 +125,28 @@ class _OwnerAddStadiumScreenState extends ConsumerState<OwnerAddStadiumScreen> {
       context: context,
       backgroundColor: Colors.transparent,
       builder: (context) => Padding(
-        padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+        padding: EdgeInsets.fromLTRB(
+          16,
+          0,
+          16,
+          16 + MediaQuery.of(context).padding.bottom,
+        ),
         child: Container(
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
-            color: AppColors.surface,
+            color: Theme.of(context).colorScheme.surface,
             borderRadius: BorderRadius.circular(AppConstants.radiusL),
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Text(
+              Text(
                 'Add Image',
                 style: TextStyle(
                   fontFamily: 'Poppins',
                   fontWeight: FontWeight.w600,
                   fontSize: 16,
-                  color: AppColors.textPrimary,
+                  color: Theme.of(context).colorScheme.onSurface,
                 ),
               ),
               const SizedBox(height: 16),
@@ -327,7 +331,7 @@ class _OwnerAddStadiumScreenState extends ConsumerState<OwnerAddStadiumScreen> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message, style: const TextStyle(fontFamily: 'Poppins')),
-        backgroundColor: AppColors.primary,
+        backgroundColor: Theme.of(context).colorScheme.primary,
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppConstants.radiusM),
@@ -342,41 +346,41 @@ class _OwnerAddStadiumScreenState extends ConsumerState<OwnerAddStadiumScreen> {
     final isSaving = controllerState.isLoading;
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: Theme.of(context).colorScheme.surface,
       bottomNavigationBar: const OwnerBottomNavBar(selectedIndex: 1),
       appBar: AppBar(
-        backgroundColor: AppColors.surface,
+        backgroundColor: Theme.of(context).colorScheme.surface,
         elevation: 0,
-        title: const Text(
+        title: Text(
           'Add Stadium',
           style: TextStyle(
             fontFamily: 'Poppins',
             fontWeight: FontWeight.w700,
             fontSize: 20,
-            color: AppColors.textPrimary,
+            color: Theme.of(context).colorScheme.onSurface,
           ),
         ),
         actions: [
           Padding(
             padding: const EdgeInsets.only(right: 12),
             child: isSaving
-                ? const Padding(
+                ? Padding(
                     padding: EdgeInsets.all(14),
                     child: SizedBox(
                       width: 20,
                       height: 20,
                       child: CircularProgressIndicator(
                         strokeWidth: 2,
-                        color: AppColors.primary,
+                        color: Theme.of(context).colorScheme.primary,
                       ),
                     ),
                   )
                 : TextButton(
                     onPressed: _save,
-                    child: const Text(
+                    child: Text(
                       'Save',
                       style: TextStyle(
-                        color: AppColors.primary,
+                        color: Theme.of(context).colorScheme.primary,
                         fontFamily: 'Poppins',
                         fontWeight: FontWeight.w600,
                         fontSize: 15,
@@ -439,40 +443,48 @@ class _OwnerAddStadiumScreenState extends ConsumerState<OwnerAddStadiumScreen> {
                   child: TextField(
                     controller: _locationController,
                     maxLines: 2,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontFamily: 'Poppins',
-                      color: AppColors.textPrimary,
+                      color: Theme.of(context).colorScheme.onSurface,
                     ),
                     decoration: InputDecoration(
                       hintText: 'e.g. 12, MG Road, Bengaluru',
-                      prefixIcon: const Icon(
+                      prefixIcon: Icon(
                         Icons.location_on_outlined,
                         size: 18,
-                        color: AppColors.textSecondary,
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
                       ),
-                      hintStyle: const TextStyle(
+                      hintStyle: TextStyle(
                         fontFamily: 'Poppins',
-                        color: AppColors.textMuted,
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.onSurface.withValues(alpha: 0.3),
                       ),
                       filled: true,
-                      fillColor: AppColors.surface,
+                      fillColor: Theme.of(context).colorScheme.surface,
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(
                           AppConstants.radiusM,
                         ),
-                        borderSide: BorderSide(color: AppColors.divider),
+                        borderSide: BorderSide(
+                          color: Theme.of(context).colorScheme.outlineVariant,
+                        ),
                       ),
                       enabledBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(
                           AppConstants.radiusM,
                         ),
-                        borderSide: BorderSide(color: AppColors.divider),
+                        borderSide: BorderSide(
+                          color: Theme.of(context).colorScheme.outlineVariant,
+                        ),
                       ),
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(
                           AppConstants.radiusM,
                         ),
-                        borderSide: const BorderSide(color: AppColors.primary),
+                        borderSide: BorderSide(
+                          color: Theme.of(context).colorScheme.primary,
+                        ),
                       ),
                     ),
                   ),
@@ -485,20 +497,20 @@ class _OwnerAddStadiumScreenState extends ConsumerState<OwnerAddStadiumScreen> {
                     height: 52,
                     decoration: BoxDecoration(
                       color: _selectedLatLng != null
-                          ? AppColors.badgeBg
-                          : AppColors.surface,
+                          ? Theme.of(context).colorScheme.secondaryContainer
+                          : Theme.of(context).colorScheme.surface,
                       borderRadius: BorderRadius.circular(AppConstants.radiusM),
                       border: Border.all(
                         color: _selectedLatLng != null
-                            ? AppColors.primary
-                            : AppColors.divider,
+                            ? Theme.of(context).colorScheme.primary
+                            : Theme.of(context).colorScheme.outlineVariant,
                       ),
                     ),
                     child: Icon(
                       Icons.map_rounded,
                       color: _selectedLatLng != null
-                          ? AppColors.primary
-                          : AppColors.textSecondary,
+                          ? Theme.of(context).colorScheme.primary
+                          : Theme.of(context).colorScheme.onSurfaceVariant,
                       size: 22,
                     ),
                   ),
@@ -509,10 +521,10 @@ class _OwnerAddStadiumScreenState extends ConsumerState<OwnerAddStadiumScreen> {
               const SizedBox(height: 6),
               Text(
                 '📍 ${_selectedLatLng!.latitude.toStringAsFixed(5)}, ${_selectedLatLng!.longitude.toStringAsFixed(5)}',
-                style: const TextStyle(
+                style: TextStyle(
                   fontFamily: 'Poppins',
                   fontSize: 11,
-                  color: AppColors.primary,
+                  color: Theme.of(context).colorScheme.primary,
                 ),
               ),
             ],
@@ -553,7 +565,7 @@ class _OwnerAddStadiumScreenState extends ConsumerState<OwnerAddStadiumScreen> {
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               itemCount: _courts.length,
-              separatorBuilder: (_, __) => const SizedBox(height: 16),
+              separatorBuilder: (_, _) => const SizedBox(height: 16),
               itemBuilder: (context, index) => _CourtCard(
                 courtNumber: index + 1,
                 court: _courts[index],
@@ -572,14 +584,20 @@ class _OwnerAddStadiumScreenState extends ConsumerState<OwnerAddStadiumScreen> {
                 width: double.infinity,
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 decoration: BoxDecoration(
-                  color: AppColors.badgeBg,
+                  color: Theme.of(context).colorScheme.secondaryContainer,
                   borderRadius: BorderRadius.circular(AppConstants.radiusM),
-                  border: Border.all(color: AppColors.primary),
+                  border: Border.all(
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
                 ),
-                child: const Row(
+                child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(Icons.add, color: AppColors.primary, size: 20),
+                    Icon(
+                      Icons.add,
+                      color: Theme.of(context).colorScheme.primary,
+                      size: 20,
+                    ),
                     SizedBox(width: 8),
                     Text(
                       'Add Another Court',
@@ -587,7 +605,7 @@ class _OwnerAddStadiumScreenState extends ConsumerState<OwnerAddStadiumScreen> {
                         fontFamily: 'Poppins',
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
-                        color: AppColors.primary,
+                        color: Theme.of(context).colorScheme.primary,
                       ),
                     ),
                   ],
@@ -626,25 +644,25 @@ class _MapPickerScreenState extends State<_MapPickerScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: AppColors.surface,
+        backgroundColor: Theme.of(context).colorScheme.surface,
         elevation: 0,
-        title: const Text(
+        title: Text(
           'Pick Location',
           style: TextStyle(
             fontFamily: 'Poppins',
             fontWeight: FontWeight.w700,
             fontSize: 18,
-            color: AppColors.textPrimary,
+            color: Theme.of(context).colorScheme.onSurface,
           ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, _picked),
-            child: const Text(
+            child: Text(
               'Confirm',
               style: TextStyle(
                 fontFamily: 'Poppins',
-                color: AppColors.primary,
+                color: Theme.of(context).colorScheme.primary,
                 fontWeight: FontWeight.w600,
                 fontSize: 15,
               ),
@@ -698,18 +716,18 @@ class _MapPickerScreenState extends State<_MapPickerScreen> {
                 borderRadius: BorderRadius.circular(AppConstants.radiusM),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
+                    color: Colors.black.withValues(alpha: 0.1),
                     blurRadius: 8,
                   ),
                 ],
               ),
-              child: const Text(
+              child: Text(
                 'Tap on the map to set your stadium location',
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontFamily: 'Poppins',
                   fontSize: 12,
-                  color: AppColors.textSecondary,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
               ),
             ),
@@ -727,9 +745,9 @@ class _MapPickerScreenState extends State<_MapPickerScreen> {
                   setState(() => _picked = myLoc);
                 } catch (_) {}
               },
-              child: const Icon(
+              child: Icon(
                 Icons.my_location,
-                color: AppColors.primary,
+                color: Theme.of(context).colorScheme.primary,
                 size: 20,
               ),
             ),
@@ -765,18 +783,22 @@ class _SingleImagePicker extends StatelessWidget {
         height: height,
         width: double.infinity,
         decoration: BoxDecoration(
-          color: AppColors.surface,
+          color: Theme.of(context).colorScheme.surface,
           borderRadius: BorderRadius.circular(AppConstants.radiusL),
-          border: Border.all(color: AppColors.divider),
+          border: Border.all(
+            color: Theme.of(context).colorScheme.outlineVariant,
+          ),
         ),
         child: imageFile == null
             ? Column(
                 mainAxisAlignment: MainAxisAlignment.center,
-                children: const [
+                children: [
                   Icon(
                     Icons.add_a_photo_outlined,
                     size: 30,
-                    color: AppColors.textMuted,
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.onSurface.withValues(alpha: 0.3),
                   ),
                   SizedBox(height: 8),
                   Text(
@@ -784,7 +806,7 @@ class _SingleImagePicker extends StatelessWidget {
                     style: TextStyle(
                       fontFamily: 'Poppins',
                       fontSize: 12,
-                      color: AppColors.textSecondary,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
                   ),
                 ],
@@ -864,21 +886,23 @@ class _ImageSourceTile extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         decoration: BoxDecoration(
-          color: AppColors.background,
+          color: Theme.of(context).colorScheme.surface,
           borderRadius: BorderRadius.circular(AppConstants.radiusM),
-          border: Border.all(color: AppColors.divider),
+          border: Border.all(
+            color: Theme.of(context).colorScheme.outlineVariant,
+          ),
         ),
         child: Row(
           children: [
-            Icon(icon, color: AppColors.primary, size: 22),
+            Icon(icon, color: Theme.of(context).colorScheme.primary, size: 22),
             const SizedBox(width: 14),
             Text(
               label,
-              style: const TextStyle(
+              style: TextStyle(
                 fontFamily: 'Poppins',
                 fontSize: 14,
                 fontWeight: FontWeight.w500,
-                color: AppColors.textPrimary,
+                color: Theme.of(context).colorScheme.onSurface,
               ),
             ),
           ],
@@ -905,32 +929,42 @@ class _CourtCard extends StatelessWidget {
     required this.onRemove,
   });
 
-  InputDecoration _inputDecoration(String label, String hint, IconData icon) {
+  InputDecoration _inputDecoration(BuildContext context, String label, String hint, IconData icon) {
     return InputDecoration(
       labelText: label,
       hintText: hint,
-      prefixIcon: Icon(icon, size: 18, color: AppColors.textSecondary),
-      labelStyle: const TextStyle(
-        fontFamily: 'Poppins',
-        color: AppColors.textSecondary,
+      prefixIcon: Icon(
+        icon,
+        size: 18,
+        color: Theme.of(context).colorScheme.onSurfaceVariant,
       ),
-      hintStyle: const TextStyle(
+      labelStyle: TextStyle(
         fontFamily: 'Poppins',
-        color: AppColors.textMuted,
+        color: Theme.of(context).colorScheme.onSurfaceVariant,
+      ),
+      hintStyle: TextStyle(
+        fontFamily: 'Poppins',
+        color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.3),
       ),
       filled: true,
-      fillColor: AppColors.background,
+      fillColor: Theme.of(context).colorScheme.surface,
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(AppConstants.radiusM),
-        borderSide: BorderSide(color: AppColors.divider),
+        borderSide: BorderSide(
+          color: Theme.of(context).colorScheme.outlineVariant,
+        ),
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(AppConstants.radiusM),
-        borderSide: BorderSide(color: AppColors.divider),
+        borderSide: BorderSide(
+          color: Theme.of(context).colorScheme.outlineVariant,
+        ),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(AppConstants.radiusM),
-        borderSide: const BorderSide(color: AppColors.primary),
+        borderSide: BorderSide(
+          color: Theme.of(context).colorScheme.primary,
+        ),
       ),
     );
   }
@@ -940,9 +974,9 @@ class _CourtCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(AppConstants.radiusL),
-        border: Border.all(color: AppColors.divider),
+        border: Border.all(color: Theme.of(context).colorScheme.outlineVariant),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -955,16 +989,16 @@ class _CourtCard extends StatelessWidget {
                   vertical: 4,
                 ),
                 decoration: BoxDecoration(
-                  color: AppColors.badgeBg,
+                  color: Theme.of(context).colorScheme.secondaryContainer,
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Text(
                   'Court $courtNumber',
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontFamily: 'Poppins',
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
-                    color: AppColors.primary,
+                    color: Theme.of(context).colorScheme.primary,
                   ),
                 ),
               ),
@@ -983,24 +1017,26 @@ class _CourtCard extends StatelessWidget {
           const SizedBox(height: 14),
           TextField(
             onChanged: (v) => court.sportType = v,
-            style: const TextStyle(
+            style: TextStyle(
               fontFamily: 'Poppins',
-              color: AppColors.textPrimary,
+              color: Theme.of(context).colorScheme.onSurface,
             ),
             decoration: _inputDecoration(
+              context,
               'Sport Type',
-              'e.g. Football, Cricket',
+              'e.g. Football (5v5)',
               Icons.sports_soccer_rounded,
             ),
           ),
           const SizedBox(height: 10),
           TextField(
             onChanged: (v) => court.equipments = v,
-            style: const TextStyle(
+            style: TextStyle(
               fontFamily: 'Poppins',
-              color: AppColors.textPrimary,
+              color: Theme.of(context).colorScheme.onSurface,
             ),
             decoration: _inputDecoration(
+              context,
               'Equipments',
               'e.g. Ball, Net, Rackets (comma separated)',
               Icons.inventory_2_outlined,
@@ -1010,14 +1046,15 @@ class _CourtCard extends StatelessWidget {
           TextField(
             onChanged: (v) => court.description = v,
             maxLines: 2,
-            style: const TextStyle(
+            style: TextStyle(
               fontFamily: 'Poppins',
-              color: AppColors.textPrimary,
+              color: Theme.of(context).colorScheme.onSurface,
             ),
             decoration: _inputDecoration(
-              'About / Description',
-              'Short note about this court',
-              Icons.subject_rounded,
+              context,
+              'Court Rules / Description',
+              'Specific details for this court',
+              Icons.info_outline_rounded,
             ),
           ),
           const SizedBox(height: 14),
@@ -1030,7 +1067,20 @@ class _CourtCard extends StatelessWidget {
           const SizedBox(height: 14),
           const _FieldLabel(label: 'Hourly Rate (₹)'),
           const SizedBox(height: 10),
-          _RateRow(label: 'Hourly', onChanged: (v) => court.pricePerHour = v),
+          TextField(
+            onChanged: (v) => court.pricePerHour = double.tryParse(v) ?? 0,
+            keyboardType: TextInputType.number,
+            style: TextStyle(
+              fontFamily: 'Poppins',
+              color: Theme.of(context).colorScheme.onSurface,
+            ),
+            decoration: _inputDecoration(
+              context,
+              'Price per Hour',
+              'e.g. 1200',
+              Icons.currency_rupee_rounded,
+            ),
+          ),
           const SizedBox(height: 14),
           Row(
             children: [
@@ -1076,29 +1126,31 @@ class _TimePickerButton extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
         decoration: BoxDecoration(
-          color: AppColors.background,
+          color: Theme.of(context).colorScheme.surface,
           borderRadius: BorderRadius.circular(AppConstants.radiusM),
-          border: Border.all(color: AppColors.divider),
+          border: Border.all(
+            color: Theme.of(context).colorScheme.outlineVariant,
+          ),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
               label,
-              style: const TextStyle(
+              style: TextStyle(
                 fontFamily: 'Poppins',
                 fontSize: 11,
-                color: AppColors.textSecondary,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
               ),
             ),
             const SizedBox(height: 4),
             Text(
               value.format(context),
-              style: const TextStyle(
+              style: TextStyle(
                 fontFamily: 'Poppins',
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
-                color: AppColors.textPrimary,
+                color: Theme.of(context).colorScheme.onSurface,
               ),
             ),
           ],
@@ -1122,10 +1174,10 @@ class _RateRow extends StatelessWidget {
           width: 72,
           child: Text(
             label,
-            style: const TextStyle(
+            style: TextStyle(
               fontFamily: 'Poppins',
               fontSize: 13,
-              color: AppColors.textSecondary,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
             ),
           ),
         ),
@@ -1134,38 +1186,46 @@ class _RateRow extends StatelessWidget {
           child: TextField(
             keyboardType: TextInputType.number,
             onChanged: (v) => onChanged(double.tryParse(v) ?? 0),
-            style: const TextStyle(
+            style: TextStyle(
               fontFamily: 'Poppins',
-              color: AppColors.textPrimary,
+              color: Theme.of(context).colorScheme.onSurface,
             ),
             decoration: InputDecoration(
               prefixText: '₹ ',
-              prefixStyle: const TextStyle(
+              prefixStyle: TextStyle(
                 fontFamily: 'Poppins',
-                color: AppColors.textSecondary,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
               ),
               hintText: '0',
-              hintStyle: const TextStyle(
+              hintStyle: TextStyle(
                 fontFamily: 'Poppins',
-                color: AppColors.textMuted,
+                color: Theme.of(
+                  context,
+                ).colorScheme.onSurface.withValues(alpha: 0.3),
               ),
               filled: true,
-              fillColor: AppColors.background,
+              fillColor: Theme.of(context).colorScheme.surface,
               contentPadding: const EdgeInsets.symmetric(
                 horizontal: 12,
                 vertical: 10,
               ),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(AppConstants.radiusM),
-                borderSide: BorderSide(color: AppColors.divider),
+                borderSide: BorderSide(
+                  color: Theme.of(context).colorScheme.outlineVariant,
+                ),
               ),
               enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(AppConstants.radiusM),
-                borderSide: BorderSide(color: AppColors.divider),
+                borderSide: BorderSide(
+                  color: Theme.of(context).colorScheme.outlineVariant,
+                ),
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(AppConstants.radiusM),
-                borderSide: const BorderSide(color: AppColors.primary),
+                borderSide: BorderSide(
+                  color: Theme.of(context).colorScheme.primary,
+                ),
               ),
             ),
           ),
@@ -1187,18 +1247,18 @@ class _SectionHeader extends StatelessWidget {
           width: 4,
           height: 20,
           decoration: BoxDecoration(
-            color: AppColors.primary,
+            color: Theme.of(context).colorScheme.primary,
             borderRadius: BorderRadius.circular(2),
           ),
         ),
         const SizedBox(width: 8),
         Text(
           title,
-          style: const TextStyle(
+          style: TextStyle(
             fontFamily: 'Poppins',
             fontSize: 18,
             fontWeight: FontWeight.w700,
-            color: AppColors.textPrimary,
+            color: Theme.of(context).colorScheme.onSurface,
           ),
         ),
       ],
@@ -1214,11 +1274,11 @@ class _FieldLabel extends StatelessWidget {
   Widget build(BuildContext context) {
     return Text(
       label,
-      style: const TextStyle(
+      style: TextStyle(
         fontFamily: 'Poppins',
         fontSize: 13,
         fontWeight: FontWeight.w500,
-        color: AppColors.textSecondary,
+        color: Theme.of(context).colorScheme.onSurfaceVariant,
       ),
     );
   }
@@ -1247,35 +1307,45 @@ class _InputField extends StatelessWidget {
       controller: controller,
       maxLines: maxLines,
       keyboardType: keyboardType,
-      style: const TextStyle(
+      style: TextStyle(
         fontFamily: 'Poppins',
-        color: AppColors.textPrimary,
+        color: Theme.of(context).colorScheme.onSurface,
       ),
       decoration: InputDecoration(
         labelText: label,
         hintText: hint,
-        prefixIcon: Icon(icon, size: 18, color: AppColors.textSecondary),
-        labelStyle: const TextStyle(
-          fontFamily: 'Poppins',
-          color: AppColors.textSecondary,
+        prefixIcon: Icon(
+          icon,
+          size: 18,
+          color: Theme.of(context).colorScheme.onSurfaceVariant,
         ),
-        hintStyle: const TextStyle(
+        labelStyle: TextStyle(
           fontFamily: 'Poppins',
-          color: AppColors.textMuted,
+          color: Theme.of(context).colorScheme.onSurfaceVariant,
+        ),
+        hintStyle: TextStyle(
+          fontFamily: 'Poppins',
+          color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.3),
         ),
         filled: true,
-        fillColor: AppColors.surface,
+        fillColor: Theme.of(context).colorScheme.surface,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppConstants.radiusM),
-          borderSide: BorderSide(color: AppColors.divider),
+          borderSide: BorderSide(
+            color: Theme.of(context).colorScheme.outlineVariant,
+          ),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppConstants.radiusM),
-          borderSide: BorderSide(color: AppColors.divider),
+          borderSide: BorderSide(
+            color: Theme.of(context).colorScheme.outlineVariant,
+          ),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppConstants.radiusM),
-          borderSide: const BorderSide(color: AppColors.primary),
+          borderSide: BorderSide(
+            color: Theme.of(context).colorScheme.primary,
+          ),
         ),
       ),
     );
@@ -1300,16 +1370,18 @@ class _TimePicker extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
         decoration: BoxDecoration(
-          color: AppColors.surface,
+          color: Theme.of(context).colorScheme.surface,
           borderRadius: BorderRadius.circular(AppConstants.radiusM),
-          border: Border.all(color: AppColors.divider),
+          border: Border.all(
+            color: Theme.of(context).colorScheme.outlineVariant,
+          ),
         ),
         child: Row(
           children: [
-            const Icon(
+            Icon(
               Icons.access_time_rounded,
               size: 18,
-              color: AppColors.textSecondary,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
             ),
             const SizedBox(width: 8),
             Column(
@@ -1317,19 +1389,21 @@ class _TimePicker extends StatelessWidget {
               children: [
                 Text(
                   label,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontFamily: 'Poppins',
                     fontSize: 11,
-                    color: AppColors.textMuted,
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.onSurface.withValues(alpha: 0.3),
                   ),
                 ),
                 Text(
                   time.format(context),
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontFamily: 'Poppins',
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
-                    color: AppColors.textPrimary,
+                    color: Theme.of(context).colorScheme.onSurface,
                   ),
                 ),
               ],

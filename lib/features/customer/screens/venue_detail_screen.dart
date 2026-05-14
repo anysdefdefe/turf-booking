@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../app/constants/app_constants.dart';
-import '../../../app/theme/app_colors.dart';
 import 'package:turf_booking/features/owner/widgets/storage_media.dart';
 import 'package:turf_booking/features/owner/data/repositories/stadium_repository.dart';
 import '../data/models/court_model.dart';
@@ -54,7 +53,7 @@ class _VenueDetailScreenState extends State<VenueDetailScreen> {
       context: context,
       useSafeArea: true,
       showDragHandle: true,
-      backgroundColor: AppColors.surface,
+      backgroundColor: Theme.of(context).colorScheme.surface,
       builder: (context) {
         return ListView.separated(
           shrinkWrap: true,
@@ -63,13 +62,16 @@ class _VenueDetailScreenState extends State<VenueDetailScreen> {
           itemBuilder: (_, index) {
             final sport = sports[index];
             return ListTile(
-              leading: Icon(sportIconForName(sport), color: AppColors.primary),
+              leading: Icon(
+                sportIconForName(sport),
+                color: Theme.of(context).colorScheme.primary,
+              ),
               title: Text(
                 sport,
-                style: const TextStyle(
+                style: TextStyle(
                   fontFamily: 'Poppins',
                   fontWeight: FontWeight.w600,
-                  color: AppColors.textPrimary,
+                  color: Theme.of(context).colorScheme.onSurface,
                 ),
               ),
               trailing: const Icon(Icons.chevron_right_rounded),
@@ -98,7 +100,7 @@ class _VenueDetailScreenState extends State<VenueDetailScreen> {
       useSafeArea: true,
       showDragHandle: true,
       isScrollControlled: true,
-      backgroundColor: AppColors.surface,
+      backgroundColor: Theme.of(context).colorScheme.surface,
       builder: (context) {
         return Padding(
           padding: EdgeInsets.only(
@@ -113,11 +115,11 @@ class _VenueDetailScreenState extends State<VenueDetailScreen> {
             children: [
               Text(
                 '$sportType courts',
-                style: const TextStyle(
+                style: TextStyle(
                   fontFamily: 'Poppins',
                   fontSize: 18,
                   fontWeight: FontWeight.w700,
-                  color: AppColors.textPrimary,
+                  color: Theme.of(context).colorScheme.onSurface,
                 ),
               ),
               const SizedBox(height: 10),
@@ -142,9 +144,11 @@ class _VenueDetailScreenState extends State<VenueDetailScreen> {
                       child: Container(
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
-                          color: AppColors.background,
+                          color: Theme.of(context).colorScheme.surface,
                           borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: AppColors.divider),
+                          border: Border.all(
+                            color: Theme.of(context).colorScheme.outlineVariant,
+                          ),
                         ),
                         child: Row(
                           children: [
@@ -152,14 +156,18 @@ class _VenueDetailScreenState extends State<VenueDetailScreen> {
                               width: 34,
                               height: 34,
                               decoration: BoxDecoration(
-                                color: AppColors.surface,
+                                color: Theme.of(context).colorScheme.surface,
                                 borderRadius: BorderRadius.circular(10),
-                                border: Border.all(color: AppColors.divider),
+                                border: Border.all(
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.outlineVariant,
+                                ),
                               ),
                               child: Icon(
                                 sportIconForName(sportType),
                                 size: 18,
-                                color: AppColors.primary,
+                                color: Theme.of(context).colorScheme.primary,
                               ),
                             ),
                             const SizedBox(width: 10),
@@ -169,20 +177,24 @@ class _VenueDetailScreenState extends State<VenueDetailScreen> {
                                 children: [
                                   Text(
                                     court.name,
-                                    style: const TextStyle(
+                                    style: TextStyle(
                                       fontFamily: 'Poppins',
                                       fontSize: 14,
                                       fontWeight: FontWeight.w700,
-                                      color: AppColors.textPrimary,
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.onSurface,
                                     ),
                                   ),
                                   const SizedBox(height: 4),
                                   Text(
                                     subtitle,
-                                    style: const TextStyle(
+                                    style: TextStyle(
                                       fontFamily: 'Poppins',
                                       fontSize: 12,
-                                      color: AppColors.textSecondary,
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.onSurfaceVariant,
                                     ),
                                   ),
                                 ],
@@ -213,12 +225,12 @@ class _VenueDetailScreenState extends State<VenueDetailScreen> {
     final lowestPricePerHour = _lowestPricePerHour;
 
     return Scaffold(
-      backgroundColor: AppColors.surface,
+      backgroundColor: Theme.of(context).colorScheme.surface,
       bottomNavigationBar: MediaQuery.removePadding(
         context: context,
         removeBottom: true,
         child: Container(
-          color: AppColors.surface,
+          color: Theme.of(context).colorScheme.surface,
           width: double.infinity,
           child: Padding(
             padding: const EdgeInsets.fromLTRB(20, 10, 20, 12),
@@ -229,8 +241,8 @@ class _VenueDetailScreenState extends State<VenueDetailScreen> {
                 child: FilledButton.icon(
                   onPressed: sports.isEmpty ? null : _openSportTypePicker,
                   style: FilledButton.styleFrom(
-                    backgroundColor: AppColors.textPrimary,
-                    foregroundColor: Colors.white,
+                    backgroundColor: Theme.of(context).colorScheme.primary,
+                    foregroundColor: Theme.of(context).colorScheme.onPrimary,
                     padding: const EdgeInsets.symmetric(vertical: 20),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(30),
@@ -269,11 +281,13 @@ class _VenueDetailScreenState extends State<VenueDetailScreen> {
                   fit: BoxFit.cover,
                   borderRadius: BorderRadius.zero,
                   placeholder: Container(
-                    color: AppColors.divider,
-                    child: const Icon(
+                    color: Theme.of(context).colorScheme.outlineVariant,
+                    child: Icon(
                       Icons.stadium_rounded,
                       size: 70,
-                      color: AppColors.textMuted,
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.onSurface.withValues(alpha: 0.3),
                     ),
                   ),
                 ),
@@ -296,9 +310,11 @@ class _VenueDetailScreenState extends State<VenueDetailScreen> {
                 const SliverToBoxAdapter(child: SizedBox(height: 290)),
                 SliverToBoxAdapter(
                   child: Container(
-                    decoration: const BoxDecoration(
-                      color: AppColors.surface,
-                      borderRadius: BorderRadius.vertical(top: Radius.circular(40)),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).colorScheme.surface,
+                      borderRadius: BorderRadius.vertical(
+                        top: Radius.circular(40),
+                      ),
                     ),
                     child: Padding(
                       padding: const EdgeInsets.fromLTRB(20, 32, 20, 26),
@@ -311,11 +327,13 @@ class _VenueDetailScreenState extends State<VenueDetailScreen> {
                               Expanded(
                                 child: Text(
                                   venue.name,
-                                  style: const TextStyle(
+                                  style: TextStyle(
                                     fontFamily: 'Poppins',
                                     fontSize: 26,
                                     fontWeight: FontWeight.w800,
-                                    color: AppColors.textPrimary,
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.onSurface,
                                     height: 1.1,
                                     letterSpacing: -0.5,
                                   ),
@@ -323,25 +341,35 @@ class _VenueDetailScreenState extends State<VenueDetailScreen> {
                               ),
                               if (lowestPricePerHour != null)
                                 Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                    vertical: 6,
+                                  ),
                                   decoration: BoxDecoration(
-                                    color: AppColors.divider.withValues(alpha: 0.5),
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .outlineVariant
+                                        .withValues(alpha: 0.5),
                                     borderRadius: BorderRadius.circular(20),
                                   ),
                                   child: Row(
                                     children: [
-                                      const Icon(
+                                      Icon(
                                         Icons.currency_rupee_rounded,
                                         size: 14,
-                                        color: AppColors.textPrimary,
+                                        color: Theme.of(
+                                          context,
+                                        ).colorScheme.onSurface,
                                       ),
                                       Text(
                                         '$lowestPricePerHour onwards',
-                                        style: const TextStyle(
+                                        style: TextStyle(
                                           fontFamily: 'Poppins',
                                           fontSize: 14,
                                           fontWeight: FontWeight.w700,
-                                          color: AppColors.textPrimary,
+                                          color: Theme.of(
+                                            context,
+                                          ).colorScheme.onSurface,
                                         ),
                                       ),
                                     ],
@@ -352,19 +380,23 @@ class _VenueDetailScreenState extends State<VenueDetailScreen> {
                           const SizedBox(height: 12),
                           Row(
                             children: [
-                              const Icon(
+                              Icon(
                                 Icons.location_on_outlined,
                                 size: 16,
-                                color: AppColors.textSecondary,
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onSurfaceVariant,
                               ),
                               const SizedBox(width: 4),
                               Expanded(
                                 child: Text(
                                   '${venue.address}, ${venue.city}',
-                                  style: const TextStyle(
+                                  style: TextStyle(
                                     fontFamily: 'Poppins',
                                     fontSize: 13,
-                                    color: AppColors.textSecondary,
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.onSurfaceVariant,
                                     fontWeight: FontWeight.w500,
                                   ),
                                 ),
@@ -375,10 +407,25 @@ class _VenueDetailScreenState extends State<VenueDetailScreen> {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                             children: [
-                              _buildSkeletalStat('Courts', '${_venueCourts.length}'),
-                              Container(height: 30, width: 1, color: AppColors.divider),
+                              _buildSkeletalStat(
+                                'Courts',
+                                '${_venueCourts.length}',
+                              ),
+                              Container(
+                                height: 30,
+                                width: 1,
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.outlineVariant,
+                              ),
                               _buildSkeletalStat('Sports', '${sports.length}'),
-                              Container(height: 30, width: 1, color: AppColors.divider),
+                              Container(
+                                height: 30,
+                                width: 1,
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.outlineVariant,
+                              ),
                               _buildSkeletalStat('City', venue.city),
                             ],
                           ),
@@ -389,10 +436,12 @@ class _VenueDetailScreenState extends State<VenueDetailScreen> {
                             venue.description.isEmpty
                                 ? 'No description provided for this venue yet.'
                                 : venue.description,
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontFamily: 'Poppins',
                               fontSize: 13.5,
-                              color: AppColors.textSecondary,
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.onSurfaceVariant,
                               height: 1.65,
                             ),
                           ),
@@ -400,12 +449,14 @@ class _VenueDetailScreenState extends State<VenueDetailScreen> {
                           const DetailSectionTitle(title: 'Amenities'),
                           const SizedBox(height: 10),
                           if (venue.amenities.isEmpty)
-                            const Text(
+                            Text(
                               'No amenities listed yet.',
                               style: TextStyle(
                                 fontFamily: 'Poppins',
                                 fontSize: 13,
-                                color: AppColors.textSecondary,
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onSurfaceVariant,
                               ),
                             )
                           else
@@ -420,17 +471,25 @@ class _VenueDetailScreenState extends State<VenueDetailScreen> {
                                         vertical: 10,
                                       ),
                                       decoration: BoxDecoration(
-                                        color: AppColors.surface,
+                                        color: Theme.of(
+                                          context,
+                                        ).colorScheme.surface,
                                         borderRadius: BorderRadius.circular(10),
-                                        border: Border.all(color: AppColors.divider),
+                                        border: Border.all(
+                                          color: Theme.of(
+                                            context,
+                                          ).colorScheme.outlineVariant,
+                                        ),
                                       ),
                                       child: Text(
                                         amenity,
-                                        style: const TextStyle(
+                                        style: TextStyle(
                                           fontFamily: 'Poppins',
                                           fontSize: 13,
                                           fontWeight: FontWeight.w500,
-                                          color: AppColors.textPrimary,
+                                          color: Theme.of(
+                                            context,
+                                          ).colorScheme.onSurface,
                                         ),
                                       ),
                                     ),
@@ -441,12 +500,14 @@ class _VenueDetailScreenState extends State<VenueDetailScreen> {
                           const DetailSectionTitle(title: 'Sport Types'),
                           const SizedBox(height: 10),
                           if (sports.isEmpty)
-                            const Text(
+                            Text(
                               'No sport types available for this venue.',
                               style: TextStyle(
                                 fontFamily: 'Poppins',
                                 fontSize: 13,
-                                color: AppColors.textSecondary,
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onSurfaceVariant,
                               ),
                             )
                           else
@@ -459,7 +520,9 @@ class _VenueDetailScreenState extends State<VenueDetailScreen> {
                                       avatar: Icon(
                                         sportIconForName(sport),
                                         size: 18,
-                                        color: AppColors.primary,
+                                        color: Theme.of(
+                                          context,
+                                        ).colorScheme.primary,
                                       ),
                                       label: Text(
                                         sport,
@@ -468,11 +531,23 @@ class _VenueDetailScreenState extends State<VenueDetailScreen> {
                                           fontWeight: FontWeight.w600,
                                         ),
                                       ),
-                                      backgroundColor: AppColors.surface,
-                                      side: const BorderSide(color: AppColors.divider),
-                                      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
-                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                                      onPressed: () => _openCourtsForSport(sport),
+                                      backgroundColor: Theme.of(
+                                        context,
+                                      ).colorScheme.surface,
+                                      side: BorderSide(
+                                        color: Theme.of(
+                                          context,
+                                        ).colorScheme.outlineVariant,
+                                      ),
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 4,
+                                        vertical: 8,
+                                      ),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      onPressed: () =>
+                                          _openCourtsForSport(sport),
                                     ),
                                   )
                                   .toList(growable: false),
@@ -504,21 +579,21 @@ class _VenueDetailScreenState extends State<VenueDetailScreen> {
       children: [
         Text(
           label,
-          style: const TextStyle(
+          style: TextStyle(
             fontFamily: 'Poppins',
             fontSize: 12,
-            color: AppColors.textSecondary,
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
             fontWeight: FontWeight.w500,
           ),
         ),
         const SizedBox(height: 4),
         Text(
           value,
-          style: const TextStyle(
+          style: TextStyle(
             fontFamily: 'Poppins',
             fontSize: 16,
             fontWeight: FontWeight.w700,
-            color: AppColors.textPrimary,
+            color: Theme.of(context).colorScheme.onSurface,
           ),
         ),
       ],
@@ -540,10 +615,14 @@ class _CircleBtn extends StatelessWidget {
         width: 42,
         height: 42,
         decoration: BoxDecoration(
-          color: AppColors.surface.withValues(alpha: 0.9),
+          color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.9),
           shape: BoxShape.circle,
         ),
-        child: Icon(icon, size: 18, color: AppColors.textPrimary),
+        child: Icon(
+          icon,
+          size: 18,
+          color: Theme.of(context).colorScheme.onSurface,
+        ),
       ),
     );
   }

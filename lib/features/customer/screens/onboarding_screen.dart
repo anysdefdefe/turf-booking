@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../app/theme/app_colors.dart';
 import '../data/repositories/onboarding_repository.dart';
 
 class OnboardingScreen extends StatefulWidget {
@@ -65,7 +64,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: Theme.of(context).colorScheme.surface,
       body: Stack(
         children: [
           // Content
@@ -97,9 +96,13 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                                 end: Alignment.bottomCenter,
                                 colors: [
                                   Colors.transparent,
-                                  AppColors.background.withValues(alpha: 0.0),
-                                  AppColors.background.withValues(alpha: 0.85),
-                                  AppColors.background,
+                                  Theme.of(
+                                    context,
+                                  ).colorScheme.surface.withValues(alpha: 0.0),
+                                  Theme.of(
+                                    context,
+                                  ).colorScheme.surface.withValues(alpha: 0.85),
+                                  Theme.of(context).colorScheme.surface,
                                 ],
                                 stops: const [0.0, 0.55, 0.85, 1.0],
                               ),
@@ -110,18 +113,25 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         Align(
                           alignment: Alignment.bottomLeft,
                           child: Padding(
-                            padding: const EdgeInsets.fromLTRB(28.0, 0, 28.0, 0),
+                            padding: const EdgeInsets.fromLTRB(
+                              28.0,
+                              0,
+                              28.0,
+                              0,
+                            ),
                             child: Column(
                               mainAxisSize: MainAxisSize.min,
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
                                   page.title,
-                                  style: const TextStyle(
+                                  style: TextStyle(
                                     fontFamily: 'Poppins',
                                     fontSize: 34,
                                     fontWeight: FontWeight.w800,
-                                    color: AppColors.textPrimary,
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.onSurface,
                                     height: 1.15,
                                     letterSpacing: -1.0,
                                   ),
@@ -129,10 +139,12 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                                 const SizedBox(height: 12),
                                 Text(
                                   page.subtitle,
-                                  style: const TextStyle(
+                                  style: TextStyle(
                                     fontFamily: 'Poppins',
                                     fontSize: 16,
-                                    color: AppColors.textSecondary,
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.onSurfaceVariant,
                                     height: 1.5,
                                   ),
                                 ),
@@ -168,8 +180,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                                 height: 8,
                                 decoration: BoxDecoration(
                                   color: selected
-                                      ? AppColors.primary
-                                      : AppColors.textMuted.withValues(alpha: 0.3),
+                                      ? Theme.of(context).colorScheme.primary
+                                      : Theme.of(context).colorScheme.onSurface
+                                            .withValues(alpha: 0.3)
+                                            .withValues(alpha: 0.3),
                                   borderRadius: BorderRadius.circular(4),
                                 ),
                               );
@@ -179,8 +193,12 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                           FloatingActionButton.extended(
                             onPressed: _finishing ? null : _next,
                             elevation: 0,
-                            backgroundColor: AppColors.textPrimary,
-                            foregroundColor: AppColors.surface,
+                            backgroundColor: Theme.of(
+                              context,
+                            ).colorScheme.onSurface,
+                            foregroundColor: Theme.of(
+                              context,
+                            ).colorScheme.surface,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(16),
                             ),
@@ -197,7 +215,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                                 ),
                                 if (!_isLast) ...[
                                   const SizedBox(width: 6),
-                                  const Icon(Icons.arrow_forward_rounded, size: 20),
+                                  const Icon(
+                                    Icons.arrow_forward_rounded,
+                                    size: 20,
+                                  ),
                                 ],
                               ],
                             ),
@@ -213,23 +234,29 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           // Top controls (Courtly logo + Skip) Overlaid
           SafeArea(
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 12.0),
+              padding: const EdgeInsets.symmetric(
+                horizontal: 24.0,
+                vertical: 12.0,
+              ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 6,
+                    ),
                     decoration: BoxDecoration(
                       color: Colors.white.withValues(alpha: 0.85),
                       borderRadius: BorderRadius.circular(20),
                     ),
-                    child: const Text(
+                    child: Text(
                       'Courtly',
                       style: TextStyle(
                         fontFamily: 'Poppins',
                         fontSize: 16,
                         fontWeight: FontWeight.w800,
-                        color: AppColors.textPrimary,
+                        color: Theme.of(context).colorScheme.onSurface,
                         letterSpacing: -0.5,
                       ),
                     ),
@@ -237,9 +264,12 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   TextButton(
                     onPressed: _finishing ? null : _finish,
                     style: TextButton.styleFrom(
-                      foregroundColor: AppColors.textPrimary,
+                      foregroundColor: Theme.of(context).colorScheme.onSurface,
                       backgroundColor: Colors.white.withValues(alpha: 0.85),
-                      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 18,
+                        vertical: 8,
+                      ),
                       shape: const StadiumBorder(),
                     ),
                     child: const Text(
