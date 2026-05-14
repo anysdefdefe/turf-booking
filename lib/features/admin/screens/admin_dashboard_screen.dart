@@ -226,7 +226,8 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
                           style: const TextStyle(color: Colors.red),
                         ),
                         ElevatedButton(
-                          onPressed: () => ref.refresh(dashboardStatsProvider),
+                          onPressed: () =>
+                              ref.invalidate(dashboardStatsProvider),
                           child: const Text('Retry'),
                         ),
                       ],

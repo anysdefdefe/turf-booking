@@ -31,7 +31,7 @@ class AdminBookingsScreen extends ConsumerWidget {
             children: [
               Text('Error: $e', style: TextStyle(color: cs.error)),
               ElevatedButton(
-                onPressed: () => ref.refresh(allBookingsProvider),
+                onPressed: () => ref.invalidate(allBookingsProvider),
                 child: const Text('Retry'),
               ),
             ],

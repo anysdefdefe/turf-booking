@@ -54,7 +54,7 @@ class SupabaseAuthRepository implements AuthRepository {
         throw Exception('Sign in failed - no user returned');
       }
 
-      return _waitForUserProfile(response.user!.id);
+      return _getUserProfile(response.user!.id);
     } on AuthException catch (e) {
       throw AppAuthException(e.message, e.statusCode, e);
     } catch (e) {
@@ -80,7 +80,7 @@ class SupabaseAuthRepository implements AuthRepository {
       final user = _client.auth.currentUser;
       if (user == null) throw Exception('Google sign in did not return a user');
 
-      return _waitForUserProfile(user.id);
+      return _getUserProfile(user.id);
     } on UnimplementedError {
       rethrow;
     } on AppAuthException {
@@ -108,7 +108,7 @@ class SupabaseAuthRepository implements AuthRepository {
     final user = _client.auth.currentUser;
     if (user == null) return null;
 
-    return _waitForUserProfile(user.id);
+    return _getUserProfile(user.id);
   }
 
   @override
@@ -120,18 +120,17 @@ class SupabaseAuthRepository implements AuthRepository {
     return UserModel.fromJson(data);
   }
 
-  Future<UserModel> _waitForUserProfile(String userId) async {
-    Object? lastError;
-    for (int i = 0; i < 30; i++) {
-      try {
-        return await _fetchUserProfile(userId);
-      } catch (e) {
-        lastError = e;
-        print('AUTH POLL [$i]: Failed to fetch profile for $userId — $e');
-        await Future.delayed(const Duration(milliseconds: 500));
-      }
+  Future<UserModel> _getUserProfile(String userId) async {
+    try {
+      final data = await _client
+          .from('users')
+          .select()
+          .eq('id', userId)
+          .single();
+
+      return UserModel.fromJson(data);
+    } catch (e) {
+      throw Exception('User profile not found: $e');
     }
-    print('AUTH FATAL: All 30 retries exhausted. Last error: $lastError');
-    throw Exception('User profile not created in time');
   }
 }

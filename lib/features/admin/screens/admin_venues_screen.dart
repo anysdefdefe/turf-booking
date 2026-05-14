@@ -129,7 +129,7 @@ class _AdminVenuesScreenState extends ConsumerState<AdminVenuesScreen> {
                       ),
                     ),
                     ElevatedButton(
-                      onPressed: () => ref.refresh(allVenuesProvider),
+                      onPressed: () => ref.invalidate(allVenuesProvider),
                       child: const Text('Retry'),
                     ),
                   ],
