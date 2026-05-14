@@ -32,7 +32,7 @@ class GoogleAuthButton extends StatelessWidget {
 
     return SizedBox(
       width: double.infinity,
-      height: 56,
+      height: 62,
       child: OutlinedButton(
         onPressed: onPressed,
         style: OutlinedButton.styleFrom(
@@ -47,23 +47,15 @@ class GoogleAuthButton extends StatelessWidget {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Container(
-              width: 28,
-              height: 28,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: cs.primaryContainer.withValues(alpha: 0.6),
-              ),
-              child: Center(
-                child: Image.network(
-                  'https://developers.google.com/identity/images/g-logo.png',
-                  width: 16,
-                  height: 16,
-                  errorBuilder: (_, _, _) => Icon(
-                    Icons.g_mobiledata_rounded,
-                    size: 16,
-                    color: cs.primary,
-                  ),
+            Center(
+              child: Image.asset(
+                'lib/app/assets/images/google-icon-1.png',
+                width: 24,
+                height: 24,
+                errorBuilder: (_, _, _) => Icon(
+                  Icons.g_mobiledata_rounded,
+                  size: 24,
+                  color: cs.primary,
                 ),
               ),
             ),
@@ -72,8 +64,8 @@ class GoogleAuthButton extends StatelessWidget {
               'Continue with Google',
               style: TextStyle(
                 fontFamily: 'Poppins',
-                fontSize: 15,
-                fontWeight: FontWeight.w600,
+                fontSize: 16,
+                fontWeight: FontWeight.w400,
               ),
             ),
           ],

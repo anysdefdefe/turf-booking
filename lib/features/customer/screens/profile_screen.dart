@@ -1395,8 +1395,6 @@ class _LogoutButton extends StatelessWidget {
   }
 }
 
-// ─── Edit Button ─────────────────────────────────────────────────────────────
-
 class _EditButton extends StatelessWidget {
   final VoidCallback onTap;
 

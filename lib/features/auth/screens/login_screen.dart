@@ -236,7 +236,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             delay: Duration(milliseconds: 320),
                             child: Padding(
                               padding: const EdgeInsets.symmetric(
-                                horizontal: 8.0,
+                                horizontal: 0.0,
                               ),
                               child: GoogleAuthButton(
                                 onPressed: _googleLoading
@@ -310,7 +310,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   }
 }
 
-// ─── Full-width hero with curved bottom cutout ───────────────────────────────
 
 class _HeroImage extends StatelessWidget {
   const _HeroImage();
