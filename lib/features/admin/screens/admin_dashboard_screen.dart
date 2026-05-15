@@ -6,6 +6,7 @@ import '../../auth/providers/auth_providers.dart';
 import '../../../app/constants/app_constants.dart';
 import '../providers/admin_provider.dart';
 import 'package:turf_booking/app/theme/theme_mode_selector.dart';
+import 'package:turf_booking/features/owner/widgets/storage_media.dart';
 
 class AdminDashboardScreen extends ConsumerStatefulWidget {
   const AdminDashboardScreen({super.key});
@@ -172,21 +173,11 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
                             return InkWell(
                               borderRadius: BorderRadius.circular(30),
                               onTap: () => _showProfileMenu(context, ref, user),
-                              child: CircleAvatar(
+                              child: StorageAvatar(
+                                storagePath: avatar,
+                                bucketName: AppConstants.storageImageBucket,
+                                displayName: display,
                                 radius: 20,
-                                backgroundColor: cs.primary,
-                                backgroundImage:
-                                    avatar != null && avatar.isNotEmpty
-                                    ? NetworkImage(avatar)
-                                    : null,
-                                child: avatar == null || avatar.isEmpty
-                                    ? Text(
-                                        display.isNotEmpty
-                                            ? display[0].toUpperCase()
-                                            : 'A',
-                                        style: TextStyle(color: cs.onPrimary),
-                                      )
-                                    : null,
                               ),
                             );
                           },
@@ -585,7 +576,9 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
                                           vertical: 3,
                                         ),
                                         decoration: BoxDecoration(
-                                          color: statusColor.withValues(alpha: 0.1),
+                                          color: statusColor.withValues(
+                                            alpha: 0.1,
+                                          ),
                                           borderRadius: BorderRadius.circular(
                                             6,
                                           ),
@@ -636,7 +629,9 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
                                             vertical: 4,
                                           ),
                                           decoration: BoxDecoration(
-                                            color: cs.primary.withValues(alpha: 0.1),
+                                            color: cs.primary.withValues(
+                                              alpha: 0.1,
+                                            ),
                                             borderRadius: BorderRadius.circular(
                                               20,
                                             ),
@@ -682,10 +677,14 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
                                         vertical: 4,
                                       ),
                                       decoration: BoxDecoration(
-                                        color: cs.primary.withValues(alpha: 0.1),
+                                        color: cs.primary.withValues(
+                                          alpha: 0.1,
+                                        ),
                                         borderRadius: BorderRadius.circular(20),
                                         border: Border.all(
-                                          color: cs.primary.withValues(alpha: 0.2),
+                                          color: cs.primary.withValues(
+                                            alpha: 0.2,
+                                          ),
                                         ),
                                       ),
                                       child: Row(
@@ -869,7 +868,8 @@ class _ProfileMenu extends StatelessWidget {
       ),
       child: Padding(
         padding: EdgeInsets.only(
-          bottom: MediaQuery.of(context).viewInsets.bottom +
+          bottom:
+              MediaQuery.of(context).viewInsets.bottom +
               MediaQuery.of(context).padding.bottom,
         ),
         child: Column(
@@ -891,22 +891,11 @@ class _ProfileMenu extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Column(
                 children: [
-                  CircleAvatar(
+                  StorageAvatar(
+                    storagePath: avatarUrl,
+                    bucketName: AppConstants.storageImageBucket,
+                    displayName: name,
                     radius: 36,
-                    backgroundColor: cs.primary,
-                    backgroundImage: avatarUrl != null && avatarUrl!.isNotEmpty
-                        ? NetworkImage(avatarUrl!)
-                        : null,
-                    child: avatarUrl == null || avatarUrl!.isEmpty
-                        ? Text(
-                            name.isNotEmpty ? name[0].toUpperCase() : 'A',
-                            style: TextStyle(
-                              color: cs.onPrimary,
-                              fontSize: 26,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          )
-                        : null,
                   ),
                   const SizedBox(height: 12),
                   Text(
