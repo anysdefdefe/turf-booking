@@ -88,6 +88,17 @@ class SupabaseAdminRepository implements AdminRepository {
         .eq('id', userId);
   }
 
+  @override
+Future<void> changeUserRole(String userId, {required bool isOwner}) async {
+  await _supabase
+      .from('users')
+      .update({
+        'is_owner': isOwner,
+        'is_approved': isOwner ? false : false,
+      })
+      .eq('id', userId);
+}
+
   // ─── VENUES ──────────────────────────────────────────────
 
   @override
