@@ -636,8 +636,6 @@ class _CourtDetailScreenState extends State<CourtDetailScreen> {
     return names[month - 1];
   }
 
-  // ── Time Slot Picker ──────────────────────────────────────────────────────
-
   Widget _buildTimeSlotPicker() {
     final morningSlots = _timeSlots
         .where((slot) {

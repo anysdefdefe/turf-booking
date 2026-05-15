@@ -58,26 +58,33 @@ class PaymentService {
     final bookingErrors = <String>[];
 
     for (final item in uniqueCartItems) {
-      final bookingId =
-          'BK-${DateTime.now().microsecondsSinceEpoch.toString().substring(6)}';
+      bool itemSuccess = true;
+      for (final slot in item.slots) {
+        final bookingId =
+            'BK-${DateTime.now().microsecondsSinceEpoch.toString().substring(6)}';
 
-      final booking = CustomerBooking(
-        id: bookingId,
-        court: item.court,
-        status: BookingStatus.booked,
-        date: item.date,
-        slots: item.slots,
-        courtType: item.court.courtTypes.isEmpty
-            ? 'Court Booking'
-            : item.court.courtTypes.first,
-      );
+        final booking = CustomerBooking(
+          id: bookingId,
+          court: item.court,
+          status: BookingStatus.booked,
+          date: item.date,
+          createdAt: DateTime.now(),
+          slots: [slot],
+          courtType: item.court.courtTypes.isEmpty
+              ? 'Court Booking'
+              : item.court.courtTypes.first,
+        );
 
-      try {
-        await bookingRepository.addBooking(booking);
-        successfulBookings.add(booking);
-      } catch (e) {
+        try {
+          await bookingRepository.addBooking(booking);
+          successfulBookings.add(booking);
+        } catch (e) {
+          itemSuccess = false;
+          bookingErrors.add(e.toString());
+        }
+      }
+      if (!itemSuccess) {
         failedItems.add(item);
-        bookingErrors.add(e.toString());
       }
     }
 
@@ -133,20 +140,22 @@ class PaymentService {
     BookingCartItem item,
     List<CustomerBooking> successfulBookings,
   ) {
-    for (final booking in successfulBookings) {
-      final isSameCourt = item.court.id == booking.court.id;
-      final isSameDate =
-          item.date.year == booking.date.year &&
-          item.date.month == booking.date.month &&
-          item.date.day == booking.date.day;
-      final isSameSlots =
-          item.slots.length == booking.slots.length &&
-          item.slots.every((slot) => booking.slots.contains(slot));
-      if (isSameCourt && isSameDate && isSameSlots) {
-        return true;
+    int matchCount = 0;
+    for (final slot in item.slots) {
+      for (final booking in successfulBookings) {
+        final isSameCourt = item.court.id == booking.court.id;
+        final isSameDate =
+            item.date.year == booking.date.year &&
+            item.date.month == booking.date.month &&
+            item.date.day == booking.date.day;
+        final isSameSlot = booking.slots.contains(slot);
+        if (isSameCourt && isSameDate && isSameSlot) {
+          matchCount++;
+          break;
+        }
       }
     }
-    return false;
+    return matchCount == item.slots.length;
   }
 
   List<BookingCartItem> _dedupeCartItems(List<BookingCartItem> items) {

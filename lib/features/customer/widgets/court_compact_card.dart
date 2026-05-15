@@ -50,14 +50,28 @@ class CourtCompactCard extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: 10),
-                Text(
-                  '₹${booking.totalAmount.toInt()}',
-                  style: TextStyle(
-                    fontFamily: 'Poppins',
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                    color: Theme.of(context).colorScheme.onSurface,
-                  ),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(
+                      '₹${booking.totalAmount.toInt()}',
+                      style: TextStyle(
+                        fontFamily: 'Poppins',
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: Theme.of(context).colorScheme.onSurface,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      '~ ${_formatBookingDate(booking.createdAtDisplay)}',
+                      style: TextStyle(
+                        fontFamily: 'Poppins',
+                        fontSize: 11,
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -82,7 +96,7 @@ class CourtCompactCard extends StatelessWidget {
             ),
             const SizedBox(height: 6),
             Text(
-              'Sports: ${court.courtTypes.join(', ')}',
+              'Sport: ${court.courtTypes}',
               style: TextStyle(
                 fontFamily: 'Poppins',
                 fontSize: 12.5,
@@ -91,7 +105,7 @@ class CourtCompactCard extends StatelessWidget {
             ),
             const SizedBox(height: 4),
             Text(
-              '${booking.durationHours} slot${booking.durationHours > 1 ? 's' : ''}',
+              'Booking date: ${_formatBookingDate(booking.date)}',
               style: TextStyle(
                 fontFamily: 'Poppins',
                 fontSize: 12.5,
@@ -132,15 +146,6 @@ class CourtCompactCard extends StatelessWidget {
             Row(
               children: [
                 _StatusChip(status: booking.status),
-                const Spacer(),
-                Text(
-                  _formatBookingDate(booking.date),
-                  style: TextStyle(
-                    fontFamily: 'Poppins',
-                    fontSize: 12,
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
-                ),
               ],
             ),
             if (onCancel != null) ...[

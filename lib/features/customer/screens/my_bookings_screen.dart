@@ -89,6 +89,12 @@ class _MyBookingsScreenState extends ConsumerState<MyBookingsScreen> {
             style: FilledButton.styleFrom(
               backgroundColor: Theme.of(context).colorScheme.primary,
               foregroundColor: Theme.of(context).colorScheme.onPrimary,
+
+              padding: const EdgeInsets.symmetric(
+                horizontal: 20,
+                vertical: 5,
+              ),
+
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(30),
               ),

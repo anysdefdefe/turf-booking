@@ -7,6 +7,7 @@ class CustomerBooking {
   final Court court;
   final BookingStatus status;
   final DateTime date;
+  final DateTime? createdAt;
   final List<String> slots;
   final String courtType;
   final DateTime? cancelledAt;
@@ -18,6 +19,7 @@ class CustomerBooking {
     required this.court,
     required this.status,
     required this.date,
+    required this.createdAt,
     required this.slots,
     required this.courtType,
     this.cancelledAt,
@@ -26,6 +28,8 @@ class CustomerBooking {
   });
 
   int get durationHours => bookedSlotCount ?? slots.length;
+
+  DateTime get createdAtDisplay => createdAt ?? date;
 
   String get primarySlot =>
       slots.isNotEmpty ? slots.first : (firstSlotLabel ?? '');
@@ -59,6 +63,7 @@ class CustomerBooking {
       court: court,
       status: status ?? this.status,
       date: date,
+      createdAt: createdAt ?? this.createdAt,
       slots: slots,
       courtType: courtType,
       cancelledAt: cancelledAt ?? this.cancelledAt,
