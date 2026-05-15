@@ -140,7 +140,7 @@ class OwnerDashboardScreen extends ConsumerWidget {
                         onTap: () => _showOwnerProfileMenu(context, ref, user),
                         child: StorageAvatar(
                           storagePath: user?.avatarUrl,
-                          bucketName: 'avatars',
+                          bucketName: AppConstants.storageImageBucket,
                           displayName: avatarName,
                           radius: 20,
                         ),
@@ -515,7 +515,8 @@ class _OwnerProfileMenu extends StatelessWidget {
       ),
       child: Padding(
         padding: EdgeInsets.only(
-          bottom: MediaQuery.of(context).viewInsets.bottom +
+          bottom:
+              MediaQuery.of(context).viewInsets.bottom +
               MediaQuery.of(context).padding.bottom,
         ),
         child: Column(
@@ -535,22 +536,11 @@ class _OwnerProfileMenu extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Column(
                 children: [
-                  CircleAvatar(
+                  StorageAvatar(
+                    storagePath: avatarUrl,
+                    bucketName: AppConstants.storageImageBucket,
+                    displayName: name,
                     radius: 36,
-                    backgroundColor: cs.primary,
-                    backgroundImage: avatarUrl != null && avatarUrl!.isNotEmpty
-                        ? NetworkImage(avatarUrl!)
-                        : null,
-                    child: avatarUrl == null || avatarUrl!.isEmpty
-                        ? Text(
-                            name.isNotEmpty ? name[0].toUpperCase() : 'O',
-                            style: TextStyle(
-                              color: cs.onPrimary,
-                              fontSize: 26,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          )
-                        : null,
                   ),
                   const SizedBox(height: 12),
                   Text(
