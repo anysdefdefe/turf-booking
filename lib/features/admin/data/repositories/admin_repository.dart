@@ -10,6 +10,7 @@ abstract class AdminRepository {
   Future<List<Map<String, dynamic>>> getAllUsers();
   Future<void> blockUser(String userId);
   Future<void> unblockUser(String userId);
+  Future<void> changeUserRole(String userId, {required bool isOwner});
 
   // Venues
   Future<List<Map<String, dynamic>>> getAllVenues();
