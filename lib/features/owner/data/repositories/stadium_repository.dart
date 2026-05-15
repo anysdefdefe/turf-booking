@@ -3,19 +3,23 @@ import 'dart:io';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter/material.dart';
+import 'package:turf_booking/app/constants/app_constants.dart';
 
 import 'package:turf_booking/features/owner/data/models/stadium_model.dart';
 import 'package:turf_booking/features/owner/data/models/court_model.dart';
 import 'package:turf_booking/shared/exceptions/app_exceptions.dart';
+import 'package:turf_booking/shared/services/storage_image_service.dart';
 
 part 'stadium_repository.g.dart';
 
 class StadiumRepository {
   final SupabaseClient _client;
+  final StorageImageService _storageImageService;
 
-  static const String imageBucket = 'stadium_and_court_image';
+  static const String imageBucket = AppConstants.storageImageBucket;
 
-  StadiumRepository(this._client);
+  StadiumRepository(this._client)
+    : _storageImageService = StorageImageService(_client);
 
   Future<String?> resolveStorageUrl({
     required String? storagePath,
@@ -43,55 +47,14 @@ class StadiumRepository {
     required String folder,
     String? oldStoragePath,
   }) async {
-    final extension = _fileExtension(file.path);
-    final fileName =
-        '${DateTime.now().microsecondsSinceEpoch}${extension.isEmpty ? '.jpg' : extension}';
-    final storagePath = '$ownerId/$folder/$fileName';
-
-    await _client.storage
-        .from(bucketName)
-        .uploadBinary(
-          storagePath,
-          await file.readAsBytes(),
-          fileOptions: FileOptions(
-            upsert: true,
-            contentType: _contentType(extension),
-          ),
-        );
-
-    if (oldStoragePath != null &&
-        oldStoragePath.isNotEmpty &&
-        oldStoragePath != storagePath &&
-        !oldStoragePath.startsWith('http')) {
-      try {
-        await _client.storage.from(bucketName).remove([oldStoragePath]);
-      } catch (_) {
-        // Ignore cleanup failures; the new image has already been saved.
-      }
-    }
-
-    return storagePath;
-  }
-
-  String _fileExtension(String path) {
-    final dotIndex = path.lastIndexOf('.');
-    if (dotIndex == -1 || dotIndex == path.length - 1) return '';
-    return path.substring(dotIndex).toLowerCase();
-  }
-
-  String _contentType(String extension) {
-    switch (extension.toLowerCase()) {
-      case '.png':
-        return 'image/png';
-      case '.webp':
-        return 'image/webp';
-      case '.heic':
-        return 'image/heic';
-      case '.jpg':
-      case '.jpeg':
-      default:
-        return 'image/jpeg';
-    }
+    return _storageImageService.uploadImageBytes(
+      bucketName: bucketName,
+      ownerId: ownerId,
+      folder: folder,
+      sourcePath: file.path,
+      bytes: await file.readAsBytes(),
+      oldStoragePath: oldStoragePath,
+    );
   }
 
   // ── READ ─────────────────────────────────────────────────────────

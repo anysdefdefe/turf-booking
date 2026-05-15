@@ -1,13 +1,19 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:turf_booking/features/auth/providers/auth_controller.dart';
 import 'package:go_router/go_router.dart';
+import '../../../app/constants/app_constants.dart';
 import '../../../app/theme/theme_mode_selector.dart';
 import '../widgets/customer_bottom_nav_bar.dart';
 import '../providers/customer_providers.dart';
 import '../providers/customer_bookings_controller.dart';
 import '../data/models/customer_booking.dart';
+import 'package:turf_booking/features/owner/widgets/storage_media.dart';
+import 'package:turf_booking/shared/services/storage_image_service.dart';
 
 DateTime _parseCreatedAt(dynamic value, dynamic fallback) {
   if (value is DateTime) return value;
@@ -24,7 +30,7 @@ class _ProfileData {
   final String email;
   final String fullName;
   final String phone;
-  final String avatarUrl;
+  final String avatarStoragePath;
   final bool isOwner;
   final bool isApproved;
   final bool isAdmin;
@@ -35,20 +41,24 @@ class _ProfileData {
     required this.email,
     required this.fullName,
     required this.phone,
-    required this.avatarUrl,
+    required this.avatarStoragePath,
     required this.isOwner,
     required this.isApproved,
     required this.isAdmin,
     required this.createdAt,
   });
 
-  _ProfileData copyWith({String? fullName, String? phone, String? avatarUrl}) {
+  _ProfileData copyWith({
+    String? fullName,
+    String? phone,
+    String? avatarStoragePath,
+  }) {
     return _ProfileData(
       id: id,
       email: email,
       fullName: fullName ?? this.fullName,
       phone: phone ?? this.phone,
-      avatarUrl: avatarUrl ?? this.avatarUrl,
+      avatarStoragePath: avatarStoragePath ?? this.avatarStoragePath,
       isOwner: isOwner,
       isApproved: isApproved,
       isAdmin: isAdmin,
@@ -73,7 +83,7 @@ class _ProfileData {
           user.email?.split('@').first ??
           'Profile',
       phone: rowData['phone'] as String? ?? '',
-      avatarUrl: rowData['avatar_url'] as String? ?? '',
+      avatarStoragePath: rowData['avatar_url'] as String? ?? '',
       isOwner: rowData['is_owner'] as bool? ?? false,
       isApproved: rowData['is_approved'] as bool? ?? false,
       isAdmin: rowData['is_admin'] as bool? ?? false,
@@ -94,6 +104,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   static const bool _isApproved = false;
 
   final _client = Supabase.instance.client;
+  late final StorageImageService _storageImageService;
 
   _ProfileData? _profile;
   bool _isLoading = true;
@@ -102,6 +113,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   @override
   void initState() {
     super.initState();
+    _storageImageService = StorageImageService(_client);
     _loadProfile();
   }
 
@@ -166,7 +178,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     final current = _profile;
     if (current == null) return;
 
-    final updated = await showModalBottomSheet<_ProfileData>(
+    final updated = await showModalBottomSheet<_ProfileEditResult>(
       context: context,
       isScrollControlled: true,
       useSafeArea: true,
@@ -179,15 +191,51 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     await _saveProfile(updated);
   }
 
-  Future<void> _saveProfile(_ProfileData profile) async {
+  Future<void> _saveProfile(_ProfileEditResult result) async {
+    final current = _profile;
+    if (current == null) return;
+
     setState(() => _isLoading = true);
 
     try {
+      final email = current.email.isNotEmpty
+          ? current.email
+          : _client.auth.currentUser?.email;
+      if (email == null || email.isEmpty) {
+        throw Exception('No email found for the current profile');
+      }
+
+      var avatarStoragePath = current.avatarStoragePath;
+      if (result.avatarFile != null) {
+        final selectedFile = result.avatarFile!;
+        await _storageImageService.validatePickedImage(selectedFile);
+        avatarStoragePath =
+            await _storageImageService.uploadImageBytes(
+              bucketName: AppConstants.storageImageBucket,
+              ownerId: current.id,
+              folder: AppConstants.storageProfileImageFolder,
+              sourcePath: selectedFile.path,
+              bytes: await selectedFile.readAsBytes(),
+              oldStoragePath: current.avatarStoragePath,
+            ) ??
+            avatarStoragePath;
+      }
+
+      final profile = result.profile.copyWith(
+        avatarStoragePath: avatarStoragePath,
+      );
+
       final payload = {
         'id': profile.id,
+        'email': email,
         'full_name': profile.fullName,
         'phone': profile.phone.isEmpty ? null : profile.phone,
-        'avatar_url': profile.avatarUrl.isEmpty ? null : profile.avatarUrl,
+        'avatar_url': profile.avatarStoragePath.isEmpty
+            ? null
+            : profile.avatarStoragePath,
+        'is_owner': profile.isOwner,
+        'is_approved': profile.isApproved,
+        'is_admin': profile.isAdmin,
       };
 
       await _client.from('users').upsert(payload, onConflict: 'id');
@@ -449,22 +497,49 @@ class _EditProfileSheet extends StatefulWidget {
 class _EditProfileSheetState extends State<_EditProfileSheet> {
   late final TextEditingController _nameCtrl;
   late final TextEditingController _phoneCtrl;
-  late final TextEditingController _avatarCtrl;
+  final _imagePicker = ImagePicker();
+  XFile? _selectedAvatar;
+  String? _selectionError;
 
   @override
   void initState() {
     super.initState();
     _nameCtrl = TextEditingController(text: widget.current.fullName);
     _phoneCtrl = TextEditingController(text: widget.current.phone);
-    _avatarCtrl = TextEditingController(text: widget.current.avatarUrl);
   }
 
   @override
   void dispose() {
     _nameCtrl.dispose();
     _phoneCtrl.dispose();
-    _avatarCtrl.dispose();
     super.dispose();
+  }
+
+  Future<void> _pickAvatar() async {
+    final selected = await _imagePicker.pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 85,
+    );
+
+    if (selected == null) return;
+
+    try {
+      final service = StorageImageService(Supabase.instance.client);
+      await service.validatePickedImage(selected);
+      if (!mounted) return;
+      setState(() {
+        _selectedAvatar = selected;
+        _selectionError = null;
+      });
+    } on FormatException catch (error) {
+      if (!mounted) return;
+      setState(() {
+        _selectionError = error.message;
+      });
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(error.message)));
+    }
   }
 
   void _save() {
@@ -478,10 +553,12 @@ class _EditProfileSheetState extends State<_EditProfileSheet> {
 
     Navigator.pop(
       context,
-      widget.current.copyWith(
-        fullName: fullName,
-        phone: _phoneCtrl.text.trim(),
-        avatarUrl: _avatarCtrl.text.trim(),
+      _ProfileEditResult(
+        profile: widget.current.copyWith(
+          fullName: fullName,
+          phone: _phoneCtrl.text.trim(),
+        ),
+        avatarFile: _selectedAvatar,
       ),
     );
   }
@@ -489,7 +566,8 @@ class _EditProfileSheetState extends State<_EditProfileSheet> {
   @override
   Widget build(BuildContext context) {
     final mediaQuery = MediaQuery.of(context);
-    final bottomInset = mediaQuery.viewInsets.bottom + mediaQuery.padding.bottom;
+    final bottomInset =
+        mediaQuery.viewInsets.bottom + mediaQuery.padding.bottom;
 
     return Container(
       decoration: BoxDecoration(
@@ -512,8 +590,6 @@ class _EditProfileSheetState extends State<_EditProfileSheet> {
               ),
             ),
           ),
-          Center(child: _AvatarPreview(controller: _avatarCtrl)),
-          const SizedBox(height: 24),
           Text(
             'Edit Profile',
             style: TextStyle(
@@ -546,12 +622,21 @@ class _EditProfileSheetState extends State<_EditProfileSheet> {
             inputType: TextInputType.phone,
           ),
           const SizedBox(height: 14),
-          _SheetField(
-            controller: _avatarCtrl,
-            label: 'Avatar URL',
-            icon: Icons.image_outlined,
-            inputType: TextInputType.url,
+          _ProfileImagePicker(
+            current: widget.current,
+            selectedAvatar: _selectedAvatar,
+            onPickImage: _pickAvatar,
           ),
+          if (_selectionError != null) ...[
+            const SizedBox(height: 10),
+            Text(
+              _selectionError!,
+              style: TextStyle(
+                fontSize: 12.5,
+                color: Theme.of(context).colorScheme.error,
+              ),
+            ),
+          ],
           const SizedBox(height: 28),
           SizedBox(
             width: double.infinity,
@@ -579,177 +664,133 @@ class _EditProfileSheetState extends State<_EditProfileSheet> {
   }
 }
 
-// ─── Avatar Preview Widget ───────────────────────────────────────────────────
+class _ProfileEditResult {
+  final _ProfileData profile;
+  final XFile? avatarFile;
 
-class _AvatarPreview extends StatefulWidget {
-  final TextEditingController controller;
-
-  const _AvatarPreview({required this.controller});
-
-  @override
-  State<_AvatarPreview> createState() => _AvatarPreviewState();
+  const _ProfileEditResult({required this.profile, this.avatarFile});
 }
 
-class _AvatarPreviewState extends State<_AvatarPreview> {
-  @override
-  void initState() {
-    super.initState();
-    widget.controller.addListener(_rebuild);
-  }
+// ─── Avatar Picker Widget ───────────────────────────────────────────────────
 
-  void _rebuild() => setState(() {});
+class _ProfileImagePicker extends StatelessWidget {
+  final _ProfileData current;
+  final XFile? selectedAvatar;
+  final VoidCallback onPickImage;
 
-  @override
-  void dispose() {
-    widget.controller.removeListener(_rebuild);
-    super.dispose();
-  }
-
-  void _showUrlDialog() {
-    final tempCtrl = TextEditingController(text: widget.controller.text);
-    showDialog(
-      context: context,
-      builder: (_) => AlertDialog(
-        backgroundColor: Theme.of(context).colorScheme.surfaceContainerLowest,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Text(
-          'Avatar URL',
-          style: TextStyle(
-            fontWeight: FontWeight.w700,
-            fontSize: 16,
-            color: Theme.of(context).colorScheme.onSurface,
-          ),
-        ),
-        content: TextField(
-          controller: tempCtrl,
-          autofocus: true,
-          style: TextStyle(
-            fontSize: 13,
-            color: Theme.of(context).colorScheme.onSurface,
-          ),
-          decoration: InputDecoration(
-            hintText: 'https://...',
-            hintStyle: TextStyle(
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-              fontSize: 13,
-            ),
-            filled: true,
-            fillColor: Theme.of(context).colorScheme.surface,
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(
-                color: Theme.of(context).colorScheme.outlineVariant,
-              ),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(
-                color: Theme.of(context).colorScheme.outlineVariant,
-              ),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(
-                color: Theme.of(context).colorScheme.primary,
-                width: 1.5,
-              ),
-            ),
-            contentPadding: const EdgeInsets.symmetric(
-              horizontal: 14,
-              vertical: 12,
-            ),
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(
-              'Cancel',
-              style: TextStyle(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-              ),
-            ),
-          ),
-          TextButton(
-            onPressed: () {
-              widget.controller.text = tempCtrl.text;
-              Navigator.pop(context);
-            },
-            child: Text(
-              'Apply',
-              style: TextStyle(
-                fontWeight: FontWeight.w600,
-                color: Theme.of(context).colorScheme.onSurface,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+  const _ProfileImagePicker({
+    required this.current,
+    required this.selectedAvatar,
+    required this.onPickImage,
+  });
 
   @override
   Widget build(BuildContext context) {
-    final url = widget.controller.text.trim();
-    final hasUrl = url.isNotEmpty;
+    final hasSelectedAvatar = selectedAvatar != null;
+    final hasStoredAvatar = current.avatarStoragePath.isNotEmpty;
 
     return GestureDetector(
-      onTap: _showUrlDialog,
-      child: Stack(
-        alignment: Alignment.bottomRight,
+      onTap: onPickImage,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            width: 88,
-            height: 88,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: Theme.of(context).colorScheme.surfaceContainerLowest,
-              border: Border.all(
-                color: Theme.of(context).colorScheme.outlineVariant,
-                width: 2,
+          Row(
+            children: [
+              Stack(
+                alignment: Alignment.bottomRight,
+                children: [
+                  Container(
+                    width: 88,
+                    height: 88,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.surfaceContainerLowest,
+                      border: Border.all(
+                        color: Theme.of(context).colorScheme.outlineVariant,
+                        width: 2,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.06),
+                          blurRadius: 12,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: ClipOval(
+                      child: hasSelectedAvatar
+                          ? Image.file(
+                              File(selectedAvatar!.path),
+                              fit: BoxFit.cover,
+                              width: 88,
+                              height: 88,
+                            )
+                          : hasStoredAvatar
+                          ? StorageAvatar(
+                              storagePath: current.avatarStoragePath,
+                              bucketName: AppConstants.storageImageBucket,
+                              displayName: current.fullName,
+                              radius: 44,
+                            )
+                          : Icon(
+                              Icons.person_outline_rounded,
+                              size: 36,
+                              color: Theme.of(context).colorScheme.onSurface,
+                            ),
+                    ),
+                  ),
+                  Container(
+                    width: 28,
+                    height: 28,
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).colorScheme.primary,
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: Theme.of(context).colorScheme.surface,
+                        width: 2.5,
+                      ),
+                    ),
+                    child: Icon(
+                      Icons.camera_alt_rounded,
+                      size: 13,
+                      color: Theme.of(context).colorScheme.onPrimary,
+                    ),
+                  ),
+                ],
               ),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.06),
-                  blurRadius: 12,
-                  offset: const Offset(0, 4),
-                ),
-              ],
-            ),
-            child: ClipOval(
-              child: hasUrl
-                  ? Image.network(
-                      url,
-                      fit: BoxFit.cover,
-                      errorBuilder: (_, _, _) => Icon(
-                        Icons.person_outline_rounded,
-                        size: 36,
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Upload profile image',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
                         color: Theme.of(context).colorScheme.onSurface,
                       ),
-                    )
-                  : Icon(
-                      Icons.person_outline_rounded,
-                      size: 36,
-                      color: Theme.of(context).colorScheme.onSurface,
                     ),
-            ),
-          ),
-          Container(
-            width: 28,
-            height: 28,
-            decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.primary,
-              shape: BoxShape.circle,
-              border: Border.all(
-                color: Theme.of(context).colorScheme.surface,
-                width: 2.5,
+                    const SizedBox(height: 4),
+                    Text(
+                      'JPG or PNG only, under 10 MB',
+                      style: TextStyle(
+                        fontSize: 12.5,
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    TextButton.icon(
+                      onPressed: onPickImage,
+                      icon: const Icon(Icons.upload_rounded, size: 18),
+                      label: const Text('Choose image'),
+                    ),
+                  ],
+                ),
               ),
-            ),
-            child: Icon(
-              Icons.camera_alt_rounded,
-              size: 13,
-              color: Theme.of(context).colorScheme.onPrimary,
-            ),
+            ],
           ),
         ],
       ),
@@ -831,8 +872,6 @@ class _ProfileHeroCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final hasAvatar = profile.avatarUrl.isNotEmpty;
-
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -858,22 +897,11 @@ class _ProfileHeroCard extends StatelessWidget {
                 width: 1.5,
               ),
             ),
-            child: ClipOval(
-              child: hasAvatar
-                  ? Image.network(
-                      profile.avatarUrl,
-                      fit: BoxFit.cover,
-                      errorBuilder: (_, _, _) => Icon(
-                        Icons.person_outline_rounded,
-                        size: 30,
-                        color: Theme.of(context).colorScheme.onSurface,
-                      ),
-                    )
-                  : Icon(
-                      Icons.person_outline_rounded,
-                      size: 30,
-                      color: Theme.of(context).colorScheme.onSurface,
-                    ),
+            child: StorageAvatar(
+              storagePath: profile.avatarStoragePath,
+              bucketName: AppConstants.storageImageBucket,
+              displayName: profile.fullName,
+              radius: 34,
             ),
           ),
           const SizedBox(width: 16),

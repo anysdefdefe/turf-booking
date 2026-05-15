@@ -6,6 +6,8 @@ import 'package:turf_booking/features/owner/data/models/court_model.dart';
 import 'package:turf_booking/features/owner/data/repositories/stadium_repository.dart';
 import 'package:turf_booking/features/owner/providers/stadium_providers.dart';
 import 'package:turf_booking/features/owner/widgets/storage_media.dart';
+import 'package:turf_booking/shared/services/storage_image_service.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'dart:io';
 import 'package:image_picker/image_picker.dart';
 
@@ -27,6 +29,7 @@ class _OwnerCourtEditScreenState extends ConsumerState<OwnerCourtEditScreen> {
   final _openTimeController = TextEditingController();
   final _closeTimeController = TextEditingController();
   final _imagePicker = ImagePicker();
+  final _storageImageService = StorageImageService(Supabase.instance.client);
   late bool _isActive;
   bool _isSaving = false;
   bool _initialized = false;
@@ -91,7 +94,16 @@ class _OwnerCourtEditScreenState extends ConsumerState<OwnerCourtEditScreen> {
       imageQuality: 82,
     );
     if (xfile != null && mounted) {
-      setState(() => _selectedImage = File(xfile.path));
+      try {
+        await _storageImageService.validatePickedImage(xfile);
+        if (!mounted) return;
+        setState(() => _selectedImage = File(xfile.path));
+      } on FormatException catch (error) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(error.message)));
+      }
     }
   }
 
@@ -257,6 +269,15 @@ class _OwnerCourtEditScreenState extends ConsumerState<OwnerCourtEditScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     _buildImageCard(court),
+                    const SizedBox(height: 8),
+                    Text(
+                      'JPG/PNG only, max 10 MB per image.',
+                      style: TextStyle(
+                        fontFamily: 'Poppins',
+                        fontSize: 11.5,
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
+                    ),
                     const SizedBox(height: 18),
                     _buildLabel('Court Name'),
                     _buildField(_nameController, hint: 'e.g. Court A'),

@@ -9,6 +9,8 @@ import 'package:turf_booking/features/owner/data/models/stadium_model.dart';
 import 'package:turf_booking/features/owner/data/repositories/stadium_repository.dart';
 import 'package:turf_booking/features/owner/providers/stadium_providers.dart';
 import 'package:turf_booking/features/owner/widgets/storage_media.dart';
+import 'package:turf_booking/shared/services/storage_image_service.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class OwnerStadiumEditScreen extends ConsumerStatefulWidget {
   const OwnerStadiumEditScreen({super.key});
@@ -26,6 +28,7 @@ class _OwnerStadiumEditScreenState
   final _amenitiesController = TextEditingController();
   final _descriptionController = TextEditingController();
   final _imagePicker = ImagePicker();
+  final _storageImageService = StorageImageService(Supabase.instance.client);
   late bool _isActive;
   bool _isSaving = false;
   bool _initialized = false;
@@ -117,7 +120,16 @@ class _OwnerStadiumEditScreenState
       imageQuality: 82,
     );
     if (xfile != null && mounted) {
-      setState(() => _selectedImage = File(xfile.path));
+      try {
+        await _storageImageService.validatePickedImage(xfile);
+        if (!mounted) return;
+        setState(() => _selectedImage = File(xfile.path));
+      } on FormatException catch (error) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(error.message)));
+      }
     }
   }
 
@@ -191,6 +203,15 @@ class _OwnerStadiumEditScreenState
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 _buildImageCard(stadium),
+                const SizedBox(height: 8),
+                Text(
+                  'JPG/PNG only, max 10 MB per image.',
+                  style: TextStyle(
+                    fontFamily: 'Poppins',
+                    fontSize: 11.5,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+                ),
                 const SizedBox(height: 18),
                 _buildLabel('Stadium Name'),
                 _buildField(_nameController, hint: 'e.g. Green Arena'),
@@ -249,10 +270,16 @@ class _OwnerStadiumEditScreenState
                       Switch.adaptive(
                         value: _isActive,
                         onChanged: (v) => setState(() => _isActive = v),
-                        activeThumbColor: Theme.of(context).colorScheme.onPrimary,
+                        activeThumbColor: Theme.of(
+                          context,
+                        ).colorScheme.onPrimary,
                         activeTrackColor: Theme.of(context).colorScheme.primary,
-                        inactiveThumbColor: Theme.of(context).colorScheme.surface,
-                        inactiveTrackColor: Theme.of(context).colorScheme.outlineVariant,
+                        inactiveThumbColor: Theme.of(
+                          context,
+                        ).colorScheme.surface,
+                        inactiveTrackColor: Theme.of(
+                          context,
+                        ).colorScheme.outlineVariant,
                       ),
                     ],
                   ),
