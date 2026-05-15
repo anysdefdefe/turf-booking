@@ -1,6 +1,15 @@
 class AppConstants {
   AppConstants._();
 
+  static const String storageImageBucket = 'stadium_and_court_image';
+  static const String storageProfileImageFolder = 'profile';
+  static const Set<String> allowedStorageImageExtensions = {
+    '.jpg',
+    '.jpeg',
+    '.png',
+  };
+  static const int maxStorageImageUploadBytes = 10 * 1024 * 1024;
+
   static const String routeHome = '/';
   static const String routeLogin = '/login';
   static const String routeRegister = '/register';

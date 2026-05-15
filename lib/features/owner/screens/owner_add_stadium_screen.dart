@@ -10,6 +10,8 @@ import 'package:geocoding/geocoding.dart';
 import 'package:turf_booking/app/constants/app_constants.dart';
 import 'package:turf_booking/features/owner/data/repositories/stadium_repository.dart';
 import 'package:turf_booking/features/owner/providers/stadium_providers.dart';
+import 'package:turf_booking/shared/services/storage_image_service.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../widgets/owner_bottom_nav_bar.dart';
 
 // ── FORM STATE MODEL ──────────────────────────────────────────────────────────
@@ -82,6 +84,7 @@ class _OwnerAddStadiumScreenState extends ConsumerState<OwnerAddStadiumScreen> {
   LatLng? _selectedLatLng;
 
   final _imagePicker = ImagePicker();
+  final _storageImageService = StorageImageService(Supabase.instance.client);
 
   @override
   void dispose() {
@@ -160,9 +163,18 @@ class _OwnerAddStadiumScreenState extends ConsumerState<OwnerAddStadiumScreen> {
                     imageQuality: 80,
                   );
                   if (xfile != null) {
-                    setState(() {
-                      _stadiumImage = File(xfile.path);
-                    });
+                    try {
+                      await _storageImageService.validatePickedImage(xfile);
+                      if (!mounted) return;
+                      setState(() {
+                        _stadiumImage = File(xfile.path);
+                      });
+                    } on FormatException catch (error) {
+                      if (!mounted) return;
+                      ScaffoldMessenger.of(
+                        context,
+                      ).showSnackBar(SnackBar(content: Text(error.message)));
+                    }
                   }
                 },
               ),
@@ -176,9 +188,19 @@ class _OwnerAddStadiumScreenState extends ConsumerState<OwnerAddStadiumScreen> {
                     imageQuality: 80,
                   );
                   if (files.isNotEmpty) {
-                    setState(() {
-                      _stadiumImage = File(files.first.path);
-                    });
+                    final firstFile = files.first;
+                    try {
+                      await _storageImageService.validatePickedImage(firstFile);
+                      if (!mounted) return;
+                      setState(() {
+                        _stadiumImage = File(firstFile.path);
+                      });
+                    } on FormatException catch (error) {
+                      if (!mounted) return;
+                      ScaffoldMessenger.of(
+                        context,
+                      ).showSnackBar(SnackBar(content: Text(error.message)));
+                    }
                   }
                 },
               ),
@@ -195,9 +217,18 @@ class _OwnerAddStadiumScreenState extends ConsumerState<OwnerAddStadiumScreen> {
       imageQuality: 80,
     );
     if (xfile != null && mounted) {
-      setState(() {
-        _courts[courtIndex].imageFile = File(xfile.path);
-      });
+      try {
+        await _storageImageService.validatePickedImage(xfile);
+        if (!mounted) return;
+        setState(() {
+          _courts[courtIndex].imageFile = File(xfile.path);
+        });
+      } on FormatException catch (error) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(error.message)));
+      }
     }
   }
 
@@ -553,6 +584,15 @@ class _OwnerAddStadiumScreenState extends ConsumerState<OwnerAddStadiumScreen> {
             const SizedBox(height: 12),
             const _FieldLabel(label: 'Stadium Images'),
             const SizedBox(height: 8),
+            Text(
+              'JPG/PNG only, max 10 MB per image.',
+              style: TextStyle(
+                fontFamily: 'Poppins',
+                fontSize: 11.5,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+            ),
+            const SizedBox(height: 8),
             _SingleImagePicker(
               imageFile: _stadiumImage,
               onAddTap: _pickStadiumImage,
@@ -809,6 +849,15 @@ class _SingleImagePicker extends StatelessWidget {
                       color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
                   ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'JPG/PNG only, max 10 MB.',
+                    style: TextStyle(
+                      fontFamily: 'Poppins',
+                      fontSize: 10.5,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+                  ),
                 ],
               )
             : Stack(
@@ -929,7 +978,12 @@ class _CourtCard extends StatelessWidget {
     required this.onRemove,
   });
 
-  InputDecoration _inputDecoration(BuildContext context, String label, String hint, IconData icon) {
+  InputDecoration _inputDecoration(
+    BuildContext context,
+    String label,
+    String hint,
+    IconData icon,
+  ) {
     return InputDecoration(
       labelText: label,
       hintText: hint,
@@ -962,9 +1016,7 @@ class _CourtCard extends StatelessWidget {
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(AppConstants.radiusM),
-        borderSide: BorderSide(
-          color: Theme.of(context).colorScheme.primary,
-        ),
+        borderSide: BorderSide(color: Theme.of(context).colorScheme.primary),
       ),
     );
   }
@@ -1063,6 +1115,15 @@ class _CourtCard extends StatelessWidget {
             onAddTap: onPickImage,
             onRemove: () => court.imageFile = null,
             compact: true,
+          ),
+          const SizedBox(height: 6),
+          Text(
+            'JPG/PNG only, max 10 MB per image.',
+            style: TextStyle(
+              fontFamily: 'Poppins',
+              fontSize: 11,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
           ),
           const SizedBox(height: 14),
           const _FieldLabel(label: 'Hourly Rate (₹)'),
@@ -1343,9 +1404,7 @@ class _InputField extends StatelessWidget {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppConstants.radiusM),
-          borderSide: BorderSide(
-            color: Theme.of(context).colorScheme.primary,
-          ),
+          borderSide: BorderSide(color: Theme.of(context).colorScheme.primary),
         ),
       ),
     );
