@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/admin_provider.dart';
 import '../widgets/user_tile.dart';
+import 'admin_user_detail_screen.dart';
 
 class AdminUsersScreen extends ConsumerStatefulWidget {
   const AdminUsersScreen({super.key});
@@ -13,6 +14,7 @@ class AdminUsersScreen extends ConsumerStatefulWidget {
 class _AdminUsersScreenState extends ConsumerState<AdminUsersScreen> {
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
+  String _filterRole = 'all'; // all, customers, owners, blocked
 
   @override
   void dispose() {
@@ -21,13 +23,32 @@ class _AdminUsersScreenState extends ConsumerState<AdminUsersScreen> {
   }
 
   List<Map<String, dynamic>> _filterUsers(List<Map<String, dynamic>> users) {
-    if (_searchQuery.isEmpty) return users;
-    return users.where((user) {
-      final name = (user['full_name'] ?? '').toLowerCase();
-      final email = (user['email'] ?? '').toLowerCase();
-      final query = _searchQuery.toLowerCase();
-      return name.contains(query) || email.contains(query);
-    }).toList();
+    var filtered = users;
+
+    // Filter by role
+    switch (_filterRole) {
+      case 'customers':
+        filtered = filtered.where((u) => u['is_owner'] != true).toList();
+        break;
+      case 'owners':
+        filtered = filtered.where((u) => u['is_owner'] == true).toList();
+        break;
+      case 'blocked':
+        filtered = filtered.where((u) => u['is_blocked'] == true).toList();
+        break;
+    }
+
+    // Filter by search
+    if (_searchQuery.isNotEmpty) {
+      filtered = filtered.where((user) {
+        final name = (user['full_name'] ?? '').toLowerCase();
+        final email = (user['email'] ?? '').toLowerCase();
+        final query = _searchQuery.toLowerCase();
+        return name.contains(query) || email.contains(query);
+      }).toList();
+    }
+
+    return filtered;
   }
 
   @override
@@ -43,38 +64,66 @@ class _AdminUsersScreenState extends ConsumerState<AdminUsersScreen> {
           Container(
             color: cs.surface,
             padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-            child: TextField(
-              controller: _searchController,
-              onChanged: (value) => setState(() => _searchQuery = value),
-              decoration: InputDecoration(
-                hintText: 'Search by name or email...',
-                hintStyle: TextStyle(color: cs.onSurfaceVariant, fontSize: 14),
-                prefixIcon: Icon(Icons.search, color: cs.onSurfaceVariant),
-                suffixIcon: _searchQuery.isNotEmpty
-                    ? GestureDetector(
-                        onTap: () {
-                          _searchController.clear();
-                          setState(() => _searchQuery = '');
-                        },
-                        child: Icon(Icons.close, color: cs.onSurfaceVariant),
-                      )
-                    : null,
-                filled: true,
-                fillColor: cs.surfaceContainerHighest,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide.none,
+            child: Column(
+              children: [
+                // Search Bar
+                TextField(
+                  controller: _searchController,
+                  onChanged: (value) => setState(() => _searchQuery = value),
+                  decoration: InputDecoration(
+                    hintText: 'Search by name or email...',
+                    hintStyle:
+                        TextStyle(color: cs.onSurfaceVariant, fontSize: 14),
+                    prefixIcon:
+                        Icon(Icons.search, color: cs.onSurfaceVariant),
+                    suffixIcon: _searchQuery.isNotEmpty
+                        ? GestureDetector(
+                            onTap: () {
+                              _searchController.clear();
+                              setState(() => _searchQuery = '');
+                            },
+                            child:
+                                Icon(Icons.close, color: cs.onSurfaceVariant),
+                          )
+                        : null,
+                    filled: true,
+                    fillColor: cs.surfaceContainerHighest,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide.none,
+                    ),
+                    contentPadding:
+                        const EdgeInsets.symmetric(vertical: 12),
+                  ),
                 ),
-                contentPadding: const EdgeInsets.symmetric(vertical: 12),
-              ),
+
+                const SizedBox(height: 10),
+
+                // Filter Chips
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: [
+                      _filterChip('All', 'all', cs),
+                      const SizedBox(width: 8),
+                      _filterChip('Customers', 'customers', cs),
+                      const SizedBox(width: 8),
+                      _filterChip('Owners', 'owners', cs),
+                      const SizedBox(width: 8),
+                      _filterChip('Blocked', 'blocked', cs),
+                    ],
+                  ),
+                ),
+              ],
             ),
           ),
 
           // Users List
           Expanded(
             child: usersAsync.when(
-              loading: () =>
-                  Center(child: CircularProgressIndicator(color: cs.primary)),
+              loading: () => Center(
+                child: CircularProgressIndicator(color: cs.primary),
+              ),
               error: (e, _) => Center(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -89,19 +138,17 @@ class _AdminUsersScreenState extends ConsumerState<AdminUsersScreen> {
               ),
               data: (users) {
                 final filtered = _filterUsers(users);
-                final cs = Theme.of(context).colorScheme;
                 return RefreshIndicator(
                   color: cs.primary,
-                  onRefresh: () async {
-                    ref.invalidate(allUsersProvider);
-                  },
+                  onRefresh: () async => ref.invalidate(allUsersProvider),
                   child: filtered.isEmpty
                       ? Center(
                           child: Text(
                             _searchQuery.isEmpty
                                 ? 'No users found'
                                 : 'No results for "$_searchQuery"',
-                            style: TextStyle(color: cs.onSurfaceVariant),
+                            style:
+                                TextStyle(color: cs.onSurfaceVariant),
                           ),
                         )
                       : ListView.builder(
@@ -109,11 +156,27 @@ class _AdminUsersScreenState extends ConsumerState<AdminUsersScreen> {
                           itemCount: filtered.length,
                           itemBuilder: (context, index) {
                             final user = filtered[index];
-                            return UserTile(
-                              user: user,
-                              onBlock: () => _handleBlock(context, ref, user),
-                              onUnblock: () =>
-                                  _handleUnblock(context, ref, user),
+                            return GestureDetector(
+                              onTap: () {
+                                // Open user details page
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) =>
+                                        AdminUserDetailScreen(user: user),
+                                  ),
+                                ).then((_) {
+                                  // Refresh after returning
+                                  ref.invalidate(allUsersProvider);
+                                });
+                              },
+                              child: UserTile(
+                                user: user,
+                                onBlock: () =>
+                                    _handleBlock(context, ref, user),
+                                onUnblock: () =>
+                                    _handleUnblock(context, ref, user),
+                              ),
                             );
                           },
                         ),
@@ -122,6 +185,28 @@ class _AdminUsersScreenState extends ConsumerState<AdminUsersScreen> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _filterChip(String label, String value, ColorScheme cs) {
+    final isSelected = _filterRole == value;
+    return GestureDetector(
+      onTap: () => setState(() => _filterRole = value),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+        decoration: BoxDecoration(
+          color: isSelected ? cs.primary : cs.surfaceContainerHighest,
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            color: isSelected ? cs.onPrimary : cs.onSurfaceVariant,
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
       ),
     );
   }
@@ -135,7 +220,8 @@ class _AdminUsersScreenState extends ConsumerState<AdminUsersScreen> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Block User'),
-        content: Text('Are you sure you want to block ${user['full_name']}?'),
+        content:
+            Text('Are you sure you want to block ${user['full_name']}?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
@@ -160,15 +246,14 @@ class _AdminUsersScreenState extends ConsumerState<AdminUsersScreen> {
       await repo.blockUser(user['id']);
       ref.invalidate(allUsersProvider);
       if (context.mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('${user['full_name']} blocked')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('${user['full_name']} blocked')),
+        );
       }
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Error: $e')));
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text('Error: $e')));
       }
     }
   }
@@ -182,7 +267,8 @@ class _AdminUsersScreenState extends ConsumerState<AdminUsersScreen> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Unblock User'),
-        content: Text('Are you sure you want to unblock ${user['full_name']}?'),
+        content: Text(
+            'Are you sure you want to unblock ${user['full_name']}?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
@@ -213,9 +299,8 @@ class _AdminUsersScreenState extends ConsumerState<AdminUsersScreen> {
       }
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Error: $e')));
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text('Error: $e')));
       }
     }
   }
