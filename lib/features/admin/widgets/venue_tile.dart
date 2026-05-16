@@ -31,7 +31,9 @@ class VenueTile extends StatelessWidget {
         color: cs.surfaceContainer,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(
-          color: isActive ? Colors.transparent : cs.error.withValues(alpha: 0.3),
+          color: isActive
+              ? Colors.transparent
+              : cs.error.withValues(alpha: 0.3),
         ),
         boxShadow: [
           BoxShadow(
@@ -75,7 +77,10 @@ class VenueTile extends StatelessWidget {
                     ),
                     Text(
                       city,
-                      style: TextStyle(fontSize: 12, color: cs.onSurfaceVariant),
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: cs.onSurfaceVariant,
+                      ),
                     ),
                   ],
                 ),

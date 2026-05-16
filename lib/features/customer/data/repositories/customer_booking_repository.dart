@@ -54,9 +54,7 @@ class CustomerBookingRepository {
         .map((row) => row['id'] as String)
         .toList(growable: false);
 
-    if (bookingIds.isEmpty) {
-  }
-
+    if (bookingIds.isEmpty) {}
 
     final mapped = <CustomerBooking>[];
     for (final raw in bookingRows) {
@@ -74,7 +72,9 @@ class CustomerBookingRepository {
       final fallbackStartLabel = _slotLabelFromIso(
         row['start_time']?.toString(),
       );
-      final slots = fallbackStartLabel.isNotEmpty ? [fallbackStartLabel] : <String>[];
+      final slots = fallbackStartLabel.isNotEmpty
+          ? [fallbackStartLabel]
+          : <String>[];
 
       final bookingDate =
           DateTime.tryParse(row['booking_date']?.toString() ?? '') ??
@@ -185,11 +185,7 @@ class CustomerBookingRepository {
           : 'paid',
     };
 
-    await _client
-        .from('bookings')
-        .insert(bookingPayload)
-        .select('id')
-        .single();
+    await _client.from('bookings').insert(bookingPayload).select('id').single();
     // No slots table insertion required as we save one slot per booking row directly.
 
     _bookings.insert(0, booking.copyWith(status: BookingStatus.booked));
@@ -367,5 +363,4 @@ class CustomerBookingRepository {
     final second = dt.second.toString().padLeft(2, '0');
     return '$hour:$minute:$second';
   }
-
 }

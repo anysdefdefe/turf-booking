@@ -21,7 +21,6 @@ class CourtDetailScreen extends StatefulWidget {
 
 class _CourtDetailScreenState extends State<CourtDetailScreen> {
   final CourtRepository _repo = CourtRepository.instance;
-  
 
   bool _initialized = false;
   Court? _court;
@@ -34,7 +33,6 @@ class _CourtDetailScreenState extends State<CourtDetailScreen> {
   final Set<String> _selectedSlots = <String>{};
 
   bool get _canBook => _selectedDate != null && _selectedSlots.isNotEmpty;
-
 
   @override
   void didChangeDependencies() {
@@ -589,7 +587,9 @@ class _CourtDetailScreenState extends State<CourtDetailScreen> {
                             fontWeight: FontWeight.w500,
                             color: selected
                                 ? Colors.black
-                                : Theme.of(context).colorScheme.onSurfaceVariant,
+                                : Theme.of(
+                                    context,
+                                  ).colorScheme.onSurfaceVariant,
                           ),
                         ),
                         const SizedBox(height: 6),
@@ -799,7 +799,7 @@ class _CourtDetailScreenState extends State<CourtDetailScreen> {
         ? Colors.white
         : const Color(0xFFE7E8EC);
     final textColor = selected
-      ? Colors.black
+        ? Colors.black
         : booked
         ? const Color(0xFF8F93A3)
         : Theme.of(context).colorScheme.primary;
@@ -876,15 +876,13 @@ class _CourtDetailScreenState extends State<CourtDetailScreen> {
                   borderRadius: BorderRadius.circular(30),
                 ),
               ),
-                  child: Row(
+              child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   const Icon(Icons.event_available_rounded, size: 18),
                   const SizedBox(width: 8),
                   Text(
-                    _canBook
-                        ? 'Proceed to Booking'
-                        : 'Select Date & Slots',
+                    _canBook ? 'Proceed to Booking' : 'Select Date & Slots',
                     style: const TextStyle(
                       fontFamily: 'Poppins',
                       fontWeight: FontWeight.w600,
@@ -899,8 +897,6 @@ class _CourtDetailScreenState extends State<CourtDetailScreen> {
       ),
     );
   }
-
-
 }
 
 class _SlotLegend extends StatelessWidget {
@@ -952,10 +948,7 @@ class _SlotLegend extends StatelessWidget {
 class _CircleBtn extends StatelessWidget {
   final IconData icon;
   final VoidCallback onTap;
-  const _CircleBtn({
-    required this.icon,
-    required this.onTap,
-  });
+  const _CircleBtn({required this.icon, required this.onTap});
 
   @override
   Widget build(BuildContext context) => GestureDetector(

@@ -94,9 +94,7 @@ class OwnerGatewayScreen extends ConsumerWidget {
         });
 
         // Return an empty scaffold while the post-frame callback fires.
-        return Scaffold(
-          backgroundColor: Theme.of(context).colorScheme.surface,
-        );
+        return Scaffold(backgroundColor: Theme.of(context).colorScheme.surface);
       },
     );
   }

@@ -12,8 +12,7 @@ class AdminUserDetailScreen extends ConsumerStatefulWidget {
       _AdminUserDetailScreenState();
 }
 
-class _AdminUserDetailScreenState
-    extends ConsumerState<AdminUserDetailScreen> {
+class _AdminUserDetailScreenState extends ConsumerState<AdminUserDetailScreen> {
   late Map<String, dynamic> _user;
 
   @override
@@ -59,9 +58,8 @@ class _AdminUserDetailScreenState
               color: isBlocked ? Colors.green : cs.error,
             ),
             tooltip: isBlocked ? 'Unblock' : 'Block',
-            onPressed: () => isBlocked
-                ? _handleUnblock(context)
-                : _handleBlock(context),
+            onPressed: () =>
+                isBlocked ? _handleUnblock(context) : _handleBlock(context),
           ),
         ],
       ),
@@ -93,9 +91,7 @@ class _AdminUserDetailScreenState
                           style: TextStyle(
                             fontSize: 24,
                             fontWeight: FontWeight.bold,
-                            color: isBlocked
-                                ? cs.error
-                                : cs.primary,
+                            color: isBlocked ? cs.error : cs.primary,
                           ),
                         ),
                       ),
@@ -131,14 +127,10 @@ class _AdminUserDetailScreenState
                                 if (isOwner)
                                   _badge(
                                     isApproved ? 'Approved' : 'Pending',
-                                    isApproved
-                                        ? Colors.green
-                                        : Colors.orange,
+                                    isApproved ? Colors.green : Colors.orange,
                                   ),
-                                if (isAdmin)
-                                  _badge('Admin', Colors.purple),
-                                if (isBlocked)
-                                  _badge('Blocked', Colors.red),
+                                if (isAdmin) _badge('Admin', Colors.purple),
+                                if (isBlocked) _badge('Blocked', Colors.red),
                               ],
                             ),
                           ],
@@ -153,7 +145,10 @@ class _AdminUserDetailScreenState
                   _detailRow(Icons.phone_outlined, 'Phone', phone),
                   const SizedBox(height: 10),
                   _detailRow(
-                      Icons.calendar_today_outlined, 'Joined', joinedDate),
+                    Icons.calendar_today_outlined,
+                    'Joined',
+                    joinedDate,
+                  ),
                 ],
               ),
             ),
@@ -173,10 +168,7 @@ class _AdminUserDetailScreenState
                 children: [
                   const Text(
                     '⚙️ Admin Actions',
-                    style: TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 14),
 
@@ -187,14 +179,11 @@ class _AdminUserDetailScreenState
                       child: OutlinedButton.icon(
                         icon: const Icon(Icons.swap_horiz),
                         label: Text(
-                          isOwner
-                              ? 'Change to Customer'
-                              : 'Promote to Owner',
+                          isOwner ? 'Change to Customer' : 'Promote to Owner',
                         ),
                         onPressed: () => _handleRoleChange(context),
                         style: OutlinedButton.styleFrom(
-                          padding:
-                              const EdgeInsets.symmetric(vertical: 12),
+                          padding: const EdgeInsets.symmetric(vertical: 12),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(10),
                           ),
@@ -214,11 +203,9 @@ class _AdminUserDetailScreenState
                           ? _handleUnblock(context)
                           : _handleBlock(context),
                       style: FilledButton.styleFrom(
-                        backgroundColor:
-                            isBlocked ? Colors.green : cs.error,
+                        backgroundColor: isBlocked ? Colors.green : cs.error,
                         foregroundColor: Colors.white,
-                        padding:
-                            const EdgeInsets.symmetric(vertical: 12),
+                        padding: const EdgeInsets.symmetric(vertical: 12),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(10),
                         ),
@@ -234,17 +221,13 @@ class _AdminUserDetailScreenState
             // Booking History
             const Text(
               '📅 Booking History',
-              style: TextStyle(
-                fontSize: 15,
-                fontWeight: FontWeight.bold,
-              ),
+              style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 10),
 
             bookingsAsync.when(
-              loading: () => Center(
-                child: CircularProgressIndicator(color: cs.primary),
-              ),
+              loading: () =>
+                  Center(child: CircularProgressIndicator(color: cs.primary)),
               error: (e, _) => Text(
                 'Could not load bookings',
                 style: TextStyle(color: cs.onSurfaceVariant),
@@ -351,8 +334,7 @@ class _AdminUserDetailScreenState
                             const SizedBox(width: 10),
                             Expanded(
                               child: Column(
-                                crossAxisAlignment:
-                                    CrossAxisAlignment.start,
+                                crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
                                     booking['booking_date'] ?? '-',
@@ -387,7 +369,7 @@ class _AdminUserDetailScreenState
                                     vertical: 2,
                                   ),
                                   decoration: BoxDecoration(
-                                      color: statusColor.withValues(alpha: 0.1),
+                                    color: statusColor.withValues(alpha: 0.1),
                                     borderRadius: BorderRadius.circular(4),
                                   ),
                                   child: Text(
@@ -445,10 +427,7 @@ class _AdminUserDetailScreenState
         Expanded(
           child: Text(
             value,
-            style: const TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
-            ),
+            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
           ),
         ),
       ],
@@ -466,10 +445,7 @@ class _AdminUserDetailScreenState
             color: cs.primary,
           ),
         ),
-        Text(
-          label,
-          style: TextStyle(fontSize: 11, color: cs.onSurfaceVariant),
-        ),
+        Text(label, style: TextStyle(fontSize: 11, color: cs.onSurfaceVariant)),
       ],
     );
   }
@@ -502,10 +478,7 @@ class _AdminUserDetailScreenState
 
     try {
       final repo = ref.read(adminRepositoryProvider);
-      await repo.changeUserRole(
-        _user['id'],
-        isOwner: !isOwner,
-      );
+      await repo.changeUserRole(_user['id'], isOwner: !isOwner);
 
       setState(() {
         _user = {..._user, 'is_owner': !isOwner};
@@ -522,8 +495,9 @@ class _AdminUserDetailScreenState
       }
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('Error: $e')));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error: $e')));
       }
     }
   }
@@ -558,14 +532,15 @@ class _AdminUserDetailScreenState
       await repo.blockUser(_user['id']);
       setState(() => _user = {..._user, 'is_blocked': true});
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('User blocked ❌')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('User blocked ❌')));
       }
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('Error: $e')));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error: $e')));
       }
     }
   }
@@ -596,14 +571,15 @@ class _AdminUserDetailScreenState
       await repo.unblockUser(_user['id']);
       setState(() => _user = {..._user, 'is_blocked': false});
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('User unblocked ✅')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('User unblocked ✅')));
       }
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('Error: $e')));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error: $e')));
       }
     }
   }

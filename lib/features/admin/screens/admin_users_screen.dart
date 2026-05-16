@@ -72,18 +72,21 @@ class _AdminUsersScreenState extends ConsumerState<AdminUsersScreen> {
                   onChanged: (value) => setState(() => _searchQuery = value),
                   decoration: InputDecoration(
                     hintText: 'Search by name or email...',
-                    hintStyle:
-                        TextStyle(color: cs.onSurfaceVariant, fontSize: 14),
-                    prefixIcon:
-                        Icon(Icons.search, color: cs.onSurfaceVariant),
+                    hintStyle: TextStyle(
+                      color: cs.onSurfaceVariant,
+                      fontSize: 14,
+                    ),
+                    prefixIcon: Icon(Icons.search, color: cs.onSurfaceVariant),
                     suffixIcon: _searchQuery.isNotEmpty
                         ? GestureDetector(
                             onTap: () {
                               _searchController.clear();
                               setState(() => _searchQuery = '');
                             },
-                            child:
-                                Icon(Icons.close, color: cs.onSurfaceVariant),
+                            child: Icon(
+                              Icons.close,
+                              color: cs.onSurfaceVariant,
+                            ),
                           )
                         : null,
                     filled: true,
@@ -92,8 +95,7 @@ class _AdminUsersScreenState extends ConsumerState<AdminUsersScreen> {
                       borderRadius: BorderRadius.circular(12),
                       borderSide: BorderSide.none,
                     ),
-                    contentPadding:
-                        const EdgeInsets.symmetric(vertical: 12),
+                    contentPadding: const EdgeInsets.symmetric(vertical: 12),
                   ),
                 ),
 
@@ -121,9 +123,8 @@ class _AdminUsersScreenState extends ConsumerState<AdminUsersScreen> {
           // Users List
           Expanded(
             child: usersAsync.when(
-              loading: () => Center(
-                child: CircularProgressIndicator(color: cs.primary),
-              ),
+              loading: () =>
+                  Center(child: CircularProgressIndicator(color: cs.primary)),
               error: (e, _) => Center(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -147,8 +148,7 @@ class _AdminUsersScreenState extends ConsumerState<AdminUsersScreen> {
                             _searchQuery.isEmpty
                                 ? 'No users found'
                                 : 'No results for "$_searchQuery"',
-                            style:
-                                TextStyle(color: cs.onSurfaceVariant),
+                            style: TextStyle(color: cs.onSurfaceVariant),
                           ),
                         )
                       : ListView.builder(
@@ -172,8 +172,7 @@ class _AdminUsersScreenState extends ConsumerState<AdminUsersScreen> {
                               },
                               child: UserTile(
                                 user: user,
-                                onBlock: () =>
-                                    _handleBlock(context, ref, user),
+                                onBlock: () => _handleBlock(context, ref, user),
                                 onUnblock: () =>
                                     _handleUnblock(context, ref, user),
                               ),
@@ -220,8 +219,7 @@ class _AdminUsersScreenState extends ConsumerState<AdminUsersScreen> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Block User'),
-        content:
-            Text('Are you sure you want to block ${user['full_name']}?'),
+        content: Text('Are you sure you want to block ${user['full_name']}?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
@@ -246,14 +244,15 @@ class _AdminUsersScreenState extends ConsumerState<AdminUsersScreen> {
       await repo.blockUser(user['id']);
       ref.invalidate(allUsersProvider);
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('${user['full_name']} blocked')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('${user['full_name']} blocked')));
       }
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('Error: $e')));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error: $e')));
       }
     }
   }
@@ -267,8 +266,7 @@ class _AdminUsersScreenState extends ConsumerState<AdminUsersScreen> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Unblock User'),
-        content: Text(
-            'Are you sure you want to unblock ${user['full_name']}?'),
+        content: Text('Are you sure you want to unblock ${user['full_name']}?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
@@ -299,8 +297,9 @@ class _AdminUsersScreenState extends ConsumerState<AdminUsersScreen> {
       }
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('Error: $e')));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error: $e')));
       }
     }
   }

@@ -1221,7 +1221,6 @@ class _TimePickerButton extends StatelessWidget {
   }
 }
 
-
 class _SectionHeader extends StatelessWidget {
   final String title;
   const _SectionHeader({required this.title});

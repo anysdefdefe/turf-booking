@@ -311,7 +311,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   }
 }
 
-
 class _HeroImage extends StatelessWidget {
   const _HeroImage();
 

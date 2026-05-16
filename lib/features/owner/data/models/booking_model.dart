@@ -1,4 +1,3 @@
-
 class BookingModel {
   final String id;
   final String courtId;
@@ -17,7 +16,6 @@ class BookingModel {
   final String? customerPhone;
   final String? courtName;
   final String? stadiumName;
-
 
   const BookingModel({
     required this.id,
@@ -54,7 +52,6 @@ class BookingModel {
         stadiumName = json['courts']['stadium']['name'] as String?;
       }
     }
-
 
     return BookingModel(
       id: json['id'] as String,

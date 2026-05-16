@@ -22,9 +22,8 @@ class AdminBookingsScreen extends ConsumerWidget {
         ),
       ),
       body: bookingsAsync.when(
-        loading: () => Center(
-          child: CircularProgressIndicator(color: cs.primary),
-        ),
+        loading: () =>
+            Center(child: CircularProgressIndicator(color: cs.primary)),
         error: (e, _) => Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -336,7 +335,12 @@ class _BookingCard extends StatelessWidget {
     );
   }
 
-  Widget _infoRow(BuildContext context, IconData icon, String label, String value) {
+  Widget _infoRow(
+    BuildContext context,
+    IconData icon,
+    String label,
+    String value,
+  ) {
     final cs = Theme.of(context).colorScheme;
     return Row(
       children: [

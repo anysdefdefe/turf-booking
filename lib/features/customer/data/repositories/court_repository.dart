@@ -31,8 +31,7 @@ class CourtRepository {
           userPosition ??= await Geolocator.getCurrentPosition();
         }
       }
-    } catch (_) {
-    }
+    } catch (_) {}
 
     final stadiumRows = await _client
         .from('stadiums')
@@ -178,8 +177,6 @@ class CourtRepository {
         .toList();
   }
 
-
-
   DateTime? _bookingTimeToDateTime(DateTime date, String? value) {
     if (value == null || value.isEmpty) {
       return null;
@@ -254,7 +251,7 @@ class CourtRepository {
             lat,
             lng,
           ) /
-          1000.0; 
+          1000.0;
     }
 
     return Stadium(

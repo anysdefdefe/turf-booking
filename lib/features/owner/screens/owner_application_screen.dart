@@ -161,163 +161,172 @@ class _OwnerApplicationScreenState
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
                         Text(
-                    'Join Courtly',
-                    style: TextStyle(
-                      fontFamily: 'Poppins',
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
-                      color: Theme.of(context).colorScheme.onSurface,
-                      letterSpacing: -0.5,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Submit your stadium or turf ownership details below. Our team reviews all documents within 48 hours.',
-                    style: TextStyle(
-                      fontFamily: 'Poppins',
-                      fontSize: 14,
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                      height: 1.5,
-                    ),
-                  ),
-                  const SizedBox(height: 32),
-
-                  TextFormField(
-                    controller: _businessNameController,
-                    decoration: const InputDecoration(
-                      labelText: 'Registered Business / Stadium Name',
-                    ),
-                    validator: (val) =>
-                        val == null || val.isEmpty ? 'Required' : null,
-                    enabled: !isLoading,
-                  ),
-                  const SizedBox(height: 16),
-
-                  TextFormField(
-                    controller: _phoneController,
-                    keyboardType: TextInputType.phone,
-                    decoration: const InputDecoration(
-                      labelText: 'Contact Phone Number',
-                    ),
-                    validator: (val) =>
-                        val == null || val.isEmpty ? 'Required' : null,
-                    enabled: !isLoading,
-                  ),
-                  const SizedBox(height: 16),
-
-                  TextFormField(
-                    controller: _messageController,
-                    maxLines: 4,
-                    decoration: const InputDecoration(
-                      labelText: 'Message to Admin (Optional)',
-                    ),
-                    enabled: !isLoading,
-                  ),
-                  const SizedBox(height: 32),
-
-                  // PDF Upload Section
-                  Container(
-                    padding: const EdgeInsets.all(18),
-                    decoration: BoxDecoration(
-                      color: Theme.of(context).colorScheme.surfaceContainerLowest,
-                      borderRadius: BorderRadius.circular(14),
-                      border: Border.all(
-                        color: Theme.of(context).colorScheme.outlineVariant,
-                      ),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.picture_as_pdf_rounded,
-                          size: 40,
-                          color: _selectedFileBytes != null
-                              ? Theme.of(context).colorScheme.primary
-                              : Theme.of(
-                                  context,
-                                ).colorScheme.onSurface.withValues(alpha: 0.3),
-                        ),
-                        const SizedBox(height: 12),
-                        Text(
-                          _selectedFileName ?? 'Upload Proof of Ownership',
-                          textAlign: TextAlign.center,
+                          'Join Courtly',
                           style: TextStyle(
                             fontFamily: 'Poppins',
-                            fontWeight: FontWeight.w600,
-                            color: _selectedFileBytes != null
-                                ? Theme.of(context).colorScheme.onSurface
-                                : Theme.of(
-                                    context,
-                                  ).colorScheme.onSurfaceVariant,
+                            fontSize: 28,
+                            fontWeight: FontWeight.bold,
+                            color: Theme.of(context).colorScheme.onSurface,
+                            letterSpacing: -0.5,
                           ),
                         ),
                         const SizedBox(height: 8),
                         Text(
-                          'PDF format only (Lease Agreement, GST Certificate, or Tax ID)',
-                          textAlign: TextAlign.center,
+                          'Submit your stadium or turf ownership details below. Our team reviews all documents within 48 hours.',
                           style: TextStyle(
                             fontFamily: 'Poppins',
-                            fontSize: 12,
+                            fontSize: 14,
                             color: Theme.of(
                               context,
-                            ).colorScheme.onSurface.withValues(alpha: 0.3),
+                            ).colorScheme.onSurfaceVariant,
+                            height: 1.5,
                           ),
                         ),
+                        const SizedBox(height: 32),
+
+                        TextFormField(
+                          controller: _businessNameController,
+                          decoration: const InputDecoration(
+                            labelText: 'Registered Business / Stadium Name',
+                          ),
+                          validator: (val) =>
+                              val == null || val.isEmpty ? 'Required' : null,
+                          enabled: !isLoading,
+                        ),
                         const SizedBox(height: 16),
+
+                        TextFormField(
+                          controller: _phoneController,
+                          keyboardType: TextInputType.phone,
+                          decoration: const InputDecoration(
+                            labelText: 'Contact Phone Number',
+                          ),
+                          validator: (val) =>
+                              val == null || val.isEmpty ? 'Required' : null,
+                          enabled: !isLoading,
+                        ),
+                        const SizedBox(height: 16),
+
+                        TextFormField(
+                          controller: _messageController,
+                          maxLines: 4,
+                          decoration: const InputDecoration(
+                            labelText: 'Message to Admin (Optional)',
+                          ),
+                          enabled: !isLoading,
+                        ),
+                        const SizedBox(height: 32),
+
+                        // PDF Upload Section
+                        Container(
+                          padding: const EdgeInsets.all(18),
+                          decoration: BoxDecoration(
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.surfaceContainerLowest,
+                            borderRadius: BorderRadius.circular(14),
+                            border: Border.all(
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.outlineVariant,
+                            ),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.picture_as_pdf_rounded,
+                                size: 40,
+                                color: _selectedFileBytes != null
+                                    ? Theme.of(context).colorScheme.primary
+                                    : Theme.of(context).colorScheme.onSurface
+                                          .withValues(alpha: 0.3),
+                              ),
+                              const SizedBox(height: 12),
+                              Text(
+                                _selectedFileName ??
+                                    'Upload Proof of Ownership',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  fontFamily: 'Poppins',
+                                  fontWeight: FontWeight.w600,
+                                  color: _selectedFileBytes != null
+                                      ? Theme.of(context).colorScheme.onSurface
+                                      : Theme.of(
+                                          context,
+                                        ).colorScheme.onSurfaceVariant,
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                'PDF format only (Lease Agreement, GST Certificate, or Tax ID)',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  fontFamily: 'Poppins',
+                                  fontSize: 12,
+                                  color: Theme.of(context).colorScheme.onSurface
+                                      .withValues(alpha: 0.3),
+                                ),
+                              ),
+                              const SizedBox(height: 16),
+                              SizedBox(
+                                width: double.infinity,
+                                child: OutlinedButton.icon(
+                                  onPressed: isLoading ? null : _pickPdf,
+                                  icon: const Icon(Icons.upload_file),
+                                  label: Text(
+                                    _selectedFileBytes != null
+                                        ? 'Change Document'
+                                        : 'Select File',
+                                  ),
+                                  style: OutlinedButton.styleFrom(
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 14,
+                                    ),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 48),
                         SizedBox(
                           width: double.infinity,
-                          child: OutlinedButton.icon(
-                            onPressed: isLoading ? null : _pickPdf,
-                            icon: const Icon(Icons.upload_file),
-                            label: Text(
-                              _selectedFileBytes != null
-                                  ? 'Change Document'
-                                  : 'Select File',
-                            ),
-                            style: OutlinedButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(vertical: 14),
+                          child: FilledButton(
+                            onPressed: isLoading ? null : _submit,
+                            style: FilledButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(vertical: 16),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(12),
                               ),
+                              minimumSize: const Size.fromHeight(48),
                             ),
+                            child: isLoading
+                                ? SizedBox(
+                                    height: 20,
+                                    width: 20,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.surface,
+                                    ),
+                                  )
+                                : const Text('Submit Application'),
                           ),
                         ),
                       ],
                     ),
                   ),
-                  const SizedBox(height: 48),
-                  SizedBox(
-                    width: double.infinity,
-                    child: FilledButton(
-                      onPressed: isLoading ? null : _submit,
-                      style: FilledButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        minimumSize: const Size.fromHeight(48),
-                      ),
-                      child: isLoading
-                          ? SizedBox(
-                              height: 20,
-                              width: 20,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: Theme.of(context).colorScheme.surface,
-                              ),
-                            )
-                          : const Text('Submit Application'),
-                    ),
-                  ),
-                        ],
-                      ),
-                    ),
-                  ),
                 ),
               ),
             ),
-          );
-        },
-      );
+          ),
+        );
+      },
+    );
   }
 }

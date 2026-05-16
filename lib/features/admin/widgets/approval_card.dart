@@ -37,7 +37,9 @@ class ApprovalCard extends StatelessWidget {
           Row(
             children: [
               CircleAvatar(
-                backgroundColor: const Color(0xFF4CAF50).withValues(alpha: 0.15),
+                backgroundColor: const Color(
+                  0xFF4CAF50,
+                ).withValues(alpha: 0.15),
                 child: Text(
                   application.ownerName?.isNotEmpty == true
                       ? application.ownerName![0].toUpperCase()

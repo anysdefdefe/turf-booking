@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-
 /// Central Material 3 theme: neutral surfaces, green as accent only, shared component styles.
 class AppTheme {
   AppTheme._();
