@@ -54,28 +54,9 @@ class CustomerBookingRepository {
         .map((row) => row['id'] as String)
         .toList(growable: false);
 
-    Map<String, List<Map<String, dynamic>>> slotsByBooking = {};
-    if (bookingIds.isNotEmpty) {
-      try {
-        final slotRows = await _client
-            .from('slots')
-            .select('booking_id, start_time, status')
-            .inFilter('booking_id', bookingIds);
+    if (bookingIds.isEmpty) {
+  }
 
-        for (final raw in slotRows) {
-          final row = raw;
-          final bookingId = row['booking_id'] as String?;
-          if (bookingId == null) {
-            continue;
-          }
-          slotsByBooking.putIfAbsent(bookingId, () => []).add(row);
-        }
-      } on PostgrestException catch (e) {
-        if (!_isSlotsSelectRlsError(e)) {
-          rethrow;
-        }
-      }
-    }
 
     final mapped = <CustomerBooking>[];
     for (final raw in bookingRows) {
@@ -84,29 +65,20 @@ class CustomerBookingRepository {
       if (courtId == null) {
         continue;
       }
-
       final court = _courtRepo.getCourtById(courtId);
       if (court == null) {
         continue;
       }
 
       final bookingId = row['id'] as String;
-      final slots =
-          (slotsByBooking[bookingId] ?? const <Map<String, dynamic>>[])
-              .map(
-                (slotRow) =>
-                    _slotLabelFromIso(slotRow['start_time']?.toString()),
-              )
-              .where((slot) => slot.isNotEmpty)
-              .toList()
-            ..sort(_slotSort);
+      final fallbackStartLabel = _slotLabelFromIso(
+        row['start_time']?.toString(),
+      );
+      final slots = fallbackStartLabel.isNotEmpty ? [fallbackStartLabel] : <String>[];
 
       final bookingDate =
           DateTime.tryParse(row['booking_date']?.toString() ?? '') ??
           DateTime.now();
-      final fallbackStartLabel = _slotLabelFromIso(
-        row['start_time']?.toString(),
-      );
       final bookedSlotCount = (row['duration_hours'] as num?)?.toInt();
 
       mapped.add(
@@ -118,6 +90,9 @@ class CustomerBookingRepository {
             row['payment_status']?.toString(),
           ),
           date: bookingDate,
+          createdAt:
+              DateTime.tryParse(row['created_at']?.toString() ?? '') ??
+              bookingDate,
           slots: slots,
           courtType: court.courtTypes.first,
           cancelledAt: row['status']?.toString() == 'cancelled'
@@ -210,40 +185,12 @@ class CustomerBookingRepository {
           : 'paid',
     };
 
-    final bookingInsert = await _client
+    await _client
         .from('bookings')
         .insert(bookingPayload)
         .select('id')
         .single();
-
-    final bookingId = bookingInsert['id'] as String;
-    if (slotTimes.isNotEmpty) {
-      final slotInserts = slotTimes
-          .map(
-            (start) => {
-              'court_id': booking.court.id,
-              'booking_id': bookingId,
-              'start_time': _toSqlTimestamp(start),
-              'end_time': _toSqlTimestamp(start.add(const Duration(hours: 1))),
-              'status': 'booked',
-            },
-          )
-          .toList(growable: false);
-      try {
-        await _client.from('slots').insert(slotInserts);
-      } on PostgrestException catch (e) {
-        if (_isSlotsRlsInsertError(e)) {
-          // Booking row is valid; some schemas block direct slot writes from clients.
-          // Keep going so checkout can complete and cart can be cleared.
-        } else {
-          // Best-effort rollback to avoid orphan bookings when slot insert fails.
-          try {
-            await _client.from('bookings').delete().eq('id', bookingId);
-          } catch (_) {}
-          rethrow;
-        }
-      }
-    }
+    // No slots table insertion required as we save one slot per booking row directly.
 
     _bookings.insert(0, booking.copyWith(status: BookingStatus.booked));
     _syncNotifier();
@@ -343,16 +290,6 @@ class CustomerBookingRepository {
     return _formatTo12Hour(dt);
   }
 
-  int _slotSort(String a, String b) {
-    final today = DateTime.now();
-    final aTime = _slotLabelToDateTime(today, a);
-    final bTime = _slotLabelToDateTime(today, b);
-    if (aTime == null || bTime == null) {
-      return a.compareTo(b);
-    }
-    return aTime.compareTo(bTime);
-  }
-
   DateTime? _slotLabelToDateTime(DateTime date, String slot) {
     final parts = slot.split(' ');
     if (parts.length != 2) {
@@ -431,25 +368,4 @@ class CustomerBookingRepository {
     return '$hour:$minute:$second';
   }
 
-  String _toSqlTimestamp(DateTime dt) {
-    final y = dt.year.toString().padLeft(4, '0');
-    final m = dt.month.toString().padLeft(2, '0');
-    final d = dt.day.toString().padLeft(2, '0');
-    final h = dt.hour.toString().padLeft(2, '0');
-    final min = dt.minute.toString().padLeft(2, '0');
-    final s = dt.second.toString().padLeft(2, '0');
-    return '$y-$m-$d $h:$min:$s';
-  }
-
-  bool _isSlotsRlsInsertError(PostgrestException e) {
-    final msg = e.message.toLowerCase();
-    return (e.code == '42501' || msg.contains('row-level security')) &&
-        msg.contains('slots');
-  }
-
-  bool _isSlotsSelectRlsError(PostgrestException e) {
-    final msg = e.message.toLowerCase();
-    return (e.code == '42501' || msg.contains('row-level security')) &&
-        msg.contains('slots');
-  }
 }

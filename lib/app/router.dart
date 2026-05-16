@@ -16,7 +16,6 @@ import 'package:turf_booking/features/customer/screens/onboarding_screen.dart';
 import 'package:turf_booking/features/customer/screens/venue_detail_screen.dart';
 import 'package:turf_booking/features/customer/screens/my_bookings_screen.dart';
 import 'package:turf_booking/features/customer/screens/profile_screen.dart';
-import 'package:turf_booking/features/customer/screens/cart_screen.dart';
 import 'package:turf_booking/features/customer/screens/booking_confirmation_screen.dart';
 import 'package:turf_booking/features/customer/data/models/booking_args.dart';
 import 'package:turf_booking/features/customer/data/models/court_detail_args.dart';
@@ -186,11 +185,6 @@ GoRouter router(Ref ref) {
         path: AppConstants.routeMyBookings,
         builder: (context, state) =>
             MyBookingsScreen(toastMessage: state.uri.queryParameters['toast']),
-      ),
-      GoRoute(
-        name: 'customerCart',
-        path: AppConstants.routeCart,
-        builder: (context, state) => const CartScreen(),
       ),
       GoRoute(
         name: 'customerProfile',

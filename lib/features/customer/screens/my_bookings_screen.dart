@@ -89,6 +89,12 @@ class _MyBookingsScreenState extends ConsumerState<MyBookingsScreen> {
             style: FilledButton.styleFrom(
               backgroundColor: Theme.of(context).colorScheme.primary,
               foregroundColor: Theme.of(context).colorScheme.onPrimary,
+
+              padding: const EdgeInsets.symmetric(
+                horizontal: 20,
+                vertical: 5,
+              ),
+
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(30),
               ),
@@ -153,16 +159,12 @@ class _MyBookingsScreenState extends ConsumerState<MyBookingsScreen> {
   }
 
   void _onNavTap(int index) {
-    if (index == 2) return;
+    if (index == 1) return;
     if (index == 0) {
       context.go('/customer/home');
       return;
     }
-    if (index == 1) {
-      context.go('/customer/cart');
-      return;
-    }
-    if (index == 3) {
+    if (index == 2) {
       context.go('/customer/profile');
     }
   }
@@ -174,7 +176,7 @@ class _MyBookingsScreenState extends ConsumerState<MyBookingsScreen> {
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.surface,
       bottomNavigationBar: CustomerBottomNavBar(
-        selectedIndex: 2,
+        selectedIndex: 1,
         onTap: _onNavTap,
       ),
       appBar: AppBar(

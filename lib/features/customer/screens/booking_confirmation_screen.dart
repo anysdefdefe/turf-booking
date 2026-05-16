@@ -67,14 +67,6 @@ class _BookingConfirmationScreenState
     ).showSnackBar(SnackBar(content: Text(errorMessage)));
   }
 
-  void _onKeepInCart(BuildContext context) {
-    if (context.canPop()) {
-      context.pop();
-    } else {
-      context.go(AppConstants.routeCart);
-    }
-  }
-
   void _onCancel(BuildContext context) {
     if (context.canPop()) {
       context.pop();
@@ -243,32 +235,6 @@ class _BookingConfirmationScreenState
                       ),
                       child: const Text(
                         'Cancel',
-                        style: TextStyle(
-                          fontFamily: 'Poppins',
-                          fontSize: 15,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: OutlinedButton(
-                      onPressed: () => _onKeepInCart(context),
-                      style: OutlinedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 18),
-                        side: BorderSide(
-                          color: Theme.of(context).colorScheme.onSurface,
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(30),
-                        ),
-                        foregroundColor: Theme.of(
-                          context,
-                        ).colorScheme.onSurface,
-                      ),
-                      child: const Text(
-                        'Keep in Cart',
                         style: TextStyle(
                           fontFamily: 'Poppins',
                           fontSize: 15,

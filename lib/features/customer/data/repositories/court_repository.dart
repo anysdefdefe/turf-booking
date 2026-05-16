@@ -32,7 +32,6 @@ class CourtRepository {
         }
       }
     } catch (_) {
-      // Ignore location errors, distance will default to 0
     }
 
     final stadiumRows = await _client
@@ -71,78 +70,29 @@ class CourtRepository {
     final dayEnd = dayStart.add(const Duration(days: 1));
     final dayString = '$date'.split(' ').first;
 
-    List<Map<String, dynamic>> slotRows = const [];
-    try {
-      slotRows =
-          (await _client
-                  .from('slots')
-                  .select('booking_id, start_time, status')
-                  .eq('court_id', courtId)
-                  .gte('start_time', _toSqlTimestamp(dayStart))
-                  .lt('start_time', _toSqlTimestamp(dayEnd)))
-              .cast<Map<String, dynamic>>();
-    } on Exception {
-      slotRows = const [];
-    }
-
     final bookingRows = await _client
         .from('bookings')
         .select('id, start_time, end_time, status')
         .eq('court_id', courtId)
         .eq('booking_date', dayString);
 
-    final bookingStatusById = <String, String>{};
+    final booked = <String>{};
     for (final raw in bookingRows) {
       final row = raw;
-      final bookingId = row['id']?.toString();
-      if (bookingId == null || bookingId.isEmpty) {
-        continue;
-      }
-      bookingStatusById[bookingId] =
-          row['status']?.toString().toLowerCase() ?? '';
-    }
-
-    final booked = <String>{};
-    for (final raw in slotRows) {
-      final row = raw;
-      final status = (row['status'] as String? ?? '').toLowerCase();
-      if (status == 'available') {
+      final status = (row['status']?.toString() ?? '').toLowerCase();
+      if (status == 'cancelled') {
         continue;
       }
 
-      final bookingId = row['booking_id']?.toString();
-      if (bookingId != null && bookingStatusById[bookingId] == 'cancelled') {
+      final start = _bookingTimeToDateTime(
+        dayStart,
+        row['start_time']?.toString(),
+      );
+      if (start == null) {
         continue;
       }
 
-      final startTime = DateTime.tryParse(row['start_time']?.toString() ?? '');
-      if (startTime == null) {
-        continue;
-      }
-      booked.add(_formatTo12Hour(startTime));
-    }
-
-    // Fallback source to keep UI in sync even if slot rows were not created.
-    // Only use this fallback if no slot rows were found (to avoid filling in-between slots).
-    if (booked.isEmpty) {
-      for (final raw in bookingRows) {
-        final row = raw;
-        final status = (row['status']?.toString() ?? '').toLowerCase();
-        if (status == 'cancelled') {
-          continue;
-        }
-
-        final start = _bookingTimeToDateTime(
-          dayStart,
-          row['start_time']?.toString(),
-        );
-        if (start == null) {
-          continue;
-        }
-
-        // Only mark the first slot as booked in fallback (don't fill in-between)
-        booked.add(_formatTo12Hour(start));
-      }
+      booked.add(_formatTo12Hour(start));
     }
 
     return booked.toList(growable: false);
@@ -313,7 +263,7 @@ class CourtRepository {
             lat,
             lng,
           ) /
-          1000.0; // Convert meters to km
+          1000.0; 
     }
 
     return Stadium(

@@ -241,57 +241,6 @@ class _BookingCard extends StatelessWidget {
                 const SizedBox(height: 6),
                 Builder(
                   builder: (_) {
-                    final slots = booking['slots'];
-                    if (slots is List && slots.isNotEmpty) {
-                      return Wrap(
-                        spacing: 6,
-                        runSpacing: 4,
-                        children: slots.map<Widget>((s) {
-                          final st =
-                              s['start_time']?.toString() ??
-                              booking['start_time']?.toString() ??
-                              '';
-                          final et =
-                              s['end_time']?.toString() ??
-                              booking['end_time']?.toString() ??
-                              '';
-                          return Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 4,
-                            ),
-                            decoration: BoxDecoration(
-                              color: cs.primary.withValues(alpha: 0.08),
-                              borderRadius: BorderRadius.circular(20),
-                              border: Border.all(
-                                color: cs.primary.withValues(alpha: 0.2),
-                              ),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(
-                                  Icons.access_time_outlined,
-                                  size: 12,
-                                  color: cs.primary,
-                                ),
-                                const SizedBox(width: 6),
-                                Text(
-                                  '${_formatTimeStr(st)} – ${_formatTimeStr(et)}',
-                                  style: const TextStyle(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w600,
-                                    color: Color(0xFF2E7D32),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          );
-                        }).toList(),
-                      );
-                    }
-
-                    // fallback single range styled as a chip
                     final st = booking['start_time']?.toString() ?? '';
                     final et = booking['end_time']?.toString() ?? '';
                     return Row(

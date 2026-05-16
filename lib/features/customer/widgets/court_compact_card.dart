@@ -50,14 +50,28 @@ class CourtCompactCard extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: 10),
-                Text(
-                  '₹${booking.totalAmount.toInt()}',
-                  style: TextStyle(
-                    fontFamily: 'Poppins',
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                    color: Theme.of(context).colorScheme.onSurface,
-                  ),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(
+                      '₹${booking.totalAmount.toInt()}',
+                      style: TextStyle(
+                        fontFamily: 'Poppins',
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: Theme.of(context).colorScheme.onSurface,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      '~ ${_formatBookingDate(booking.createdAtDisplay)}',
+                      style: TextStyle(
+                        fontFamily: 'Poppins',
+                        fontSize: 11,
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -82,7 +96,7 @@ class CourtCompactCard extends StatelessWidget {
             ),
             const SizedBox(height: 6),
             Text(
-              'Sports: ${court.courtTypes.join(', ')}',
+              'Sport: ${court.courtTypes}',
               style: TextStyle(
                 fontFamily: 'Poppins',
                 fontSize: 12.5,
@@ -91,7 +105,7 @@ class CourtCompactCard extends StatelessWidget {
             ),
             const SizedBox(height: 4),
             Text(
-              '${booking.durationHours} slot${booking.durationHours > 1 ? 's' : ''}',
+              'Booking date: ${_formatBookingDate(booking.date)}',
               style: TextStyle(
                 fontFamily: 'Poppins',
                 fontSize: 12.5,
@@ -99,48 +113,35 @@ class CourtCompactCard extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 8),
-            Wrap(
-              spacing: 6,
-              runSpacing: 6,
-              children: booking.displaySlots
-                  .map(
-                    (slot) => Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 4,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.surface,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: Theme.of(context).colorScheme.outlineVariant,
-                        ),
-                      ),
-                      child: Text(
-                        slot,
-                        style: TextStyle(
-                          fontFamily: 'Poppins',
-                          fontSize: 11,
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
-                        ),
-                      ),
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.surface,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: Theme.of(context).colorScheme.outlineVariant,
                     ),
-                  )
-                  .toList(),
+                  ),
+                  child: Text(
+                    '${_formatTime(booking.startDateTime)} – ${_formatTime(booking.endDateTime)}',
+                    style: TextStyle(
+                      fontFamily: 'Poppins',
+                      fontSize: 11,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ),
+              ],
             ),
             const SizedBox(height: 10),
             Row(
               children: [
                 _StatusChip(status: booking.status),
-                const Spacer(),
-                Text(
-                  _formatBookingDate(booking.date),
-                  style: TextStyle(
-                    fontFamily: 'Poppins',
-                    fontSize: 12,
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
-                ),
               ],
             ),
             if (onCancel != null) ...[
@@ -191,6 +192,13 @@ class CourtCompactCard extends StatelessWidget {
       'Dec',
     ];
     return '${d.day} ${months[d.month - 1]}';
+  }
+
+  String _formatTime(DateTime dt) {
+    final h = dt.hour % 12 == 0 ? 12 : dt.hour % 12;
+    final m = dt.minute.toString().padLeft(2, '0');
+    final suffix = dt.hour >= 12 ? 'PM' : 'AM';
+    return '$h:$m $suffix';
   }
 }
 

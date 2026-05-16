@@ -519,17 +519,19 @@ class _VenueDetailScreenState extends State<VenueDetailScreen> {
                                     (sport) => ActionChip(
                                       avatar: Icon(
                                         sportIconForName(sport),
-                                        size: 18,
+                                        size: 14,
                                         color: Theme.of(
                                           context,
                                         ).colorScheme.primary,
                                       ),
+                                      labelPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                                       label: Text(
                                         sport,
                                         style: const TextStyle(
                                           fontFamily: 'Poppins',
-                                          fontWeight: FontWeight.w600,
+                                          fontWeight: FontWeight.w400,
                                         ),
+                                        
                                       ),
                                       backgroundColor: Theme.of(
                                         context,

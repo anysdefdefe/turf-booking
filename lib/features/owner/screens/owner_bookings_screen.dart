@@ -887,70 +887,47 @@ class _BookingCard extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 6),
-                // Slot chips row – show each individual booked slot.
-                // Falls back to the booking-level range if no slots are attached.
-                if (booking.slots.isEmpty)
-                  Row(
-                    children: [
-                      Icon(
-                        Icons.access_time_rounded,
-                        size: 14,
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                Wrap(
+                  spacing: 6,
+                  runSpacing: 4,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 3,
                       ),
-                      const SizedBox(width: 4),
-                      Text(
-                        '${_formatTimeStr(booking.startTime)} – ${_formatTimeStr(booking.endTime)}',
-                        style: TextStyle(
-                          fontFamily: 'Poppins',
-                          fontSize: 13,
-                          fontWeight: FontWeight.w500,
-                          color: Theme.of(context).colorScheme.onSurface,
+                      decoration: BoxDecoration(
+                        color: Theme.of(context)
+                            .colorScheme
+                            .surfaceContainerHighest,
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                          color: Theme.of(context).colorScheme.outlineVariant,
                         ),
                       ),
-                    ],
-                  )
-                else
-                  Wrap(
-                    spacing: 6,
-                    runSpacing: 4,
-                    children: booking.slots.map((slot) {
-                      return Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 3,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Theme.of(context)
-                              .colorScheme
-                              .surfaceContainerHighest,
-                          borderRadius: BorderRadius.circular(20),
-                          border: Border.all(
-                            color: Theme.of(context).colorScheme.outlineVariant,
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.access_time_rounded,
+                            size: 12,
+                            color: Theme.of(context).colorScheme.onSurface,
                           ),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              Icons.access_time_rounded,
-                              size: 12,
+                          const SizedBox(width: 4),
+                          Text(
+                            '${_formatTimeStr(booking.startTime)} – ${_formatTimeStr(booking.endTime)}',
+                            style: TextStyle(
+                              fontFamily: 'Poppins',
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500,
                               color: Theme.of(context).colorScheme.onSurface,
                             ),
-                            const SizedBox(width: 4),
-                            Text(
-                              '${_formatDateTime(slot.startTime)} – ${_formatDateTime(slot.endTime)}',
-                              style: TextStyle(
-                                fontFamily: 'Poppins',
-                                fontSize: 12,
-                                fontWeight: FontWeight.w500,
-                                color: Theme.of(context).colorScheme.onSurface,
-                              ),
-                            ),
-                          ],
-                        ),
-                      );
-                    }).toList(),
-                  ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
               ],
             ),
           ),

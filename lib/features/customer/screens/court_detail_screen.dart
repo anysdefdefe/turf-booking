@@ -6,7 +6,7 @@ import 'package:turf_booking/features/owner/data/repositories/stadium_repository
 import '../data/models/booking_cart_item.dart';
 import '../data/models/court_detail_args.dart';
 import '../data/models/court_model.dart';
-import '../data/repositories/customer_cart_repository.dart';
+import '../data/models/booking_args.dart';
 import '../data/repositories/court_repository.dart';
 import '../widgets/detail_section_title.dart';
 
@@ -21,7 +21,7 @@ class CourtDetailScreen extends StatefulWidget {
 
 class _CourtDetailScreenState extends State<CourtDetailScreen> {
   final CourtRepository _repo = CourtRepository.instance;
-  final CustomerCartRepository _cartRepo = CustomerCartRepository.instance;
+  
 
   bool _initialized = false;
   Court? _court;
@@ -636,8 +636,6 @@ class _CourtDetailScreenState extends State<CourtDetailScreen> {
     return names[month - 1];
   }
 
-  // ── Time Slot Picker ──────────────────────────────────────────────────────
-
   Widget _buildTimeSlotPicker() {
     final morningSlots = _timeSlots
         .where((slot) {
@@ -850,21 +848,6 @@ class _CourtDetailScreenState extends State<CourtDetailScreen> {
                   ? () {
                       final selectedSlots = _orderedSelectedSlots();
                       final selectedDate = _selectedDate!;
-                      final existsInCart = _cartRepo.hasConflictForSelection(
-                        courtId: court.id,
-                        date: selectedDate,
-                        slots: selectedSlots,
-                      );
-                      if (existsInCart) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text(
-                              'These exact slots are already in your cart.',
-                            ),
-                          ),
-                        );
-                        return;
-                      }
 
                       final cartItem = BookingCartItem(
                         id: 'CART-${DateTime.now().microsecondsSinceEpoch}',
@@ -873,24 +856,13 @@ class _CourtDetailScreenState extends State<CourtDetailScreen> {
                         slots: selectedSlots,
                         createdAt: DateTime.now(),
                       );
-                      _cartRepo.addItem(cartItem);
 
-                      setState(() {
-                        _selectedSlots.clear();
-                      });
-
-                      if (!mounted) {
-                        return;
-                      }
-
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: const Text('Slots added to booking cart.'),
-                          action: SnackBarAction(
-                            label: 'View Cart',
-                            onPressed: () => context.go(AppConstants.routeCart),
-                          ),
-                        ),
+                      // Directly proceed to booking confirmation with the
+                      // single selection (no cart).
+                      if (!mounted) return;
+                      context.push(
+                        AppConstants.routeBookingConfirm,
+                        extra: BookingArgs(cartItems: [cartItem]),
                       );
                     }
                   : null,
@@ -905,14 +877,14 @@ class _CourtDetailScreenState extends State<CourtDetailScreen> {
                   borderRadius: BorderRadius.circular(30),
                 ),
               ),
-              child: Row(
+                  child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(Icons.add_shopping_cart_rounded, size: 18),
+                  const Icon(Icons.event_available_rounded, size: 18),
                   const SizedBox(width: 8),
                   Text(
                     _canBook
-                        ? 'Add to Cart  •  ₹${(court.pricePerHour * _selectedHours).toInt()}'
+                        ? 'Proceed to Booking'
                         : 'Select Date & Slots',
                     style: const TextStyle(
                       fontFamily: 'Poppins',

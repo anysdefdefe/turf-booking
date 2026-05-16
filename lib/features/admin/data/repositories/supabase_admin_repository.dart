@@ -132,7 +132,7 @@ Future<void> changeUserRole(String userId, {required bool isOwner}) async {
   Future<List<Map<String, dynamic>>> getAllBookings() async {
     final response = await _supabase
         .from('bookings')
-        .select('*, users!customer_id(full_name, email), slots(*)')
+        .select('*, users!customer_id(full_name, email)')
         .order('created_at', ascending: false);
 
     return List<Map<String, dynamic>>.from(response);

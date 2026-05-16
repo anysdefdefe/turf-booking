@@ -359,8 +359,8 @@ class StadiumRepository {
     }
   }
 
-  /// Creates a maintenance 'phantom' booking by inserting into `slots`.
-  /// The `booking_id` is left null and `status` is 'maintenance'.
+  /// Creates a maintenance block by inserting a confirmed booking 
+  /// for the owner, preventing customers from booking the slot.
   Future<void> createMaintenanceSlot({
     required String courtId,
     required DateTime date,
@@ -387,30 +387,26 @@ class StadiumRepository {
         throw Exception('End time must be after start time.');
       }
 
-      final inserts = <Map<String, dynamic>>[];
-      var cursor = start;
-      while (cursor.isBefore(end)) {
-        final nextCursor = cursor.add(const Duration(hours: 1));
+      final durationHours = end.difference(start).inHours;
+      final stStr = '${start.hour.toString().padLeft(2, '0')}:${start.minute.toString().padLeft(2, '0')}:00';
+      final etStr = '${end.hour.toString().padLeft(2, '0')}:${end.minute.toString().padLeft(2, '0')}:00';
+      final dateStr = '${date.year.toString().padLeft(4, '0')}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
 
-        final stStr =
-            '${cursor.year.toString().padLeft(4, '0')}-${cursor.month.toString().padLeft(2, '0')}-${cursor.day.toString().padLeft(2, '0')} ${cursor.hour.toString().padLeft(2, '0')}:${cursor.minute.toString().padLeft(2, '0')}:00';
-        final etStr =
-            '${nextCursor.year.toString().padLeft(4, '0')}-${nextCursor.month.toString().padLeft(2, '0')}-${nextCursor.day.toString().padLeft(2, '0')} ${nextCursor.hour.toString().padLeft(2, '0')}:${nextCursor.minute.toString().padLeft(2, '0')}:00';
+      final userId = _client.auth.currentUser!.id;
 
-        inserts.add({
-          'court_id': courtId,
-          'start_time': stStr,
-          'end_time': etStr,
-          'status': 'maintenance',
-          'booking_id': null,
-        });
-
-        cursor = nextCursor;
-      }
-
-      await _client.from('slots').insert(inserts);
+      await _client.from('bookings').insert({
+        'court_id': courtId,
+        'customer_id': userId,
+        'booking_date': dateStr,
+        'start_time': stStr,
+        'end_time': etStr,
+        'duration_hours': durationHours > 0 ? durationHours : 1,
+        'total_amount': 1.0, // Must be > 0 due to check constraint
+        'status': 'confirmed',
+        'payment_status': 'paid',
+      });
     } catch (e) {
-      throw UnknownException('Failed to create maintenance slot: $e', e);
+      throw UnknownException('Failed to create maintenance block: $e', e);
     }
   }
 }

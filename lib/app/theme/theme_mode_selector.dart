@@ -1,15 +1,9 @@
 import 'dart:ui';
-
 import 'package:flutter/material.dart';
-
 import 'theme_controller.dart';
 
-/// Light / Dark / System appearance control. Updates instantly via [ThemeController].
 class ThemeModeSelector extends StatelessWidget {
-  /// Tighter layout for app bars and heroes.
   final bool compact;
-
-  /// Optional section title above the control.
   final String? title;
 
   const ThemeModeSelector({super.key, this.compact = false, this.title});

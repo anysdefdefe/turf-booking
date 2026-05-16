@@ -238,16 +238,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     }
 
     if (index == 1) {
-      context.go('/customer/cart');
-      return;
-    }
-
-    if (index == 2) {
       context.go('/customer/my-bookings');
       return;
     }
 
-    if (index == 3) {
+    if (index == 2) {
       context.go('/customer/profile');
     }
   }

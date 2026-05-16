@@ -1,26 +1,3 @@
-/// A single 1-hour slot row from the `slots` table.
-class SlotModel {
-  final String id;
-  final DateTime startTime; // stored as timestamp in the slots table
-  final DateTime endTime;
-  final String status;
-
-  const SlotModel({
-    required this.id,
-    required this.startTime,
-    required this.endTime,
-    required this.status,
-  });
-
-  factory SlotModel.fromJson(Map<String, dynamic> json) {
-    return SlotModel(
-      id: json['id'] as String,
-      startTime: DateTime.parse(json['start_time'] as String),
-      endTime: DateTime.parse(json['end_time'] as String),
-      status: json['status'] as String,
-    );
-  }
-}
 
 class BookingModel {
   final String id;
@@ -41,9 +18,6 @@ class BookingModel {
   final String? courtName;
   final String? stadiumName;
 
-  /// Individual 1-hour slots belonging to this booking (from `slots` table).
-  /// Sorted ascending by start_time so we can display them in order.
-  final List<SlotModel> slots;
 
   const BookingModel({
     required this.id,
@@ -61,7 +35,6 @@ class BookingModel {
     this.customerPhone,
     this.courtName,
     this.stadiumName,
-    this.slots = const [],
   });
 
   factory BookingModel.fromJson(Map<String, dynamic> json) {
@@ -82,16 +55,6 @@ class BookingModel {
       }
     }
 
-    // Parse the nested slots rows (may be absent or empty).
-    List<SlotModel> slots = [];
-    if (json['slots'] != null && json['slots'] is List) {
-      slots =
-          (json['slots'] as List<dynamic>)
-              .whereType<Map<String, dynamic>>()
-              .map(SlotModel.fromJson)
-              .toList()
-            ..sort((a, b) => a.startTime.compareTo(b.startTime));
-    }
 
     return BookingModel(
       id: json['id'] as String,
@@ -111,7 +74,6 @@ class BookingModel {
       customerPhone: customerPhone,
       courtName: courtName,
       stadiumName: stadiumName,
-      slots: slots,
     );
   }
 }
