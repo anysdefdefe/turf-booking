@@ -286,7 +286,7 @@ class _AdminUserDetailScreenState
                       padding: const EdgeInsets.all(14),
                       margin: const EdgeInsets.only(bottom: 12),
                       decoration: BoxDecoration(
-                        color: cs.primaryContainer.withOpacity(0.3),
+                        color: cs.primaryContainer.withValues(alpha: 0.3),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Row(
@@ -339,7 +339,7 @@ class _AdminUserDetailScreenState
                             Container(
                               padding: const EdgeInsets.all(8),
                               decoration: BoxDecoration(
-                                color: statusColor.withOpacity(0.1),
+                                color: statusColor.withValues(alpha: 0.1),
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               child: Icon(
@@ -387,7 +387,7 @@ class _AdminUserDetailScreenState
                                     vertical: 2,
                                   ),
                                   decoration: BoxDecoration(
-                                    color: statusColor.withOpacity(0.1),
+                                      color: statusColor.withValues(alpha: 0.1),
                                     borderRadius: BorderRadius.circular(4),
                                   ),
                                   child: Text(
@@ -419,7 +419,7 @@ class _AdminUserDetailScreenState
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(6),
       ),
       child: Text(
