@@ -618,7 +618,7 @@ class _CourtTile extends ConsumerWidget {
 
   // ── Deactivate (soft-delete) ─────────────────────────────────────────────
   Future<void> _confirmDeactivate(BuildContext context, WidgetRef ref) async {
-    final messenger = ScaffoldMessenger.of(context);
+
 
     final confirmed = await showDialog<bool>(
       context: context,
@@ -749,8 +749,9 @@ class _CourtTile extends ConsumerWidget {
       await ref
           .read(stadiumRepositoryProvider)
           .updateCourt(courtId: court.id, isActive: false);
+      if (!context.mounted) return;
       ref.invalidate(courtsForStadiumProvider(stadiumId));
-      messenger.showSnackBar(
+      ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
             '"${court.name}" deactivated — hidden from customers',
@@ -764,7 +765,8 @@ class _CourtTile extends ConsumerWidget {
         ),
       );
     } catch (e) {
-      messenger.showSnackBar(
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
             'Failed: $e',
@@ -782,7 +784,7 @@ class _CourtTile extends ConsumerWidget {
 
   // ── Activate (re-enable) ─────────────────────────────────────────────────
   Future<void> _confirmActivate(BuildContext context, WidgetRef ref) async {
-    final messenger = ScaffoldMessenger.of(context);
+
 
     final confirmed = await showDialog<bool>(
       context: context,
@@ -913,8 +915,9 @@ class _CourtTile extends ConsumerWidget {
       await ref
           .read(stadiumRepositoryProvider)
           .updateCourt(courtId: court.id, isActive: true);
+      if (!context.mounted) return;
       ref.invalidate(courtsForStadiumProvider(stadiumId));
-      messenger.showSnackBar(
+      ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
             '"${court.name}" activated — now visible to customers',
@@ -928,7 +931,8 @@ class _CourtTile extends ConsumerWidget {
         ),
       );
     } catch (e) {
-      messenger.showSnackBar(
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
             'Failed: $e',
@@ -1421,7 +1425,7 @@ class _AddCourtSheetState extends ConsumerState<_AddCourtSheet> {
             Row(
               children: [
                 Expanded(
-                  child: _TimeField(
+                  child: _timeField(
                     label: 'Start Time',
                     time: _openTime,
                     onTap: () => _pickTime(true),
@@ -1429,7 +1433,7 @@ class _AddCourtSheetState extends ConsumerState<_AddCourtSheet> {
                 ),
                 const SizedBox(width: 12),
                 Expanded(
-                  child: _TimeField(
+                  child: _timeField(
                     label: 'End Time',
                     time: _closeTime,
                     onTap: () => _pickTime(false),
@@ -1679,7 +1683,7 @@ class _AddCourtSheetState extends ConsumerState<_AddCourtSheet> {
     );
   }
 
-  Widget _TimeField({
+  Widget _timeField({
     required String label,
     required TimeOfDay time,
     required VoidCallback onTap,

@@ -5,8 +5,6 @@ import 'admin_repository.dart';
 class SupabaseAdminRepository implements AdminRepository {
   final _supabase = Supabase.instance.client;
 
-  // ─── APPROVALS ───────────────────────────────────────────
-
   @override
   Future<List<OwnerApplicationModel>> getPendingApplications() async {
     final response = await _supabase
@@ -22,13 +20,11 @@ class SupabaseAdminRepository implements AdminRepository {
 
   @override
   Future<void> approveOwner(String applicationId, String userId) async {
-    // Update application status
     await _supabase
         .from('owner_applications')
         .update({'status': 'approved'})
         .eq('id', applicationId);
 
-    // Update user to be approved owner
     await _supabase
         .from('users')
         .update({'is_owner': true, 'is_approved': true})
@@ -41,36 +37,27 @@ class SupabaseAdminRepository implements AdminRepository {
     String userId,
     String reason,
   ) async {
-    // Update application status
     await _supabase
         .from('owner_applications')
         .update({'status': 'rejected'})
         .eq('id', applicationId);
 
-    // Update user
     await _supabase
         .from('users')
         .update({'is_owner': false, 'is_approved': false})
         .eq('id', userId);
   }
 
-  // ─── USERS ───────────────────────────────────────────────
 
-  @override
   @override
   Future<List<Map<String, dynamic>>> getAllUsers() async {
     final currentUserId = _supabase.auth.currentUser!.id;
-
-    print('🔍 Current admin ID: $currentUserId');
 
     final response = await _supabase
         .from('users')
         .select()
         .neq('id', currentUserId)
         .order('created_at', ascending: false);
-
-    print('👥 Users fetched: ${response.length}');
-    print('👥 Users data: $response');
 
     return List<Map<String, dynamic>>.from(response);
   }
@@ -87,19 +74,6 @@ class SupabaseAdminRepository implements AdminRepository {
         .update({'is_blocked': false})
         .eq('id', userId);
   }
-
-  @override
-Future<void> changeUserRole(String userId, {required bool isOwner}) async {
-  await _supabase
-      .from('users')
-      .update({
-        'is_owner': isOwner,
-        'is_approved': isOwner ? false : false,
-      })
-      .eq('id', userId);
-}
-
-  // ─── VENUES ──────────────────────────────────────────────
 
   @override
   Future<List<Map<String, dynamic>>> getAllVenues() async {
@@ -127,7 +101,6 @@ Future<void> changeUserRole(String userId, {required bool isOwner}) async {
         .eq('id', venueId);
   }
 
-  // ---------------------------- BOOKINGS------------------------------------
   @override
   Future<List<Map<String, dynamic>>> getAllBookings() async {
     final response = await _supabase
@@ -137,8 +110,6 @@ Future<void> changeUserRole(String userId, {required bool isOwner}) async {
 
     return List<Map<String, dynamic>>.from(response);
   }
-
-  // ─── DASHBOARD ───────────────────────────────────────────
 
   @override
   Future<Map<String, dynamic>> getDashboardStats() async {

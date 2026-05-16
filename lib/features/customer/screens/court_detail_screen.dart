@@ -35,7 +35,6 @@ class _CourtDetailScreenState extends State<CourtDetailScreen> {
 
   bool get _canBook => _selectedDate != null && _selectedSlots.isNotEmpty;
 
-  int get _selectedHours => _selectedSlots.length;
 
   @override
   void didChangeDependencies() {
