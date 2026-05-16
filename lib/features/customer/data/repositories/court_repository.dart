@@ -67,7 +67,6 @@ class CourtRepository {
     required DateTime date,
   }) async {
     final dayStart = DateTime(date.year, date.month, date.day);
-    final dayEnd = dayStart.add(const Duration(days: 1));
     final dayString = '$date'.split(' ').first;
 
     final bookingRows = await _client
@@ -179,15 +178,7 @@ class CourtRepository {
         .toList();
   }
 
-  String _toSqlTimestamp(DateTime dt) {
-    final y = dt.year.toString().padLeft(4, '0');
-    final m = dt.month.toString().padLeft(2, '0');
-    final d = dt.day.toString().padLeft(2, '0');
-    final h = dt.hour.toString().padLeft(2, '0');
-    final min = dt.minute.toString().padLeft(2, '0');
-    final s = dt.second.toString().padLeft(2, '0');
-    return '$y-$m-$d $h:$min:$s';
-  }
+
 
   DateTime? _bookingTimeToDateTime(DateTime date, String? value) {
     if (value == null || value.isEmpty) {

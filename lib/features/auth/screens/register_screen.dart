@@ -332,6 +332,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                                               .read(authProvider.notifier)
                                               .signInWithGoogle();
                                         } catch (e) {
+                                          if (!context.mounted) return;
                                           ScaffoldMessenger.of(
                                             context,
                                           ).showSnackBar(

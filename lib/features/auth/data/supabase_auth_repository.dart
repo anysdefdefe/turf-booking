@@ -114,11 +114,7 @@ class SupabaseAuthRepository implements AuthRepository {
   @override
   Stream<AuthState> get authStateChanges => _client.auth.onAuthStateChange;
 
-  Future<UserModel> _fetchUserProfile(String userId) async {
-    final data = await _client.from('users').select().eq('id', userId).single();
 
-    return UserModel.fromJson(data);
-  }
 
   Future<UserModel> _getUserProfile(String userId) async {
     try {

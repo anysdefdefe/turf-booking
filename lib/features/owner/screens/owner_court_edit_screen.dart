@@ -723,7 +723,6 @@ class _MaintenanceBlockSheetState
         Navigator.pop(context);
       }
     } catch (e) {
-      print('MAINTENANCE ERROR: $e');
       if (mounted) {
         Navigator.pop(
           context,

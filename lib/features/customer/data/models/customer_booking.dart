@@ -63,7 +63,7 @@ class CustomerBooking {
       court: court,
       status: status ?? this.status,
       date: date,
-      createdAt: createdAt ?? this.createdAt,
+      createdAt: createdAt,
       slots: slots,
       courtType: courtType,
       cancelledAt: cancelledAt ?? this.cancelledAt,

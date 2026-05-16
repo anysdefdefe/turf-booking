@@ -127,7 +127,7 @@ class _OwnerAddStadiumScreenState extends ConsumerState<OwnerAddStadiumScreen> {
     showModalBottomSheet<void>(
       context: context,
       backgroundColor: Colors.transparent,
-      builder: (context) => Padding(
+      builder: (bottomSheetContext) => Padding(
         padding: EdgeInsets.fromLTRB(
           16,
           0,
@@ -137,7 +137,7 @@ class _OwnerAddStadiumScreenState extends ConsumerState<OwnerAddStadiumScreen> {
         child: Container(
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.surface,
+            color: Theme.of(bottomSheetContext).colorScheme.surface,
             borderRadius: BorderRadius.circular(AppConstants.radiusL),
           ),
           child: Column(
@@ -149,7 +149,7 @@ class _OwnerAddStadiumScreenState extends ConsumerState<OwnerAddStadiumScreen> {
                   fontFamily: 'Poppins',
                   fontWeight: FontWeight.w600,
                   fontSize: 16,
-                  color: Theme.of(context).colorScheme.onSurface,
+                  color: Theme.of(bottomSheetContext).colorScheme.onSurface,
                 ),
               ),
               const SizedBox(height: 16),
@@ -157,7 +157,7 @@ class _OwnerAddStadiumScreenState extends ConsumerState<OwnerAddStadiumScreen> {
                 icon: Icons.camera_alt_rounded,
                 label: 'Take a Photo',
                 onTap: () async {
-                  Navigator.pop(context);
+                  Navigator.pop(bottomSheetContext);
                   final xfile = await _imagePicker.pickImage(
                     source: ImageSource.camera,
                     imageQuality: 80,
@@ -183,7 +183,7 @@ class _OwnerAddStadiumScreenState extends ConsumerState<OwnerAddStadiumScreen> {
                 icon: Icons.photo_library_rounded,
                 label: 'Choose from Gallery',
                 onTap: () async {
-                  Navigator.pop(context);
+                  Navigator.pop(bottomSheetContext);
                   final files = await _imagePicker.pickMultiImage(
                     imageQuality: 80,
                   );
@@ -1221,80 +1221,6 @@ class _TimePickerButton extends StatelessWidget {
   }
 }
 
-class _RateRow extends StatelessWidget {
-  final String label;
-  final ValueChanged<double> onChanged;
-
-  const _RateRow({required this.label, required this.onChanged});
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        SizedBox(
-          width: 72,
-          child: Text(
-            label,
-            style: TextStyle(
-              fontFamily: 'Poppins',
-              fontSize: 13,
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-            ),
-          ),
-        ),
-        const SizedBox(width: 8),
-        Expanded(
-          child: TextField(
-            keyboardType: TextInputType.number,
-            onChanged: (v) => onChanged(double.tryParse(v) ?? 0),
-            style: TextStyle(
-              fontFamily: 'Poppins',
-              color: Theme.of(context).colorScheme.onSurface,
-            ),
-            decoration: InputDecoration(
-              prefixText: '₹ ',
-              prefixStyle: TextStyle(
-                fontFamily: 'Poppins',
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-              ),
-              hintText: '0',
-              hintStyle: TextStyle(
-                fontFamily: 'Poppins',
-                color: Theme.of(
-                  context,
-                ).colorScheme.onSurface.withValues(alpha: 0.3),
-              ),
-              filled: true,
-              fillColor: Theme.of(context).colorScheme.surface,
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: 12,
-                vertical: 10,
-              ),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(AppConstants.radiusM),
-                borderSide: BorderSide(
-                  color: Theme.of(context).colorScheme.outlineVariant,
-                ),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(AppConstants.radiusM),
-                borderSide: BorderSide(
-                  color: Theme.of(context).colorScheme.outlineVariant,
-                ),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(AppConstants.radiusM),
-                borderSide: BorderSide(
-                  color: Theme.of(context).colorScheme.primary,
-                ),
-              ),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-}
 
 class _SectionHeader extends StatelessWidget {
   final String title;

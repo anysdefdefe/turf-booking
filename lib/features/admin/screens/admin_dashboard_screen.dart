@@ -17,8 +17,7 @@ class AdminDashboardScreen extends ConsumerStatefulWidget {
 }
 
 class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
-  String _range = '24h'; // '24h', '7d', or 'all'
-  /// Format a [DateTime] to a readable 12-hour time string (e.g. "9:00 AM").
+  String _range = '24h'; 
   String _formatDateTime(DateTime dt) {
     final h = dt.hour % 12 == 0 ? 12 : dt.hour % 12;
     final m = dt.minute.toString().padLeft(2, '0');
@@ -26,7 +25,6 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
     return '$h:$m $suffix';
   }
 
-  /// Fallback: format a raw "HH:mm:ss" or ISO time string.
   String _formatTimeStr(String raw) {
     final dt = DateTime.tryParse('2000-01-01 $raw');
     if (dt == null) {
@@ -37,7 +35,6 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
     return _formatDateTime(dt);
   }
 
-  /// Calculate total hours from slots or start/end time.
   int _calculateTotalHours(Map<String, dynamic> booking) {
     final slots = booking['slots'];
     if (slots is List && slots.isNotEmpty) {
@@ -58,7 +55,6 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
       return total;
     }
 
-    // Fallback: use start/end time
     final st = booking['start_time']?.toString() ?? '';
     final et = booking['end_time']?.toString() ?? '';
     if (st.isNotEmpty && et.isNotEmpty) {
@@ -122,11 +118,8 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
         child: RefreshIndicator(
           color: cs.primary,
           onRefresh: () async {
-            // Refresh the data providers
-            // ignore: unawaited_futures
-            ref.refresh(dashboardStatsProvider.future);
-            // ignore: unawaited_futures
-            ref.refresh(allBookingsProvider.future);
+            ref.invalidate(dashboardStatsProvider);
+            ref.invalidate(allBookingsProvider);
           },
           child: SingleChildScrollView(
             physics: const AlwaysScrollableScrollPhysics(),
@@ -134,7 +127,6 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Header
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -161,7 +153,6 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
                         ],
                       ),
                     ),
-                    // Profile menu (enhanced bottom sheet)
                     Builder(
                       builder: (context) {
                         final userAsync = ref.watch(authStateProvider);
@@ -204,7 +195,6 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
 
                 const SizedBox(height: 24),
 
-                // Stats Row (horizontally scrollable)
                 statsAsync.when(
                   loading: () => Center(
                     child: CircularProgressIndicator(color: cs.primary),
@@ -224,7 +214,6 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
                     ),
                   ),
                   data: (stats) {
-                    // Build horizontally scrollable stat cards (thin scrollbar)
                     final controller = ScrollController();
                     return Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -326,7 +315,6 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
 
                 const SizedBox(height: 20),
 
-                // Revenue Chart + Range Toggle
                 Text(
                   'Revenue',
                   style: TextStyle(
@@ -452,8 +440,6 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
                 ),
 
                 const SizedBox(height: 20),
-
-                // Recent Bookings Section
                 Text(
                   'Recent Bookings',
                   style: TextStyle(
@@ -605,7 +591,6 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
                                 ],
                               ),
                               const SizedBox(height: 8),
-                              // Slots display - show each individual slot
                               Builder(
                                 builder: (_) {
                                   final slots = booking['slots'];
@@ -614,7 +599,6 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
                                       spacing: 6,
                                       runSpacing: 4,
                                       children: slots.map<Widget>((s) {
-                                        // Use ONLY slot times, not booking times
                                         final st =
                                             s['start_time']?.toString() ?? '';
                                         final et =
@@ -665,7 +649,6 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
                                     );
                                   }
 
-                                  // Fallback: if no slots, show single booking range
                                   final st =
                                       booking['start_time']?.toString() ?? '';
                                   final et =
@@ -712,7 +695,6 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
                                 },
                               ),
                               const SizedBox(height: 8),
-                              // Total hours
                               Row(
                                 children: [
                                   Icon(
@@ -761,7 +743,8 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
         onLogout: () async {
           Navigator.pop(context);
           await ref.read(authControllerProvider.notifier).signOut();
-          if (mounted) context.go(AppConstants.routeLogin);
+          if (!context.mounted) return;
+          context.go(AppConstants.routeLogin);
         },
         onSwitch: () {
           Navigator.pop(context);
@@ -772,73 +755,7 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
   }
 }
 
-class _StatBox extends StatelessWidget {
-  final String title;
-  final String value;
-  final IconData icon;
-  final Color iconColor;
 
-  const _StatBox({
-    required this.title,
-    required this.value,
-    required this.icon,
-    required this.iconColor,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: cs.surfaceContainer,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: iconColor.withValues(alpha: 0.15),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(icon, color: iconColor, size: 24),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Text(
-            title,
-            style: TextStyle(
-              fontSize: 12,
-              color: cs.onSurfaceVariant,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            value,
-            style: TextStyle(
-              fontSize: 22,
-              fontWeight: FontWeight.w700,
-              color: cs.onSurface,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
 
 class _ProfileMenu extends StatelessWidget {
   final String name;
@@ -875,7 +792,6 @@ class _ProfileMenu extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Handle bar
             Container(
               margin: const EdgeInsets.only(top: 12),
               width: 40,
@@ -886,7 +802,6 @@ class _ProfileMenu extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 16),
-            // Avatar + name
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Column(
@@ -920,7 +835,6 @@ class _ProfileMenu extends StatelessWidget {
               child: ThemeModeSelector(title: 'Appearance'),
             ),
             const SizedBox(height: 16),
-            // Actions
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Column(
@@ -981,122 +895,7 @@ class _ProfileMenu extends StatelessWidget {
   }
 }
 
-class _MenuItem extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final VoidCallback onTap;
-  final bool isDestructive;
 
-  const _MenuItem({
-    required this.icon,
-    required this.label,
-    required this.onTap,
-    required this.isDestructive,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final color = isDestructive ? Colors.red : cs.primary;
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-          child: Row(
-            children: [
-              Icon(icon, color: color, size: 22),
-              const SizedBox(width: 14),
-              Text(
-                label,
-                style: TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w600,
-                  color: color,
-                ),
-              ),
-              const Spacer(),
-              Icon(Icons.chevron_right, color: cs.outlineVariant, size: 22),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _EnhancedStatCard extends StatelessWidget {
-  final String label;
-  final String value;
-  final IconData icon;
-  final Color color;
-  final Gradient gradient;
-
-  const _EnhancedStatCard({
-    required this.label,
-    required this.value,
-    required this.icon,
-    required this.color,
-    required this.gradient,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 110,
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        gradient: gradient,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: color.withValues(alpha: 0.15), width: 1),
-        boxShadow: [
-          BoxShadow(
-            color: color.withValues(alpha: 0.08),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.12),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(icon, color: color, size: 22),
-          ),
-          const SizedBox(height: 10),
-          Text(
-            value,
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w700,
-              color: color,
-            ),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-          const SizedBox(height: 4),
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 11,
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-              fontWeight: FontWeight.w500,
-            ),
-            textAlign: TextAlign.center,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-        ],
-      ),
-    );
-  }
-}
 
 class _StatCardLarge extends StatelessWidget {
   final double width;
@@ -1173,7 +972,6 @@ class _StatCardLarge extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(width: 6),
-                    // placeholder percent change
                     Container(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 8,
@@ -1363,54 +1161,4 @@ class _EnhancedSparklinePainter extends CustomPainter {
   bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
 }
 
-// Legacy sparkline chart class (kept for compatibility if needed)
-class _SparklineChart extends StatelessWidget {
-  final List<double> data;
 
-  const _SparklineChart({required this.data});
-
-  @override
-  Widget build(BuildContext context) {
-    return CustomPaint(
-      painter: _SparklinePainter(data, Theme.of(context).colorScheme.primary),
-      size: const Size(double.infinity, double.infinity),
-    );
-  }
-}
-
-class _SparklinePainter extends CustomPainter {
-  final List<double> data;
-  final Color color;
-
-  _SparklinePainter(this.data, this.color);
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = color
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 2.0
-      ..isAntiAlias = true;
-
-    if (data.isEmpty) return;
-    final max = data.reduce((a, b) => a > b ? a : b);
-    final min = data.reduce((a, b) => a < b ? a : b);
-    final range = (max - min) == 0 ? 1 : (max - min);
-
-    final stepX = size.width / (data.length - 1).clamp(1, double.infinity);
-    final path = Path();
-    for (var i = 0; i < data.length; i++) {
-      final x = stepX * i;
-      final y = size.height - ((data[i] - min) / range) * size.height;
-      if (i == 0) {
-        path.moveTo(x, y);
-      } else {
-        path.lineTo(x, y);
-      }
-    }
-    canvas.drawPath(path, paint);
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
-}

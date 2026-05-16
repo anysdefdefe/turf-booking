@@ -248,6 +248,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                               .read(authProvider.notifier)
                                               .signInWithGoogle();
                                         } catch (e) {
+                                          if (!context.mounted) return;
                                           ScaffoldMessenger.of(
                                             context,
                                           ).showSnackBar(
