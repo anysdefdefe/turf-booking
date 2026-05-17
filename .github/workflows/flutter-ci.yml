@@ -51,6 +51,9 @@ jobs:
       - name: Verify Formatting
         run: dart format --output=none --set-exit-if-changed .
 
+      - name: Create .env file
+        run: touch .env
+
       - name: Analyze Project
         run: flutter analyze
 
