@@ -275,7 +275,6 @@ class StadiumRepository {
     }
   }
 
-  /// Updates mutable fields on a stadium. Only non-null values are sent.
   Future<void> updateStadium({
     required String stadiumId,
     String? name,
@@ -315,7 +314,6 @@ class StadiumRepository {
     }
   }
 
-  /// Updates mutable fields on a court. Only non-null values are sent.
   Future<void> updateCourt({
     required String courtId,
     String? name,
@@ -359,8 +357,6 @@ class StadiumRepository {
     }
   }
 
-  /// Creates a maintenance block by inserting a confirmed booking
-  /// for the owner, preventing customers from booking the slot.
   Future<void> createMaintenanceSlot({
     required String courtId,
     required DateTime date,
@@ -412,11 +408,45 @@ class StadiumRepository {
       throw UnknownException('Failed to create maintenance block: $e', e);
     }
   }
+
+  Future<List<Map<String, dynamic>>> getBlockedSlots(String courtId) async {
+    try {
+      final response = await _client
+          .from('blocked_slots')
+          .select()
+          .eq('court_id', courtId)
+          .eq('status', 'blocked')
+          .order('block_date', ascending: true)
+          .order('start_time', ascending: true);
+      return response;
+    } catch (e) {
+      throw UnknownException('Failed to fetch blocked slots: $e', e);
+    }
+  }
+
+  Future<void> addBlockedSlots(List<Map<String, dynamic>> blocks) async {
+    if (blocks.isEmpty) return;
+    try {
+      final userId = _client.auth.currentUser!.id;
+      final payload = blocks.map((b) => {...b, 'owner_id': userId}).toList();
+      await _client.from('blocked_slots').insert(payload);
+    } catch (e) {
+      throw UnknownException('Failed to add blocked slots: $e', e);
+    }
+  }
+
+  Future<void> unblockSlot(String blockId) async {
+    try {
+      await _client
+          .from('blocked_slots')
+          .update({'status': 'unblocked'})
+          .eq('id', blockId);
+    } catch (e) {
+      throw UnknownException('Failed to unblock slot: $e', e);
+    }
+  }
 }
 
-/// A lightweight DTO for court data collected from the UI form.
-/// This is NOT a database model — it's a transfer object consumed
-/// only by [StadiumRepository.createStadiumWithCourts].
 class CourtInsertPayload {
   final String name;
   final String sportType;

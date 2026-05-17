@@ -245,18 +245,20 @@ class _MyBookingsScreenState extends ConsumerState<MyBookingsScreen> {
             onTap: () => setState(() => _selectedFilterIndex = index),
             borderRadius: BorderRadius.circular(999),
             child: AnimatedContainer(
-              duration: const Duration(milliseconds: 180),
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
+              duration: const Duration(milliseconds: 200),
+              curve: Curves.easeInOut,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
               decoration: BoxDecoration(
                 color: selected
                     ? Theme.of(context).colorScheme.primary
-                    : Theme.of(context).colorScheme.surface,
-                borderRadius: BorderRadius.circular(999),
+                    : Theme.of(context).colorScheme.surfaceContainerHighest
+                          .withValues(alpha: 0.3),
+                borderRadius: BorderRadius.circular(24),
                 border: Border.all(
                   color: selected
                       ? Theme.of(context).colorScheme.primary
-                      : Theme.of(context).colorScheme.outlineVariant,
-                  width: selected ? 1.4 : 1,
+                      : Colors.transparent,
+                  width: 1,
                 ),
               ),
               child: Text(
@@ -264,8 +266,9 @@ class _MyBookingsScreenState extends ConsumerState<MyBookingsScreen> {
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontFamily: 'Poppins',
-                  fontSize: 12.5,
+                  fontSize: 13,
                   fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
+                  letterSpacing: 0.3,
                   color: selected
                       ? Theme.of(context).colorScheme.onPrimary
                       : Theme.of(context).colorScheme.onSurfaceVariant,

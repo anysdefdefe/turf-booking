@@ -13,6 +13,7 @@ class CustomerBooking {
   final DateTime? cancelledAt;
   final int? bookedSlotCount;
   final String? firstSlotLabel;
+  final double? dbTotalAmount;
 
   const CustomerBooking({
     required this.id,
@@ -25,6 +26,7 @@ class CustomerBooking {
     this.cancelledAt,
     this.bookedSlotCount,
     this.firstSlotLabel,
+    this.dbTotalAmount,
   });
 
   int get durationHours => bookedSlotCount ?? slots.length;
@@ -50,13 +52,15 @@ class CustomerBooking {
       (status == BookingStatus.booked || status == BookingStatus.unpaid) &&
       !isPast;
 
-  double get totalAmount => court.pricePerHour * durationHours;
+  double get totalAmount =>
+      dbTotalAmount ?? (court.pricePerHour * durationHours);
 
   CustomerBooking copyWith({
     BookingStatus? status,
     DateTime? cancelledAt,
     int? bookedSlotCountOverride,
     String? firstSlotLabelOverride,
+    double? dbTotalAmountOverride,
   }) {
     return CustomerBooking(
       id: id,
@@ -69,6 +73,7 @@ class CustomerBooking {
       cancelledAt: cancelledAt ?? this.cancelledAt,
       bookedSlotCount: bookedSlotCountOverride ?? bookedSlotCount,
       firstSlotLabel: firstSlotLabelOverride ?? firstSlotLabel,
+      dbTotalAmount: dbTotalAmountOverride ?? dbTotalAmount,
     );
   }
 

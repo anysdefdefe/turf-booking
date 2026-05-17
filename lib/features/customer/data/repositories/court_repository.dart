@@ -93,6 +93,31 @@ class CourtRepository {
       booked.add(_formatTo12Hour(start));
     }
 
+    // Fetch blocked slots
+    final blockedRows = await _client
+        .from('blocked_slots')
+        .select('start_time, end_time')
+        .eq('court_id', courtId)
+        .eq('block_date', dayString)
+        .eq('status', 'blocked');
+
+    for (final raw in blockedRows) {
+      final row = raw;
+      final start = _bookingTimeToDateTime(
+        dayStart,
+        row['start_time']?.toString(),
+      );
+      final end = _bookingTimeToDateTime(dayStart, row['end_time']?.toString());
+
+      if (start != null && end != null) {
+        var cursor = start;
+        while (cursor.isBefore(end)) {
+          booked.add(_formatTo12Hour(cursor));
+          cursor = cursor.add(const Duration(hours: 1));
+        }
+      }
+    }
+
     return booked.toList(growable: false);
   }
 
