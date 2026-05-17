@@ -73,7 +73,10 @@ class UserTile extends StatelessWidget {
                     ),
                     Text(
                       email,
-                      style: TextStyle(fontSize: 12, color: cs.onSurfaceVariant),
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: cs.onSurfaceVariant,
+                      ),
                     ),
                   ],
                 ),
@@ -106,7 +109,9 @@ class UserTile extends StatelessWidget {
           // Details
           Row(
             children: [
-              Expanded(child: _infoItem(context, Icons.phone_outlined, 'Phone', phone)),
+              Expanded(
+                child: _infoItem(context, Icons.phone_outlined, 'Phone', phone),
+              ),
               Expanded(
                 child: _infoItem(
                   context,
@@ -200,7 +205,12 @@ class UserTile extends StatelessWidget {
     );
   }
 
-  Widget _infoItem(BuildContext context, IconData icon, String label, String value) {
+  Widget _infoItem(
+    BuildContext context,
+    IconData icon,
+    String label,
+    String value,
+  ) {
     final cs = Theme.of(context).colorScheme;
     return Row(
       children: [

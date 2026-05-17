@@ -119,11 +119,7 @@ class OwnerStadiumManageScreen extends ConsumerWidget {
         return courtsAsync.when(
           loading: () => Scaffold(
             backgroundColor: cs.surface,
-            body: Center(
-              child: CircularProgressIndicator(
-                color: cs.primary,
-              ),
-            ),
+            body: Center(child: CircularProgressIndicator(color: cs.primary)),
           ),
           error: (err, _) => Scaffold(
             backgroundColor: Theme.of(context).colorScheme.surface,
@@ -269,10 +265,10 @@ class _HeroImage extends StatelessWidget {
           child: GestureDetector(
             onTap: onEdit,
             child: _CircleButton(
-                  icon: Icons.edit_outlined,
-                  iconColor: Theme.of(context).colorScheme.primary,
-                  iconSize: 18,
-                ),
+              icon: Icons.edit_outlined,
+              iconColor: Theme.of(context).colorScheme.primary,
+              iconSize: 18,
+            ),
           ),
         ),
       ],
@@ -618,8 +614,6 @@ class _CourtTile extends ConsumerWidget {
 
   // ── Deactivate (soft-delete) ─────────────────────────────────────────────
   Future<void> _confirmDeactivate(BuildContext context, WidgetRef ref) async {
-
-
     final confirmed = await showDialog<bool>(
       context: context,
       barrierColor: Colors.black.withValues(alpha: 0.45),
@@ -784,8 +778,6 @@ class _CourtTile extends ConsumerWidget {
 
   // ── Activate (re-enable) ─────────────────────────────────────────────────
   Future<void> _confirmActivate(BuildContext context, WidgetRef ref) async {
-
-
     final confirmed = await showDialog<bool>(
       context: context,
       barrierColor: Colors.black.withValues(alpha: 0.45),
@@ -1387,9 +1379,7 @@ class _AddCourtSheetState extends ConsumerState<_AddCourtSheet> {
                         Icon(
                           _sportIcon(sport),
                           size: 13,
-                          color: selected
-                              ? cs.onPrimary
-                              : cs.onSurfaceVariant,
+                          color: selected ? cs.onPrimary : cs.onSurfaceVariant,
                         ),
                         const SizedBox(width: 5),
                         Text(
@@ -1398,9 +1388,7 @@ class _AddCourtSheetState extends ConsumerState<_AddCourtSheet> {
                             fontFamily: 'Poppins',
                             fontSize: 12,
                             fontWeight: FontWeight.w600,
-                            color: selected
-                              ? cs.onPrimary
-                              : cs.onSurface,
+                            color: selected ? cs.onPrimary : cs.onSurface,
                           ),
                         ),
                       ],
@@ -1579,7 +1567,7 @@ class _AddCourtSheetState extends ConsumerState<_AddCourtSheet> {
                     borderRadius: BorderRadius.circular(12),
                   ),
                 ),
-                      child: _isSaving
+                child: _isSaving
                     ? SizedBox(
                         height: 20,
                         width: 20,
@@ -1741,10 +1729,7 @@ class _AmenityChip extends StatelessWidget {
       decoration: BoxDecoration(
         color: cs.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(50),
-        border: Border.all(
-          color: cs.primary.withValues(alpha: 0.28),
-          width: 1,
-        ),
+        border: Border.all(color: cs.primary.withValues(alpha: 0.28), width: 1),
       ),
       child: Text(
         label,
@@ -1773,18 +1758,12 @@ class _SportChip extends StatelessWidget {
       decoration: BoxDecoration(
         color: cs.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(50),
-        border: Border.all(
-          color: cs.primary.withValues(alpha: 0.5),
-        ),
+        border: Border.all(color: cs.primary.withValues(alpha: 0.5)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(
-            _sportIcon(sport),
-            size: 14,
-            color: cs.primary,
-          ),
+          Icon(_sportIcon(sport), size: 14, color: cs.primary),
           const SizedBox(width: 6),
           Text(
             sport,

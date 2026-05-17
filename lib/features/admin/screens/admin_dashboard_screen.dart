@@ -17,7 +17,7 @@ class AdminDashboardScreen extends ConsumerStatefulWidget {
 }
 
 class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
-  String _range = '24h'; 
+  String _range = '24h';
   String _formatDateTime(DateTime dt) {
     final h = dt.hour % 12 == 0 ? 12 : dt.hour % 12;
     final m = dt.minute.toString().padLeft(2, '0');
@@ -755,8 +755,6 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
   }
 }
 
-
-
 class _ProfileMenu extends StatelessWidget {
   final String name;
   final String email;
@@ -894,8 +892,6 @@ class _ProfileMenu extends StatelessWidget {
     );
   }
 }
-
-
 
 class _StatCardLarge extends StatelessWidget {
   final double width;
@@ -1160,5 +1156,3 @@ class _EnhancedSparklinePainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
 }
-
-

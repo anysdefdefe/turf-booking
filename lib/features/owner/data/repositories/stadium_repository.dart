@@ -359,7 +359,7 @@ class StadiumRepository {
     }
   }
 
-  /// Creates a maintenance block by inserting a confirmed booking 
+  /// Creates a maintenance block by inserting a confirmed booking
   /// for the owner, preventing customers from booking the slot.
   Future<void> createMaintenanceSlot({
     required String courtId,
@@ -388,9 +388,12 @@ class StadiumRepository {
       }
 
       final durationHours = end.difference(start).inHours;
-      final stStr = '${start.hour.toString().padLeft(2, '0')}:${start.minute.toString().padLeft(2, '0')}:00';
-      final etStr = '${end.hour.toString().padLeft(2, '0')}:${end.minute.toString().padLeft(2, '0')}:00';
-      final dateStr = '${date.year.toString().padLeft(4, '0')}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+      final stStr =
+          '${start.hour.toString().padLeft(2, '0')}:${start.minute.toString().padLeft(2, '0')}:00';
+      final etStr =
+          '${end.hour.toString().padLeft(2, '0')}:${end.minute.toString().padLeft(2, '0')}:00';
+      final dateStr =
+          '${date.year.toString().padLeft(4, '0')}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
 
       final userId = _client.auth.currentUser!.id;
 

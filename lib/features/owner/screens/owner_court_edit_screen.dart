@@ -395,7 +395,6 @@ class _OwnerCourtEditScreenState extends ConsumerState<OwnerCourtEditScreen> {
 
                     const SizedBox(height: 32),
 
-                    // ── Save button ───────────────────────────────
                     SizedBox(
                       width: double.infinity,
                       child: FilledButton(
@@ -428,7 +427,7 @@ class _OwnerCourtEditScreenState extends ConsumerState<OwnerCourtEditScreen> {
                                   fontFamily: 'Poppins',
                                   fontWeight: FontWeight.w600,
                                   fontSize: 15,
-                                  color: Colors.white,
+                                  color: Color.fromARGB(255, 255, 255, 255),
                                 ),
                               ),
                       ),

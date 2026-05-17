@@ -524,14 +524,16 @@ class _VenueDetailScreenState extends State<VenueDetailScreen> {
                                           context,
                                         ).colorScheme.primary,
                                       ),
-                                      labelPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                      labelPadding: EdgeInsets.symmetric(
+                                        horizontal: 8,
+                                        vertical: 2,
+                                      ),
                                       label: Text(
                                         sport,
                                         style: const TextStyle(
                                           fontFamily: 'Poppins',
                                           fontWeight: FontWeight.w400,
                                         ),
-                                        
                                       ),
                                       backgroundColor: Theme.of(
                                         context,

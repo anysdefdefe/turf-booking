@@ -139,11 +139,7 @@ class CourtCompactCard extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 10),
-            Row(
-              children: [
-                _StatusChip(status: booking.status),
-              ],
-            ),
+            Row(children: [_StatusChip(status: booking.status)]),
             if (onCancel != null) ...[
               const SizedBox(height: 10),
               Row(

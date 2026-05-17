@@ -303,7 +303,7 @@ class _HeroImage extends StatelessWidget {
                         ),
                       )
                     : _HeroIconButton(
-                      tooltip: 'Log out',
+                        tooltip: 'Log out',
                         icon: Icons.logout_rounded,
                         onTap: () =>
                             ref.read(authControllerProvider.notifier).signOut(),
@@ -322,11 +322,8 @@ class _HeroImage extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 1,
-                  vertical: 5,
-                ),
-                
+                padding: const EdgeInsets.symmetric(horizontal: 1, vertical: 5),
+
                 child: Text(
                   'Discipline beats motivation. Show up and play.',
                   style: TextStyle(

@@ -33,11 +33,7 @@ class ThemeModeSelector extends StatelessWidget {
               ),
               SizedBox(height: compact ? 8 : 10),
             ],
-            _ModeControl(
-              mode: mode,
-              compact: compact,
-              brightness: brightness,
-            ),
+            _ModeControl(mode: mode, compact: compact, brightness: brightness),
           ],
         );
       },
@@ -162,7 +158,9 @@ class _ModeControl extends StatelessWidget {
                                     end: Alignment.bottomRight,
                                     colors: [
                                       Colors.white,
-                                      cs.primaryContainer.withValues(alpha: 0.5),
+                                      cs.primaryContainer.withValues(
+                                        alpha: 0.5,
+                                      ),
                                     ],
                                   ),
                             boxShadow: [
@@ -187,8 +185,8 @@ class _ModeControl extends StatelessWidget {
                             tooltip: entry.tooltip,
                             compact: compact,
                             selected: selected,
-                            onTap: () => ThemeController.instance
-                                .setThemeMode(itemMode),
+                            onTap: () =>
+                                ThemeController.instance.setThemeMode(itemMode),
                           ),
                         );
                       }).toList(),
@@ -236,9 +234,7 @@ class _ModeSegment extends StatelessWidget {
             horizontal: compact ? 10 : 14,
             vertical: compact ? 9 : 12,
           ),
-          decoration: const BoxDecoration(
-            color: Colors.transparent,
-          ),
+          decoration: const BoxDecoration(color: Colors.transparent),
           child: Center(
             child: AnimatedOpacity(
               duration: const Duration(milliseconds: 180),

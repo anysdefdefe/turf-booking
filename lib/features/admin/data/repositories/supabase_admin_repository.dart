@@ -50,12 +50,11 @@ class SupabaseAdminRepository implements AdminRepository {
 
   @override
   Future<void> changeUserRole(String userId, {required bool isOwner}) async {
-    await _supabase.from('users').update({
-      'is_owner': isOwner,
-      'is_approved': isOwner,
-    }).eq('id', userId);
+    await _supabase
+        .from('users')
+        .update({'is_owner': isOwner, 'is_approved': isOwner})
+        .eq('id', userId);
   }
-
 
   @override
   Future<List<Map<String, dynamic>>> getAllUsers() async {

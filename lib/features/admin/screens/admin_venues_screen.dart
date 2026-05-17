@@ -75,7 +75,10 @@ class _AdminVenuesScreenState extends ConsumerState<AdminVenuesScreen> {
                   onChanged: (value) => setState(() => _searchQuery = value),
                   decoration: InputDecoration(
                     hintText: 'Search by name or city...',
-                    hintStyle: TextStyle(color: cs.onSurfaceVariant, fontSize: 14),
+                    hintStyle: TextStyle(
+                      color: cs.onSurfaceVariant,
+                      fontSize: 14,
+                    ),
                     prefixIcon: Icon(Icons.search, color: cs.onSurfaceVariant),
                     suffixIcon: _searchQuery.isNotEmpty
                         ? GestureDetector(
@@ -83,7 +86,10 @@ class _AdminVenuesScreenState extends ConsumerState<AdminVenuesScreen> {
                               _searchController.clear();
                               setState(() => _searchQuery = '');
                             },
-                            child: Icon(Icons.close, color: cs.onSurfaceVariant),
+                            child: Icon(
+                              Icons.close,
+                              color: cs.onSurfaceVariant,
+                            ),
                           )
                         : null,
                     filled: true,
@@ -115,9 +121,7 @@ class _AdminVenuesScreenState extends ConsumerState<AdminVenuesScreen> {
           // Venues List
           Expanded(
             child: venuesAsync.when(
-              loading: () => const Center(
-                child: CircularProgressIndicator(),
-              ),
+              loading: () => const Center(child: CircularProgressIndicator()),
               error: (e, _) => Center(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -147,7 +151,9 @@ class _AdminVenuesScreenState extends ConsumerState<AdminVenuesScreen> {
                                 ? 'No venues found'
                                 : 'No results for "$_searchQuery"',
                             style: TextStyle(
-                              color: Theme.of(context).colorScheme.onSurfaceVariant,
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.onSurfaceVariant,
                             ),
                           ),
                         )
