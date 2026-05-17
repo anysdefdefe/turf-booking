@@ -24,8 +24,6 @@ jobs:
         with:
           path: |
             ~/.pub-cache
-            .dart_tool
-            build
           key: ${{ runner.os }}-flutter-${{ hashFiles('**/pubspec.lock') }}
           restore-keys: |
             ${{ runner.os }}-flutter-
@@ -52,7 +50,7 @@ jobs:
         run: dart format --output=none --set-exit-if-changed .
 
       - name: Create .env file
-        run: touch .env
+        run: echo "" > .env
 
       - name: Analyze Project
         run: flutter analyze
@@ -62,4 +60,5 @@ jobs:
       #   run: flutter test
 
       - name: Build APK (Debug)
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: flutter build apk --debug
