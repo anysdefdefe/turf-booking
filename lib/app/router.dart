@@ -32,6 +32,7 @@ import 'package:turf_booking/features/admin/screens/admin_main_screen.dart';
 import 'package:turf_booking/features/owner/screens/owner_stadium_manage_screen.dart';
 import 'package:turf_booking/features/owner/screens/owner_stadium_edit_screen.dart';
 import 'package:turf_booking/features/owner/screens/owner_court_edit_screen.dart';
+import 'package:turf_booking/features/owner/screens/owner_block_management_screen.dart';
 import 'package:turf_booking/features/owner/screens/owner_gateway_screen.dart';
 import 'package:turf_booking/app/constants/app_constants.dart';
 
@@ -241,6 +242,13 @@ GoRouter router(Ref ref) {
         path: AppConstants.routeOwnerEditCourt,
         builder: (context, state) =>
             OwnerCourtEditScreen(courtId: state.pathParameters['courtId']!),
+      ),
+      GoRoute(
+        name: 'ownerBlockManagement',
+        path: '/owner/court/:courtId/blocks',
+        builder: (context, state) => OwnerBlockManagementScreen(
+          courtId: state.pathParameters['courtId']!,
+        ),
       ),
     ],
   );

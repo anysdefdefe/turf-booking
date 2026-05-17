@@ -44,7 +44,7 @@ class CustomerBookingRepository {
     final bookingRows = await _client
         .from('bookings')
         .select(
-          'id, court_id, booking_date, start_time, end_time, status, payment_status, created_at',
+          'id, court_id, booking_date, start_time, end_time, duration_hours, total_amount, status, payment_status, created_at',
         )
         .eq('customer_id', user.id)
         .order('created_at', ascending: false);
@@ -80,6 +80,7 @@ class CustomerBookingRepository {
           DateTime.tryParse(row['booking_date']?.toString() ?? '') ??
           DateTime.now();
       final bookedSlotCount = (row['duration_hours'] as num?)?.toInt();
+      final dbTotalAmount = (row['total_amount'] as num?)?.toDouble();
 
       mapped.add(
         CustomerBooking(
@@ -100,6 +101,7 @@ class CustomerBookingRepository {
               : null,
           bookedSlotCount: bookedSlotCount,
           firstSlotLabel: slots.isEmpty ? fallbackStartLabel : null,
+          dbTotalAmount: dbTotalAmount,
         ),
       );
     }
