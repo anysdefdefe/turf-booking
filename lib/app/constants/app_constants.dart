@@ -1,6 +1,16 @@
 class AppConstants {
   AppConstants._();
 
+  // ── App Identity ──────────────────────────────────────────────────────────
+  /// The display name of the app shown in the UI (e.g. splash, login, onboarding).
+  static const String appName = 'Courtly';
+
+  /// The product/category tagline used alongside the app name.
+  static const String appTagline = 'Turf Booking';
+
+  /// The package/application identifier used in MaterialApp.title.
+  static const String appTitle = '$appName — $appTagline';
+
   static const String storageImageBucket = 'stadium_and_court_image';
   static const String storageProfileImageFolder = 'profile';
   static const Set<String> allowedStorageImageExtensions = {
