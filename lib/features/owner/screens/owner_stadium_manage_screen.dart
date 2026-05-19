@@ -1394,7 +1394,9 @@ class _AddCourtSheetState extends ConsumerState<_AddCourtSheet> {
                                   ? Icons.edit_rounded
                                   : _sportIcon(sport),
                               size: 13,
-                              color: selected ? cs.onPrimary : cs.onSurfaceVariant,
+                              color: selected
+                                  ? cs.onPrimary
+                                  : cs.onSurfaceVariant,
                             ),
                             const SizedBox(width: 5),
                             Text(

@@ -683,7 +683,10 @@ class _OwnerCourtEditScreenState extends ConsumerState<OwnerCourtEditScreen> {
               onTap: () => setState(() => _selectedSport = sport),
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 150),
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 8,
+                ),
                 decoration: BoxDecoration(
                   color: selected ? cs.primary : cs.surface,
                   borderRadius: BorderRadius.circular(50),
@@ -696,9 +699,7 @@ class _OwnerCourtEditScreenState extends ConsumerState<OwnerCourtEditScreen> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Icon(
-                      sport == 'Other'
-                          ? Icons.edit_rounded
-                          : _sportIcon(sport),
+                      sport == 'Other' ? Icons.edit_rounded : _sportIcon(sport),
                       size: 13,
                       color: selected ? cs.onPrimary : cs.onSurfaceVariant,
                     ),
@@ -738,8 +739,10 @@ class _OwnerCourtEditScreenState extends ConsumerState<OwnerCourtEditScreen> {
               ),
               filled: true,
               fillColor: cs.surface,
-              contentPadding:
-                  const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 14,
+                vertical: 12,
+              ),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(AppConstants.radiusM),
                 borderSide: BorderSide(color: cs.outlineVariant),
