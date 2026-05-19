@@ -4,6 +4,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'app/constants/app_constants.dart';
 import 'app/theme/app_theme.dart';
 import 'app/theme/theme_controller.dart';
 import 'app/router.dart';
@@ -40,7 +41,7 @@ class CourtlyApp extends ConsumerWidget {
       valueListenable: ThemeController.instance,
       builder: (context, themeMode, _) {
         return MaterialApp.router(
-          title: 'Courtly',
+          title: AppConstants.appName,
           debugShowCheckedModeBanner: false,
           theme: AppTheme.lightTheme,
           darkTheme: AppTheme.darkTheme,

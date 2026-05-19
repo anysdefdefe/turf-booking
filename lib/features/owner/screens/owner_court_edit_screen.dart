@@ -11,6 +11,39 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'dart:io';
 import 'package:image_picker/image_picker.dart';
 
+// ── Sport helpers (mirrored from manage screen) ───────────────────────────────
+
+const _kSportOptions = [
+  'Football',
+  'Badminton',
+  'Cricket',
+  'Basketball',
+  'Volleyball',
+  'Tennis',
+  'Padel',
+];
+
+IconData _sportIcon(String sportType) {
+  switch (sportType.toLowerCase()) {
+    case 'football':
+    case 'soccer':
+      return Icons.sports_soccer_rounded;
+    case 'badminton':
+      return Icons.sports_tennis_rounded;
+    case 'cricket':
+      return Icons.sports_cricket_rounded;
+    case 'basketball':
+      return Icons.sports_basketball_rounded;
+    case 'volleyball':
+      return Icons.sports_volleyball_rounded;
+    case 'padel':
+    case 'tennis':
+      return Icons.sports_tennis_rounded;
+    default:
+      return Icons.sports_rounded;
+  }
+}
+
 class OwnerCourtEditScreen extends ConsumerStatefulWidget {
   final String courtId;
   const OwnerCourtEditScreen({super.key, required this.courtId});
@@ -22,15 +55,18 @@ class OwnerCourtEditScreen extends ConsumerStatefulWidget {
 
 class _OwnerCourtEditScreenState extends ConsumerState<OwnerCourtEditScreen> {
   final _nameController = TextEditingController();
-  final _sportController = TextEditingController();
   final _descriptionController = TextEditingController();
   final _priceController = TextEditingController();
   final _equipmentController = TextEditingController();
   final _openTimeController = TextEditingController();
   final _closeTimeController = TextEditingController();
+  // Used when the court's sport isn't in the standard chip list ("Other" mode)
+  final _customSportController = TextEditingController();
   final _imagePicker = ImagePicker();
   final _storageImageService = StorageImageService(Supabase.instance.client);
   late bool _isActive;
+  // Either a value from _kSportOptions, or the sentinel 'Other'
+  String? _selectedSport;
   bool _isSaving = false;
   bool _initialized = false;
   File? _selectedImage;
@@ -38,19 +74,25 @@ class _OwnerCourtEditScreenState extends ConsumerState<OwnerCourtEditScreen> {
   @override
   void dispose() {
     _nameController.dispose();
-    _sportController.dispose();
     _descriptionController.dispose();
     _priceController.dispose();
     _equipmentController.dispose();
     _openTimeController.dispose();
     _closeTimeController.dispose();
+    _customSportController.dispose();
     super.dispose();
   }
 
   void _initFields(CourtModel court) {
     if (_initialized) return;
     _nameController.text = court.name;
-    _sportController.text = court.sportType;
+    // If the stored sport is not in our standard list, treat it as custom
+    if (_kSportOptions.contains(court.sportType)) {
+      _selectedSport = court.sportType;
+    } else {
+      _selectedSport = 'Other';
+      _customSportController.text = court.sportType;
+    }
     _descriptionController.text = court.description ?? '';
     _priceController.text = court.pricePerHour.toStringAsFixed(0);
     _equipmentController.text = court.equipments.join(', ');
@@ -109,14 +151,21 @@ class _OwnerCourtEditScreenState extends ConsumerState<OwnerCourtEditScreen> {
 
   Future<void> _save(String stadiumId, String? currentImagePath) async {
     final name = _nameController.text.trim();
-    final sport = _sportController.text.trim();
+    // Resolve the actual sport value: if 'Other' is selected, use the typed text
+    final sport = _selectedSport == 'Other'
+        ? _customSportController.text.trim()
+        : _selectedSport;
     final price = double.tryParse(_priceController.text.trim());
     final equipments = _parseCsv(_equipmentController.text);
     final openTime = _openTimeController.text.trim();
     final closeTime = _closeTimeController.text.trim();
 
-    if (name.isEmpty || sport.isEmpty) {
-      _showSnackbar('Name and sport are required');
+    if (name.isEmpty || sport == null || sport.isEmpty) {
+      _showSnackbar(
+        _selectedSport == 'Other'
+            ? 'Please type your sport name'
+            : 'Name and sport are required',
+      );
       return;
     }
     if (price == null || price <= 0) {
@@ -267,8 +316,8 @@ class _OwnerCourtEditScreenState extends ConsumerState<OwnerCourtEditScreen> {
                     _buildLabel('Court Name'),
                     _buildField(_nameController, hint: 'e.g. Court A'),
                     const SizedBox(height: 16),
-                    _buildLabel('Sport'),
-                    _buildField(_sportController, hint: 'e.g. Football'),
+                    _buildLabel('Sport Type'),
+                    _buildSportSelector(),
                     const SizedBox(height: 16),
                     _buildLabel('About / Description'),
                     _buildField(
@@ -618,4 +667,98 @@ class _OwnerCourtEditScreenState extends ConsumerState<OwnerCourtEditScreen> {
       ),
     ),
   );
+
+  Widget _buildSportSelector() {
+    final cs = Theme.of(context).colorScheme;
+    final allOptions = [..._kSportOptions, 'Other'];
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: allOptions.map((sport) {
+            final selected = _selectedSport == sport;
+            return GestureDetector(
+              onTap: () => setState(() => _selectedSport = sport),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 150),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 8,
+                ),
+                decoration: BoxDecoration(
+                  color: selected ? cs.primary : cs.surface,
+                  borderRadius: BorderRadius.circular(50),
+                  border: Border.all(
+                    color: selected ? cs.primary : cs.outlineVariant,
+                    width: 1.5,
+                  ),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      sport == 'Other' ? Icons.edit_rounded : _sportIcon(sport),
+                      size: 13,
+                      color: selected ? cs.onPrimary : cs.onSurfaceVariant,
+                    ),
+                    const SizedBox(width: 5),
+                    Text(
+                      sport,
+                      style: TextStyle(
+                        fontFamily: 'Poppins',
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: selected ? cs.onPrimary : cs.onSurface,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }).toList(),
+        ),
+        // Show custom text input only when 'Other' is selected
+        if (_selectedSport == 'Other') ...[
+          const SizedBox(height: 10),
+          TextField(
+            controller: _customSportController,
+            textCapitalization: TextCapitalization.words,
+            style: TextStyle(
+              fontFamily: 'Poppins',
+              fontSize: 14,
+              color: cs.onSurface,
+            ),
+            decoration: InputDecoration(
+              hintText: 'e.g. Kabaddi, Hockey, Pickleball…',
+              hintStyle: TextStyle(
+                fontFamily: 'Poppins',
+                fontSize: 14,
+                color: cs.onSurface.withValues(alpha: 0.35),
+              ),
+              filled: true,
+              fillColor: cs.surface,
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 14,
+                vertical: 12,
+              ),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(AppConstants.radiusM),
+                borderSide: BorderSide(color: cs.outlineVariant),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(AppConstants.radiusM),
+                borderSide: BorderSide(color: cs.outlineVariant),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(AppConstants.radiusM),
+                borderSide: BorderSide(color: cs.primary, width: 1.5),
+              ),
+            ),
+          ),
+        ],
+      ],
+    );
+  }
 }

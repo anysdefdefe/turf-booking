@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:turf_booking/app/constants/app_constants.dart';
 import 'package:turf_booking/features/auth/providers/auth_controller.dart';
 import 'package:turf_booking/features/auth/providers/auth_notifier.dart';
 import 'package:turf_booking/features/auth/widgets/auth_form_widgets.dart';
@@ -466,9 +467,9 @@ class _HeroImage extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 16),
-                const Text(
-                  'Courtly',
-                  style: TextStyle(
+                Text(
+                  AppConstants.appName,
+                  style: const TextStyle(
                     fontFamily: 'Poppins',
                     color: Colors.white,
                     fontSize: 32,

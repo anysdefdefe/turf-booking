@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../app/constants/app_constants.dart';
 import '../data/repositories/onboarding_repository.dart';
 
 class OnboardingScreen extends StatefulWidget {
@@ -251,7 +252,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Text(
-                      'Courtly',
+                      AppConstants.appName,
                       style: TextStyle(
                         fontFamily: 'Poppins',
                         fontSize: 16,

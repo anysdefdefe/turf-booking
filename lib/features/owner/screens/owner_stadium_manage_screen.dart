@@ -1085,6 +1085,7 @@ class _AddCourtSheetState extends ConsumerState<_AddCourtSheet> {
   final _descriptionController = TextEditingController();
   final _priceController = TextEditingController();
   final _equipmentController = TextEditingController();
+  final _customSportController = TextEditingController();
   final _imagePicker = ImagePicker();
   String? _selectedSport;
   File? _selectedImage;
@@ -1106,6 +1107,7 @@ class _AddCourtSheetState extends ConsumerState<_AddCourtSheet> {
     _descriptionController.dispose();
     _priceController.dispose();
     _equipmentController.dispose();
+    _customSportController.dispose();
     // NOTE: do NOT dispose widget.scrollController — it is owned by
     // DraggableScrollableSheet and will be disposed by the framework.
     super.dispose();
@@ -1159,13 +1161,21 @@ class _AddCourtSheetState extends ConsumerState<_AddCourtSheet> {
   Future<void> _submit() async {
     final name = _nameController.text.trim();
     final price = double.tryParse(_priceController.text.trim());
+    // Resolve sport: 'Other' means use the custom text field
+    final sport = _selectedSport == 'Other'
+        ? _customSportController.text.trim()
+        : _selectedSport;
 
     if (name.isEmpty) {
       _snack('Court name is required');
       return;
     }
-    if (_selectedSport == null) {
-      _snack('Please select a sport type');
+    if (sport == null || sport.isEmpty) {
+      _snack(
+        _selectedSport == 'Other'
+            ? 'Please type your sport name'
+            : 'Please select a sport type',
+      );
       return;
     }
     if (price == null || price <= 0) {
@@ -1181,7 +1191,7 @@ class _AddCourtSheetState extends ConsumerState<_AddCourtSheet> {
           .addCourt(
             stadiumId: widget.stadiumId,
             name: name,
-            sportType: _selectedSport!,
+            sportType: sport,
             description: _descriptionController.text.trim().isEmpty
                 ? null
                 : _descriptionController.text.trim(),
@@ -1348,54 +1358,70 @@ class _AddCourtSheetState extends ConsumerState<_AddCourtSheet> {
 
             // Sport type
             _label('Sport Type'),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: _kSportOptions.map((sport) {
-                final selected = _selectedSport == sport;
-                return GestureDetector(
-                  onTap: () => setState(() => _selectedSport = sport),
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 150),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 14,
-                      vertical: 8,
-                    ),
-                    decoration: BoxDecoration(
-                      color: selected
-                          ? Theme.of(context).colorScheme.primary
-                          : cs.surface,
-                      borderRadius: BorderRadius.circular(50),
-                      border: Border.all(
-                        color: selected
-                            ? Theme.of(context).colorScheme.primary
-                            : Theme.of(context).colorScheme.outlineVariant,
-                        width: 1.5,
-                      ),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          _sportIcon(sport),
-                          size: 13,
-                          color: selected ? cs.onPrimary : cs.onSurfaceVariant,
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [..._kSportOptions, 'Other'].map((sport) {
+                    final selected = _selectedSport == sport;
+                    return GestureDetector(
+                      onTap: () => setState(() => _selectedSport = sport),
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 150),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 8,
                         ),
-                        const SizedBox(width: 5),
-                        Text(
-                          sport,
-                          style: TextStyle(
-                            fontFamily: 'Poppins',
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                            color: selected ? cs.onPrimary : cs.onSurface,
+                        decoration: BoxDecoration(
+                          color: selected
+                              ? Theme.of(context).colorScheme.primary
+                              : cs.surface,
+                          borderRadius: BorderRadius.circular(50),
+                          border: Border.all(
+                            color: selected
+                                ? Theme.of(context).colorScheme.primary
+                                : Theme.of(context).colorScheme.outlineVariant,
+                            width: 1.5,
                           ),
                         ),
-                      ],
-                    ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              sport == 'Other'
+                                  ? Icons.edit_rounded
+                                  : _sportIcon(sport),
+                              size: 13,
+                              color: selected
+                                  ? cs.onPrimary
+                                  : cs.onSurfaceVariant,
+                            ),
+                            const SizedBox(width: 5),
+                            Text(
+                              sport,
+                              style: TextStyle(
+                                fontFamily: 'Poppins',
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                                color: selected ? cs.onPrimary : cs.onSurface,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  }).toList(),
+                ),
+                if (_selectedSport == 'Other') ...[
+                  const SizedBox(height: 10),
+                  _field(
+                    _customSportController,
+                    hint: 'e.g. Kabaddi, Hockey, Pickleball…',
                   ),
-                );
-              }).toList(),
+                ],
+              ],
             ),
             const SizedBox(height: 16),
 

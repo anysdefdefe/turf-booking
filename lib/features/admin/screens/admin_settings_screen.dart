@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../../app/constants/app_constants.dart';
 import '../../auth/providers/auth_controller.dart';
 
 class AdminSettingsScreen extends ConsumerWidget {
@@ -116,7 +117,7 @@ class AdminSettingsScreen extends ConsumerWidget {
                     context,
                     Icons.app_settings_alt,
                     'App Name',
-                    'Courtly',
+                    AppConstants.appName,
                   ),
                 ],
               ),
