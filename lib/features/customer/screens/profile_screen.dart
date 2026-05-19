@@ -7,11 +7,9 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:turf_booking/features/auth/providers/auth_controller.dart';
 import 'package:go_router/go_router.dart';
 import '../../../app/constants/app_constants.dart';
+import '../../../app/theme/theme_controller.dart';
 import '../../../app/theme/theme_mode_selector.dart';
 import '../widgets/customer_bottom_nav_bar.dart';
-import '../providers/customer_providers.dart';
-import '../providers/customer_bookings_controller.dart';
-import '../data/models/customer_booking.dart';
 import 'package:turf_booking/features/owner/widgets/storage_media.dart';
 import 'package:turf_booking/shared/services/storage_image_service.dart';
 
@@ -100,9 +98,6 @@ class ProfileScreen extends ConsumerStatefulWidget {
 }
 
 class _ProfileScreenState extends ConsumerState<ProfileScreen> {
-  static const bool _isOwner = false;
-  static const bool _isApproved = false;
-
   final _client = Supabase.instance.client;
   late final StorageImageService _storageImageService;
 
@@ -169,6 +164,32 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
   void _switchMode() {
     context.go('/mode-selection');
+  }
+
+  Future<void> _openThemeSheet() async {
+    await showModalBottomSheet<void>(
+      context: context,
+      useSafeArea: true,
+      backgroundColor: Theme.of(context).colorScheme.surfaceContainer,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (context) => const Padding(
+        padding: EdgeInsets.fromLTRB(20, 16, 20, 24),
+        child: ThemeModeSelector(title: 'Appearance'),
+      ),
+    );
+  }
+
+  String _themeLabel(ThemeMode mode) {
+    switch (mode) {
+      case ThemeMode.light:
+        return 'Light';
+      case ThemeMode.dark:
+        return 'Dark';
+      case ThemeMode.system:
+        return 'System';
+    }
   }
 
   Future<void> _openEditSheet() async {
@@ -280,14 +301,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   width: 60,
                   height: 60,
                   decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [
-                        cs.errorContainer,
-                        cs.errorContainer.withValues(alpha: 0.6),
-                      ],
-                    ),
+                    color: cs.errorContainer,
                     borderRadius: BorderRadius.circular(18),
                   ),
                   child: Icon(Icons.logout_rounded, color: cs.error, size: 26),
@@ -394,22 +408,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         elevation: 0,
         automaticallyImplyLeading: false,
         centerTitle: false,
-        title: Text(
-          'Profile',
-          style: TextStyle(
-            fontFamily: 'Poppins',
-            fontSize: 22,
-            color: cs.onSurface,
-            fontWeight: FontWeight.w700,
-            letterSpacing: -0.3,
-          ),
-        ),
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 16),
-            child: _EditButton(onTap: _openEditSheet),
-          ),
-        ],
+        title: const Text('Profile'),
       ),
       body: _isLoading && profile == null
           ? Center(child: CircularProgressIndicator(color: cs.primary))
@@ -417,7 +416,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               onRefresh: _loadProfile,
               color: cs.primary,
               child: ListView(
-                padding: const EdgeInsets.fromLTRB(20, 4, 20, 32),
+                padding: const EdgeInsets.fromLTRB(20, 6, 20, 32),
                 physics: const AlwaysScrollableScrollPhysics(),
                 children: [
                   if (_error != null) ...[
@@ -425,45 +424,56 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     const SizedBox(height: 16),
                   ],
                   if (profile != null) ...[
-                    _ProfileHeroCard(profile: profile),
-                    const SizedBox(height: 20),
-                    _isOwner
-                        ? const _OwnerStatsRow()
-                        : const _CustomerStatsRow(),
-                    const SizedBox(height: 20),
-                    _isOwner
-                        ? const _OwnerInfoCard(isApproved: _isApproved)
-                        : _CustomerInfoCard(onSwitchMode: _switchMode),
-                    const SizedBox(height: 24),
-                    const _SectionLabel(label: 'Account'),
-                    const SizedBox(height: 10),
-                    _ActionTile(
-                      icon: Icons.receipt_long_rounded,
-                      label: 'My Bookings',
-                      onTap: () => context.go('/customer/my-bookings'),
+                    _ProfileHeaderPanel(
+                      profile: profile,
+                      onEdit: _openEditSheet,
+                      onLogout: _handleLogout,
                     ),
-                    _ActionTile(
-                      icon: Icons.notifications_none_rounded,
-                      label: 'Notifications',
-                      onTap: () {},
+                    const SizedBox(height: 18),
+                    _SettingsGroupCard(
+                      title: 'General settings',
+                      children: [
+                        _SettingsStaticRow(label: 'Language', value: 'English'),
+                        ValueListenableBuilder<ThemeMode>(
+                          valueListenable: ThemeController.instance,
+                          builder: (context, currentMode, _) {
+                            return _SettingsActionRow(
+                              label: 'Appearance',
+                              trailingText: _themeLabel(currentMode),
+                              onTap: _openThemeSheet,
+                            );
+                          },
+                        ),
+                      ],
                     ),
-                    const SizedBox(height: 20),
-                    const _SectionLabel(label: 'General'),
-                    const SizedBox(height: 10),
-                    _ActionTile(
-                      icon: Icons.help_outline_rounded,
-                      label: 'Help & Support',
-                      onTap: () {},
+                    const SizedBox(height: 14),
+                    _SettingsGroupCard(
+                      title: 'Account settings',
+                      children: [
+                        _SettingsActionRow(
+                          label: 'My bookings',
+                          onTap: () => context.go('/customer/my-bookings'),
+                        ),
+                        _SettingsActionRow(
+                          label: 'Switch role',
+                          onTap: _switchMode,
+                        ),
+                      ],
                     ),
-                    _ActionTile(
-                      icon: Icons.privacy_tip_outlined,
-                      label: 'Privacy Policy',
-                      onTap: () {},
+                    const SizedBox(height: 14),
+                    _SettingsGroupCard(
+                      title: 'Support',
+                      children: [
+                        _SettingsActionRow(
+                          label: 'Help & support',
+                          onTap: () {},
+                        ),
+                        _SettingsActionRow(
+                          label: 'Privacy policy',
+                          onTap: () {},
+                        ),
+                      ],
                     ),
-                    const SizedBox(height: 24),
-                    const ThemeModeSelector(title: 'Appearance'),
-                    const SizedBox(height: 12),
-                    _LogoutButton(onTap: _handleLogout),
                   ] else ...[
                     const SizedBox(height: 32),
                     Center(
@@ -476,6 +486,211 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 ],
               ),
             ),
+    );
+  }
+}
+
+class _ProfileHeaderPanel extends StatelessWidget {
+  final _ProfileData profile;
+  final VoidCallback onEdit;
+  final VoidCallback onLogout;
+
+  const _ProfileHeaderPanel({
+    required this.profile,
+    required this.onEdit,
+    required this.onLogout,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+
+    return Column(
+      children: [
+        Row(
+          children: [
+            const Spacer(),
+            _EditButton(onTap: onEdit),
+            const SizedBox(width: 8),
+            _LogoutIconButton(onTap: onLogout),
+          ],
+        ),
+        const SizedBox(height: 6),
+        Container(
+          width: 98,
+          height: 98,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: cs.surfaceContainerLowest,
+            border: Border.all(color: cs.outlineVariant, width: 1.5),
+            boxShadow: [
+              BoxShadow(
+                color: cs.shadow.withValues(alpha: 0.08),
+                blurRadius: 18,
+                offset: const Offset(0, 8),
+              ),
+            ],
+          ),
+          child: StorageAvatar(
+            storagePath: profile.avatarStoragePath,
+            bucketName: AppConstants.storageImageBucket,
+            displayName: profile.fullName,
+            radius: 49,
+          ),
+        ),
+        const SizedBox(height: 14),
+        Text(
+          profile.fullName,
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            fontFamily: 'Poppins',
+            fontSize: 20,
+            fontWeight: FontWeight.w700,
+            color: cs.onSurface,
+            letterSpacing: -0.25,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          profile.email,
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            fontFamily: 'Poppins',
+            fontSize: 13,
+            color: cs.onSurfaceVariant,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _SettingsGroupCard extends StatelessWidget {
+  final String title;
+  final List<Widget> children;
+
+  const _SettingsGroupCard({required this.title, required this.children});
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+
+    return Container(
+      padding: const EdgeInsets.fromLTRB(16, 14, 16, 8),
+      decoration: BoxDecoration(
+        color: cs.surfaceContainerLow,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: cs.outlineVariant),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w700,
+              color: cs.onSurface,
+            ),
+          ),
+          const SizedBox(height: 6),
+          ...children,
+        ],
+      ),
+    );
+  }
+}
+
+class _SettingsActionRow extends StatelessWidget {
+  final String label;
+  final String? trailingText;
+  final VoidCallback onTap;
+
+  const _SettingsActionRow({
+    required this.label,
+    required this.onTap,
+    this.trailingText,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 11),
+        child: Row(
+          children: [
+            Expanded(
+              child: Text(
+                label,
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                  color: cs.onSurface,
+                ),
+              ),
+            ),
+            if (trailingText != null)
+              Padding(
+                padding: const EdgeInsets.only(right: 10),
+                child: Text(
+                  trailingText!,
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: cs.onSurfaceVariant,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+            Icon(
+              Icons.chevron_right_rounded,
+              size: 20,
+              color: cs.onSurfaceVariant,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _SettingsStaticRow extends StatelessWidget {
+  final String label;
+  final String value;
+
+  const _SettingsStaticRow({required this.label, required this.value});
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 11),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              label,
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+                color: cs.onSurface,
+              ),
+            ),
+          ),
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 13,
+              color: cs.onSurfaceVariant,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -862,492 +1077,6 @@ class _SheetField extends StatelessWidget {
 
 // ─── Profile Hero Card ───────────────────────────────────────────────────────
 
-class _ProfileHeroCard extends StatelessWidget {
-  final _ProfileData profile;
-
-  const _ProfileHeroCard({required this.profile});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceContainerLowest,
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(
-          color: Theme.of(context).colorScheme.outlineVariant,
-          width: 1,
-        ),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          // Avatar on the left
-          Container(
-            width: 68,
-            height: 68,
-            decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.surface,
-              shape: BoxShape.circle,
-              border: Border.all(
-                color: Theme.of(context).colorScheme.outlineVariant,
-                width: 1.5,
-              ),
-            ),
-            child: StorageAvatar(
-              storagePath: profile.avatarStoragePath,
-              bucketName: AppConstants.storageImageBucket,
-              displayName: profile.fullName,
-              radius: 34,
-            ),
-          ),
-          const SizedBox(width: 16),
-          // Info on the right
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  profile.fullName,
-                  style: TextStyle(
-                    fontSize: 17,
-                    fontWeight: FontWeight.w700,
-                    color: Theme.of(context).colorScheme.onSurface,
-                    letterSpacing: -0.2,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                _HeroInfoRow(
-                  icon: Icons.mail_outline_rounded,
-                  text: profile.email,
-                ),
-                const SizedBox(height: 3),
-                _HeroInfoRow(
-                  icon: Icons.phone_outlined,
-                  text: profile.phone.isEmpty
-                      ? 'No phone added'
-                      : profile.phone,
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _HeroInfoRow extends StatelessWidget {
-  final IconData icon;
-  final String text;
-
-  const _HeroInfoRow({required this.icon, required this.text});
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Icon(
-          icon,
-          size: 13,
-          color: Theme.of(context).colorScheme.onSurfaceVariant,
-        ),
-        const SizedBox(width: 6),
-        Expanded(
-          child: Text(
-            text,
-            style: TextStyle(
-              fontSize: 12.5,
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-            ),
-            overflow: TextOverflow.ellipsis,
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-// ─── Stats Row ───────────────────────────────────────────────────────────────
-
-class _CustomerStatsRow extends ConsumerWidget {
-  const _CustomerStatsRow();
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    // This watches the async provider, though we can just read from repo directly if it's already loaded,
-    // but watching the controller ensures it rebuilds on changes.
-    ref.watch(customerBookingsControllerProvider);
-    final repo = ref.watch(customerBookingRepositoryProvider);
-    final allBookings = repo.getAllBookings();
-
-    // Compute stats
-    int activeBookings = 0;
-    double spent = 0;
-    final Set<String> uniqueVenues = {};
-
-    for (final b in allBookings) {
-      if (b.status != BookingStatus.cancelled) {
-        activeBookings++;
-        uniqueVenues.add(b.court.stadiumId);
-
-        // Let's assume paid means not unpaid and not cancelled
-        if (b.status != BookingStatus.unpaid) {
-          spent += b.totalAmount;
-        }
-      }
-    }
-
-    return Row(
-      children: [
-        _StatChip(
-          value: activeBookings.toString(),
-          label: 'Bookings',
-          icon: Icons.event_note_rounded,
-        ),
-        const SizedBox(width: 10),
-        _StatChip(
-          value: uniqueVenues.length.toString(),
-          label: 'Venues',
-          icon: Icons.stadium_rounded,
-        ),
-        const SizedBox(width: 10),
-        _StatChip(
-          value: '₹${spent.toInt()}',
-          label: 'Spent',
-          icon: Icons.account_balance_wallet_rounded,
-        ),
-      ],
-    );
-  }
-}
-
-class _OwnerStatsRow extends StatelessWidget {
-  const _OwnerStatsRow();
-
-  @override
-  Widget build(BuildContext context) {
-    return const Row(
-      children: [
-        _StatChip(
-          value: '0',
-          label: 'Courts',
-          icon: Icons.sports_soccer_rounded,
-        ),
-        SizedBox(width: 10),
-        _StatChip(value: '0', label: "Today's", icon: Icons.today_rounded),
-        SizedBox(width: 10),
-        _StatChip(
-          value: '₹0',
-          label: 'Revenue',
-          icon: Icons.trending_up_rounded,
-        ),
-      ],
-    );
-  }
-}
-
-class _StatChip extends StatelessWidget {
-  final String value;
-  final String label;
-  final IconData icon;
-
-  const _StatChip({
-    required this.value,
-    required this.label,
-    required this.icon,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Expanded(
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 16),
-        decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.surfaceContainerLowest,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: Theme.of(context).colorScheme.outlineVariant,
-            width: 1,
-          ),
-        ),
-        child: Column(
-          children: [
-            Icon(icon, size: 18, color: Theme.of(context).colorScheme.primary),
-            const SizedBox(height: 6),
-            Text(
-              value,
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w700,
-                color: Theme.of(context).colorScheme.onSurface,
-                letterSpacing: -0.3,
-              ),
-            ),
-            const SizedBox(height: 2),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 11,
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-// ─── Info Cards ──────────────────────────────────────────────────────────────
-
-class _CustomerInfoCard extends StatelessWidget {
-  final VoidCallback onSwitchMode;
-
-  const _CustomerInfoCard({required this.onSwitchMode});
-
-  @override
-  Widget build(BuildContext context) {
-    return _InfoCard(
-      tag: 'Customer',
-      description: 'You are browsing and booking courts as a customer.',
-      trailingWidget: _RoleSwitcher(onTap: onSwitchMode),
-    );
-  }
-}
-
-class _RoleSwitcher extends StatelessWidget {
-  final VoidCallback onTap;
-
-  const _RoleSwitcher({required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(14),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-        decoration: BoxDecoration(
-          color: cs.inverseSurface,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: cs.outlineVariant),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              Icons.swap_horiz_rounded,
-              size: 14,
-              color: cs.onInverseSurface,
-            ),
-            const SizedBox(width: 4),
-            Text(
-              'Switch',
-              style: TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w600,
-                color: cs.onInverseSurface,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _OwnerInfoCard extends StatelessWidget {
-  final bool isApproved;
-
-  const _OwnerInfoCard({required this.isApproved});
-
-  @override
-  Widget build(BuildContext context) {
-    return _InfoCard(
-      tag: 'Owner',
-      description: isApproved
-          ? 'Your ownership is verified. Manage your courts and bookings.'
-          : 'Your ownership request is pending approval.',
-      trailingWidget: _RoleBadge(
-        label: isApproved ? 'Verified' : 'Pending',
-        isPositive: isApproved,
-      ),
-    );
-  }
-}
-
-class _InfoCard extends StatelessWidget {
-  final String tag;
-  final String description;
-  final Widget trailingWidget;
-
-  const _InfoCard({
-    required this.tag,
-    required this.description,
-    required this.trailingWidget,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceContainerLowest,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(
-          color: Theme.of(context).colorScheme.outlineVariant,
-          width: 1,
-        ),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  tag,
-                  style: TextStyle(
-                    fontSize: 13.5,
-                    fontWeight: FontWeight.w700,
-                    color: Theme.of(context).colorScheme.onSurface,
-                  ),
-                ),
-                const SizedBox(height: 5),
-                Text(
-                  description,
-                  style: TextStyle(
-                    fontSize: 12,
-                    height: 1.5,
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(width: 12),
-          trailingWidget,
-        ],
-      ),
-    );
-  }
-}
-
-class _RoleBadge extends StatelessWidget {
-  final String label;
-  final bool isPositive;
-
-  const _RoleBadge({required this.label, required this.isPositive});
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-      decoration: BoxDecoration(
-        color: isPositive
-            ? cs.primary.withValues(alpha: 0.12)
-            : cs.tertiary.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: cs.outlineVariant),
-      ),
-      child: Text(
-        label,
-        style: TextStyle(
-          fontSize: 11,
-          fontWeight: FontWeight.w600,
-          color: isPositive ? cs.primary : cs.tertiary,
-        ),
-      ),
-    );
-  }
-}
-
-// ─── Section Label ───────────────────────────────────────────────────────────
-
-class _SectionLabel extends StatelessWidget {
-  final String label;
-
-  const _SectionLabel({required this.label});
-
-  @override
-  Widget build(BuildContext context) {
-    return Text(
-      label,
-      style: TextStyle(
-        fontSize: 12,
-        fontWeight: FontWeight.w600,
-        color: Theme.of(context).colorScheme.onSurfaceVariant,
-        letterSpacing: 0.6,
-      ),
-    );
-  }
-}
-
-// ─── Action Tile ─────────────────────────────────────────────────────────────
-
-class _ActionTile extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final VoidCallback onTap;
-
-  const _ActionTile({
-    required this.icon,
-    required this.label,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(14),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-          decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.surfaceContainerLowest,
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(
-              color: Theme.of(context).colorScheme.outlineVariant,
-              width: 1,
-            ),
-          ),
-          child: Row(
-            children: [
-              Icon(
-                icon,
-                size: 20,
-                color: Theme.of(context).colorScheme.onSurface,
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Text(
-                  label,
-                  style: TextStyle(
-                    fontSize: 13.5,
-                    fontWeight: FontWeight.w500,
-                    color: Theme.of(context).colorScheme.onSurface,
-                  ),
-                ),
-              ),
-              Icon(
-                Icons.arrow_forward_ios_rounded,
-                size: 13,
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
 // ─── Error Banner ────────────────────────────────────────────────────────────
 
 class _ErrorBanner extends StatelessWidget {
@@ -1380,41 +1109,28 @@ class _ErrorBanner extends StatelessWidget {
 
 // ─── Logout Button ───────────────────────────────────────────────────────────
 
-class _LogoutButton extends StatelessWidget {
+class _LogoutIconButton extends StatelessWidget {
   final VoidCallback onTap;
 
-  const _LogoutButton({required this.onTap});
+  const _LogoutIconButton({required this.onTap});
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
 
-    return InkWell(
+    return GestureDetector(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(14),
       child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.symmetric(vertical: 16),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
         decoration: BoxDecoration(
-          color: cs.surface,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: cs.outlineVariant, width: 1),
+          color: cs.surfaceContainerLowest,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: cs.onSurfaceVariant.withValues(alpha: 0.3),
+            width: 1,
+          ),
         ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.logout_rounded, size: 20, color: cs.error),
-            const SizedBox(width: 10),
-            Text(
-              'Log out',
-              style: TextStyle(
-                fontSize: 14.5,
-                fontWeight: FontWeight.w600,
-                color: cs.error,
-              ),
-            ),
-          ],
-        ),
+        child: Icon(Icons.logout_rounded, size: 18, color: cs.onSurfaceVariant),
       ),
     );
   }
@@ -1451,6 +1167,7 @@ class _EditButton extends StatelessWidget {
             Text(
               'Edit',
               style: TextStyle(
+                fontFamily: 'Poppins',
                 fontSize: 12.5,
                 fontWeight: FontWeight.w600,
                 color: Theme.of(context).colorScheme.onSurfaceVariant,
