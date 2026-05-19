@@ -184,9 +184,9 @@ class _MyBookingsScreenState extends ConsumerState<MyBookingsScreen> {
           'My Bookings',
           style: TextStyle(
             fontFamily: 'Poppins',
-            fontSize: 22,
-            fontWeight: FontWeight.w700,
-            letterSpacing: -0.3,
+            fontSize: 24,
+            fontWeight: FontWeight.w800,
+            letterSpacing: -0.5,
             color: Theme.of(context).colorScheme.onSurface,
           ),
         ),
@@ -194,38 +194,51 @@ class _MyBookingsScreenState extends ConsumerState<MyBookingsScreen> {
       body: Column(
         children: [
           if (bookingState.isLoading)
-            const LinearProgressIndicator(minHeight: 2),
+            const LinearProgressIndicator(
+              minHeight: 3,
+              backgroundColor: Colors.transparent,
+            ),
           _buildFilterRow(),
-          ValueListenableBuilder<List<CustomerBooking>>(
-            valueListenable: _repo.bookingsNotifier,
-            builder: (context, allBookings, _) {
-              final ordered = [...allBookings]
-                ..sort((a, b) => b.startDateTime.compareTo(a.startDateTime));
-              final bookings = _bookingsForFilter(ordered);
+          Expanded(
+            child: ValueListenableBuilder<List<CustomerBooking>>(
+              valueListenable: _repo.bookingsNotifier,
+              builder: (context, allBookings, _) {
+                final ordered = [...allBookings]
+                  ..sort((a, b) => b.startDateTime.compareTo(a.startDateTime));
+                final bookings = _bookingsForFilter(ordered);
 
-              return Expanded(
-                child: bookings.isEmpty
-                    ? const EmptyState(
-                        title: 'No bookings yet',
-                        subtitle: 'Your bookings will appear here',
-                        icon: Icons.event_note_rounded,
-                      )
-                    : ListView.builder(
-                        padding: const EdgeInsets.only(top: 8, bottom: 24),
-                        itemCount: bookings.length,
-                        itemBuilder: (context, index) {
-                          final booking = bookings[index];
-                          return CourtCompactCard(
-                            booking: booking,
-                            onTap: () => _openReceiptPlaceholder(booking),
-                            onCancel: booking.canCancel
-                                ? () => _onCancelBooking(booking)
-                                : null,
-                          );
-                        },
+                if (bookings.isEmpty) {
+                  return const EmptyState(
+                    title: 'No bookings yet',
+                    subtitle: 'Your bookings will appear here',
+                    icon: Icons.event_note_rounded,
+                  );
+                }
+
+                return ListView.builder(
+                  padding: const EdgeInsets.only(
+                    top: 12,
+                    bottom: 24,
+                    left: 16,
+                    right: 16,
+                  ),
+                  itemCount: bookings.length,
+                  itemBuilder: (context, index) {
+                    final booking = bookings[index];
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 12),
+                      child: CourtCompactCard(
+                        booking: booking,
+                        onTap: () => _openReceiptPlaceholder(booking),
+                        onCancel: booking.canCancel
+                            ? () => _onCancelBooking(booking)
+                            : null,
                       ),
-              );
-            },
+                    );
+                  },
+                );
+              },
+            ),
           ),
         ],
       ),
@@ -234,44 +247,82 @@ class _MyBookingsScreenState extends ConsumerState<MyBookingsScreen> {
 
   Widget _buildFilterRow() {
     const labels = ['All', 'Upcoming', 'Past', 'Cancelled'];
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 6, 20, 8),
-      child: Wrap(
-        spacing: 8,
-        runSpacing: 8,
+    const icons = [
+      Icons.inbox_rounded,
+      Icons.calendar_month_rounded,
+      Icons.history_rounded,
+      Icons.close_rounded,
+    ];
+
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+      child: Row(
         children: List.generate(labels.length, (index) {
           final selected = _selectedFilterIndex == index;
-          return InkWell(
-            onTap: () => setState(() => _selectedFilterIndex = index),
-            borderRadius: BorderRadius.circular(999),
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 200),
-              curve: Curves.easeInOut,
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-              decoration: BoxDecoration(
-                color: selected
-                    ? Theme.of(context).colorScheme.primary
-                    : Theme.of(context).colorScheme.surfaceContainerHighest
-                          .withValues(alpha: 0.3),
-                borderRadius: BorderRadius.circular(24),
-                border: Border.all(
+          return Padding(
+            padding: EdgeInsets.only(right: index < labels.length - 1 ? 8 : 0),
+            child: InkWell(
+              onTap: () => setState(() => _selectedFilterIndex = index),
+              borderRadius: BorderRadius.circular(12),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 250),
+                curve: Curves.easeInOut,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 10,
+                ),
+                decoration: BoxDecoration(
                   color: selected
                       ? Theme.of(context).colorScheme.primary
-                      : Colors.transparent,
-                  width: 1,
+                      : Theme.of(context).colorScheme.surfaceContainerHigh,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: selected
+                        ? Theme.of(context).colorScheme.primary
+                        : Theme.of(
+                            context,
+                          ).colorScheme.outline.withValues(alpha: 0.5),
+                    width: selected ? 0 : 1,
+                  ),
+                  boxShadow: selected
+                      ? [
+                          BoxShadow(
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.primary.withValues(alpha: 0.3),
+                            blurRadius: 8,
+                            offset: const Offset(0, 4),
+                          ),
+                        ]
+                      : [],
                 ),
-              ),
-              child: Text(
-                labels[index],
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontFamily: 'Poppins',
-                  fontSize: 13,
-                  fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
-                  letterSpacing: 0.3,
-                  color: selected
-                      ? Theme.of(context).colorScheme.onPrimary
-                      : Theme.of(context).colorScheme.onSurfaceVariant,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      icons[index],
+                      size: 16,
+                      color: selected
+                          ? Theme.of(context).colorScheme.onPrimary
+                          : Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      labels[index],
+                      style: TextStyle(
+                        fontFamily: 'Poppins',
+                        fontSize: 13,
+                        fontWeight: selected
+                            ? FontWeight.w700
+                            : FontWeight.w500,
+                        letterSpacing: 0.2,
+                        color: selected
+                            ? Theme.of(context).colorScheme.onPrimary
+                            : Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
